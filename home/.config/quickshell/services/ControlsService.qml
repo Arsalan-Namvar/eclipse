@@ -66,7 +66,9 @@ Singleton {
         { id: "packages",   icon: "󰏗", label: "Packages",
           detail: "Updates, what is installed, the AUR",   panel: "packages" },
         { id: "servers",    icon: "󰒋", label: "Servers",
-          detail: "The ports your projects listen on",     panel: "servers" }
+          detail: "The ports your projects listen on",     panel: "servers" },
+        { id: "camera",     icon: "󰄀", label: "Camera",
+          detail: "Effects and reactions for your calls",  panel: "camera" }
     ]
 
     readonly property var defaultButtons: ["stats", "settings", "pet", "games", "notes", "board"]

@@ -72,6 +72,9 @@ Singleton {
     readonly property alias launcherOrder: config.launcherOrder
     readonly property alias launcherFits: config.launcherFits
     readonly property alias emojiTone: config.emojiTone
+    readonly property alias cameraEnabled: config.cameraEnabled
+    readonly property alias cameraEffect: config.cameraEffect
+    readonly property alias cameraReactions: config.cameraReactions
     readonly property alias clipboardHistory: config.clipboardHistory
     readonly property alias clipboardKeep: config.clipboardKeep
     readonly property alias clipboardImages: config.clipboardImages
@@ -332,6 +335,7 @@ Singleton {
         "emojiTone",
         "doNotDisturb", "nightLight", "nightTemperature", "barHidden", "desktopHidden",
         "gameMode",
+        "cameraEnabled", "cameraEffect", "cameraReactions",
         "recorderAudio", "captureShape", "captureKind"
     ]
 
@@ -584,6 +588,17 @@ Singleton {
         // Skin tone for emoji that have one: 0 is the default yellow, 1 to 5
         // light to dark. The person's, so it stays with the machine.
         property int emojiTone: 0
+
+        // ── CAMERA ──────────────────────────────────────────────────
+        //
+        // Off takes the virtual camera away from every program.
+        property bool cameraEnabled: true
+
+        // One of `CameraService.effects`.
+        property string cameraEffect: "natural"
+
+        // The gestures that set off a reaction, by `CameraService.reactions` id.
+        property var cameraReactions: ["thumbsup", "heart", "peace", "thumbsdown"]
 
         // ── CLIPBOARD ───────────────────────────────────────────────
         //

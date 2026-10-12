@@ -178,6 +178,14 @@ not know never costs you a try, and the login screen still asks for the
 password after a boot. Settings → Session lists the faces it knows, adds
 another, removes one, and lets you try it without locking.
 
+**The webcam has effects for any call.** <kbd>SUPER</kbd> <kbd>SHIFT</kbd>
+<kbd>W</kbd> opens it on the island: what the others will see, a strip of
+effects under it (the palette's colour, black and white, the background
+blurred, centre stage, sunglasses, a crown) and the gestures beside it. A
+thumbs up lets balloons go, a heart made with both hands sends hearts, a
+victory sign throws confetti. Pick *impasto camera* in Discord, a browser or
+OBS; the webcam turns on only while one of them is reading it.
+
 ## Settings
 
 <p align="center">
@@ -208,7 +216,8 @@ login screen, switched on unless your machine already uses another display
 manager. It sets up Thunar, VSCodium, Vesktop and Spotify, dark GTK
 applications, and what opens which kind of file — leaving alone any your
 machine already has an answer for. Where there is an infrared camera it
-installs howdy-next and asks to enrol your face. It asks for your password
+installs howdy-next and asks to enrol your face, and where there is a webcam
+it installs the virtual camera the effects go out through. It asks for your password
 through sudo for pacman, for the copy into `/`, and to let spicetify patch
 Spotify. A program that is open, or a Spotify you have never started, is
 skipped with the reason and set up by the next `update`. After that they follow
@@ -223,7 +232,7 @@ with somewhere to press them.
 | `--skip-packages` | install nothing; copy and build only |
 | `--skip-system` | leave `/` alone — no login screen, and no password for it |
 | `--skip-plugins` | no shake to find, no glass |
-| `--skip-extras` | leave Thunar, VSCodium, Vesktop, Spotify, GTK and face unlock alone |
+| `--skip-extras` | leave Thunar, VSCodium, Vesktop, Spotify, GTK, face unlock and the camera alone |
 | `--aur-helper yay\|paru` | which helper builds the AUR half — built from the AUR if you have neither |
 | `--noconfirm` | take the default at every question |
 | `-n`, `--dry-run` | say what would happen, and do none of it |
@@ -280,6 +289,7 @@ rather than failing.
 | 🔆 | Monitor brightness | [ddcutil](https://www.ddcutil.com) |
 | 🔑 | Login screen | [SDDM](https://github.com/sddm/sddm) |
 | 👤 | Face unlock | [howdy-next](https://codeberg.org/nathawat/howdy-next) |
+| 📷 | Camera effects | [MediaPipe](https://ai.google.dev/edge/mediapipe) · [v4l2loopback](https://github.com/umlaeute/v4l2loopback) |
 
 </details>
 

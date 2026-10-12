@@ -67,6 +67,8 @@ ShellRoot {
         void SessionService.sleepPending
         // Seeds the example profiles on a first install.
         void ProfileService.arrived
+        // Lists the virtual camera, so a call can pick it.
+        void CameraService.ready
     }
 
     // ── SCREENS ─────────────────────────────────────────────────────────────
@@ -461,6 +463,12 @@ ShellRoot {
         name: "servers"
         description: "Open the development servers"
         onPressed: root.island?.toggle("servers")
+    }
+
+    GlobalShortcut {
+        name: "camera"
+        description: "Open the camera effects"
+        onPressed: root.island?.toggle("camera")
     }
 
     // The clipboard and the emoji are launcher modes: pressed again on that

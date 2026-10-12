@@ -53,3 +53,9 @@ quickemu                     # the machines panel · brings quickget, spicy and 
 
 # · howdy-next is not listed: ./setup face installs it, and only where there
 # · is an infrared camera, since it brings opencv with it.
+
+
+# ── CAMERA EFFECTS ──────────────────────────────────────────────────────────
+
+# · python-mediapipe-bin is not listed: ./setup camera installs it with the
+# · virtual camera, and only where there is a webcam.
