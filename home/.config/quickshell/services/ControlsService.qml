@@ -64,7 +64,9 @@ Singleton {
         { id: "keys",       icon: "󰌌", label: "Keys",
           detail: "Every shortcut, on one sheet",          panel: "keys" },
         { id: "packages",   icon: "󰏗", label: "Packages",
-          detail: "Updates, what is installed, the AUR",   panel: "packages" }
+          detail: "Updates, what is installed, the AUR",   panel: "packages" },
+        { id: "servers",    icon: "󰒋", label: "Servers",
+          detail: "The ports your projects listen on",     panel: "servers" }
     ]
 
     readonly property var defaultButtons: ["stats", "settings", "pet", "games", "notes", "board"]

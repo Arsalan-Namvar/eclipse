@@ -168,6 +168,7 @@
       "Shell · Turn game mode on or off": "SUPER + SHIFT + G",
       "Shell · Open the packages": "SUPER + I",
       "Shell · Open the virtual machines": "SUPER + SHIFT + M",
+      "Shell · Open the development servers": "SUPER + O",
       "Shell · Open the clipboard history": "SUPER + V",
       "Shell · Pick an emoji": "SUPER + period",
       "Shell · Pick a colour off the screen": "SUPER + SHIFT + C",

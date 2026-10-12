@@ -99,6 +99,8 @@ Rectangle {
         // A program asking for root (`PolkitService`).
         auth:       { width: 460,  height: 236 },
         machines:   { width: 860,  height: 580 },
+        // A row per server, from two to six before it scrolls.
+        servers:    { width: ServersService.panelWidth, height: ServersService.panelHeight },
         // A row per creature, plus one for the next egg.
         pet:        { width: 560,  height: 205 + 62 * PetService.family.length },
         // The shelf of cards, or the game being played at its own size.
@@ -178,6 +180,7 @@ Rectangle {
         session: sessionPanel,
         auth: authPanel,
         machines: machinesPanel,
+        servers: serversPanel,
         pet: petPanel,
         games: gamesPanel,
         notes: notesPanel,
@@ -633,6 +636,11 @@ Rectangle {
     Component {
         id: machinesPanel
         MachinesPanel { onClosed: root.close() }
+    }
+
+    Component {
+        id: serversPanel
+        ServersPanel { onClosed: root.close() }
     }
 
     Component {

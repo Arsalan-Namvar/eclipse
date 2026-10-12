@@ -457,6 +457,12 @@ ShellRoot {
         onPressed: root.island?.toggle("machines")
     }
 
+    GlobalShortcut {
+        name: "servers"
+        description: "Open the development servers"
+        onPressed: root.island?.toggle("servers")
+    }
+
     // The clipboard and the emoji are launcher modes: pressed again on that
     // mode it closes, pressed on another mode it switches. The query is set
     // before opening because with `launcherFits` the panel's height depends on
