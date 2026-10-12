@@ -293,6 +293,7 @@ QtObject {
             "Brightness": "Brillo",
             "Network": "Red",
             "Weather": "Tiempo",
+            "Markets": "Mercados",
             "Updates": "Actualizaciones",
             "Pet": "Mascota",
             "Spectrum": "Espectro",
@@ -352,6 +353,13 @@ QtObject {
             "Nobody yet": "Nadie todavía",
             "No such profile — the last grid is still showing":
                 "No existe ese perfil — se sigue mostrando la última cuadrícula",
+
+            "The coins and currencies to follow, separated by commas.":
+                "Las monedas y divisas que sigues, separadas por comas.",
+            "A coin alone is priced in US dollars and BTC/EUR in euros; two currencies, such as EUR/USD, follow the European Central Bank's daily rate. Prices come from CoinGecko and Frankfurter, which see what you follow but need no account. The bar shows the first one.":
+                "Una moneda sola se cotiza en dólares y BTC/EUR en euros; dos divisas, como EUR/USD, siguen el tipo diario del Banco Central Europeo. Los precios vienen de CoinGecko y Frankfurter, que ven lo que sigues pero no piden cuenta. La barra muestra el primero.",
+            "Follow": "Seguir",
+            "Not found:": "No encontrado:",
 
             "A note on the wallpaper is written the same way as one in the panel.":
                 "Una nota en el fondo se escribe igual que una del panel.",

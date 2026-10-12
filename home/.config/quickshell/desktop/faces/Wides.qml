@@ -41,6 +41,7 @@ Item {
         updates: updatesWide,
         weather: weatherWide,
         github: githubWide,
+        markets: marketsWide,
         stats: statsWide,
         claude: claudeWide,
         codex: codexWide,
@@ -1018,5 +1019,41 @@ Item {
         id: spectrumWide
 
         SpectrumFace { ink: root.ink; row: root.row; family: "4x2" }
+    }
+
+    // The first pair in full, and its line.
+    Component {
+        id: marketsWide
+
+        WidgetFace {
+
+            ink: root.ink
+            label: MarketsService.lead ? `${MarketsService.lead.base}/${MarketsService.lead.quote}` : "Markets"
+            note: !MarketsService.lead
+                ? (MarketsService.pairs.length === 0 ? "nothing on the list" : "no prices")
+                : `${MarketsService.change(MarketsService.lead)} · ${MarketsService.lead.period}`
+            noteTint: MarketsService.lead ? MarketsService.tint(MarketsService.lead) : root.ink.muted
+
+            Text {
+                anchors.centerIn: parent
+                text: MarketsService.glyph(MarketsService.lead)
+                font.family: Theme.fontMono
+                font.pixelSize: 34
+                color: root.ink.text
+            }
+            reading: MarketsService.price(MarketsService.lead)
+            extraShare: 0.48
+
+            extra: [
+                Sparkline {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width
+                    height: 64
+                    values: MarketsService.shape(MarketsService.lead)
+                    stroke: MarketsService.tint(MarketsService.lead)
+                    thickness: 2
+                }
+            ]
+        }
     }
 }

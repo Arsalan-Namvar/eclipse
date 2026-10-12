@@ -50,6 +50,7 @@ Singleton {
         { id: "bluetooth",     name: "Bluetooth",     bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(3, 0) },
         { id: "notifications", name: "Notifications", bar: true,  desk: false, width: Theme.cardWidth, height: Theme.cardHeight(7, 0) },
         { id: "weather",       name: "Weather",       bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(0, 50) },
+        { id: "markets",       name: "Markets",       bar: true,  width: Theme.cardWidth, height: MarketsService.cardHeight },
         { id: "github",        name: "GitHub",        bar: false, width: Theme.cardWidth, height: Theme.cardHeight(0, GithubService.cardGrid) },
         { id: "stats",         name: "System",        bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(2, Theme.cardRowGap + 36) },
         { id: "updates",       name: "Updates",       bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(4, 0) },
@@ -137,6 +138,11 @@ Singleton {
                 WeatherService.subscribe()
             else
                 WeatherService.release()
+        } else if (id === "markets") {
+            if (on)
+                MarketsService.subscribe()
+            else
+                MarketsService.release()
         } else if (id === "updates") {
             if (on)
                 UpdatesService.subscribe()
@@ -196,6 +202,8 @@ Singleton {
             return BatteryService.icon
         case "weather":
             return WeatherService.glyph || "󰖐"
+        case "markets":
+            return MarketsService.glyph(MarketsService.lead)
         case "updates":
             return "󰏖"
         case "notifications":
@@ -228,6 +236,9 @@ Singleton {
             return `${BatteryService.percent}%`
         case "weather":
             return WeatherService.available ? `${WeatherService.temperature}°` : "--°"
+        case "markets":
+            return MarketsService.lead
+                ? `${MarketsService.short(MarketsService.lead)} ${MarketsService.change(MarketsService.lead)}` : "—"
         case "updates":
             return `${UpdatesService.count}`
         case "notifications":
@@ -299,6 +310,8 @@ Singleton {
             return ClaudeService.measured ? ClaudeService.tint : Theme.indicator
         case "codex":
             return CodexService.tint
+        case "markets":
+            return MarketsService.tint(MarketsService.lead)
         }
         return Theme.text
     }
@@ -568,6 +581,10 @@ Singleton {
         case "weather":
             // Builds the service, which runs its first fetch.
             return WeatherService.available
+        case "markets":
+            // Builds the service, which runs its first fetch; false with an
+            // empty list.
+            return MarketsService.available
         case "github":
             // False until a name is set and a grid comes back, so nothing
             // shows on an unconfigured machine.

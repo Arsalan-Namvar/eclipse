@@ -23,6 +23,7 @@ singleton NotificationService 1.0 services/NotificationService.qml
 singleton FaceService        1.0 services/FaceService.qml
 singleton LockService        1.0 services/LockService.qml
 singleton WeatherService     1.0 services/WeatherService.qml
+singleton MarketsService     1.0 services/MarketsService.qml
 singleton SessionService     1.0 services/SessionService.qml
 singleton NetworkService     1.0 services/NetworkService.qml
 singleton FontService        1.0 services/FontService.qml
@@ -150,6 +151,7 @@ BrightnessModule 1.0 bar/modules/BrightnessModule.qml
 NetworkModule    1.0 bar/modules/NetworkModule.qml
 BluetoothModule  1.0 bar/modules/BluetoothModule.qml
 WeatherModule    1.0 bar/modules/WeatherModule.qml
+MarketsModule    1.0 bar/modules/MarketsModule.qml
 StatsModule      1.0 bar/modules/StatsModule.qml
 UpdatesModule    1.0 bar/modules/UpdatesModule.qml
 PetModule        1.0 bar/modules/PetModule.qml

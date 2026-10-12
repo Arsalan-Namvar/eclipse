@@ -40,6 +40,7 @@ Item {
         updates: updatesSquare,
         weather: weatherSquare,
         github: githubSquare,
+        markets: marketsSquare,
         stats: statsSquare,
         claude: claudeSquare,
         codex: codexSquare,
@@ -564,6 +565,30 @@ Item {
                 font.pixelSize: 30
                 color: root.ink.text
             }
+        }
+    }
+
+    // The first pair's price, short, and its change.
+    Component {
+        id: marketsSquare
+
+        WidgetFace {
+
+            ink: root.ink
+            label: MarketsService.lead ? `${MarketsService.lead.base}/${MarketsService.lead.quote}` : "Markets"
+            note: !MarketsService.lead
+                ? (MarketsService.pairs.length === 0 ? "nothing on the list" : "no prices")
+                : `${MarketsService.change(MarketsService.lead)} · ${MarketsService.lead.period}`
+            noteTint: MarketsService.lead ? MarketsService.tint(MarketsService.lead) : root.ink.muted
+
+            Text {
+                anchors.centerIn: parent
+                text: MarketsService.glyph(MarketsService.lead)
+                font.family: Theme.fontMono
+                font.pixelSize: 34
+                color: root.ink.text
+            }
+            reading: MarketsService.short(MarketsService.lead)
         }
     }
 }

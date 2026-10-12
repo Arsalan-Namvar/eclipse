@@ -73,6 +73,24 @@ SettingsSection {
             }
         }
 
+        SettingGroup {
+            title: Tr.t("Markets")
+            note: Tr.t("The coins and currencies to follow, separated by commas.")
+            hint: Tr.t("A coin alone is priced in US dollars and BTC/EUR in euros; two currencies, such as EUR/USD, follow the European Central Bank's daily rate. Prices come from CoinGecko and Frankfurter, which see what you follow but need no account. The bar shows the first one.")
+
+            // A symbol neither source knows is dropped from the widget, so
+            // it is named here.
+            SettingField {
+                label: Tr.t("Follow")
+                reading: MarketsService.unknown.length > 0
+                    ? `${Tr.t("Not found:")} ${MarketsService.unknown.join(", ")}` : ""
+                alarm: MarketsService.unknown.length > 0
+                placeholder: "BTC, ETH, EUR/USD"
+                value: SettingsService.markets
+                onEdited: value => SettingsService.set("markets", value.trim())
+            }
+        }
+
         // The tiles draw the pet itself, one in each style, and blink while
         // the pointer is on them.
         SettingGroup {

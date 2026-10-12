@@ -66,6 +66,7 @@ Singleton {
     readonly property alias dockLauncher: config.dockLauncher
     readonly property alias weatherPlace: config.weatherPlace
     readonly property alias githubUser: config.githubUser
+    readonly property alias markets: config.markets
     readonly property alias petStyle: config.petStyle
     readonly property alias launcherResults: config.launcherResults
     readonly property alias launcherOrder: config.launcherOrder
@@ -327,7 +328,7 @@ Singleton {
     // Reset. The recorder and capture entries are last-used state.
     readonly property var machineKeys: [
         "displays", "lidPolicy",
-        "userName", "userAvatar", "language", "keyboard", "weatherPlace", "githubUser",
+        "userName", "userAvatar", "language", "keyboard", "weatherPlace", "githubUser", "markets",
         "emojiTone",
         "doNotDisturb", "nightLight", "nightTemperature", "barHidden", "desktopHidden",
         "gameMode",
@@ -813,6 +814,10 @@ Singleton {
 
         // GitHub user for the contributions widget; empty draws nothing.
         property string githubUser: ""
+
+        // The markets widget's pairs, BASE/QUOTE or a coin alone (in US
+        // dollars), separated by commas.
+        property string markets: "BTC, ETH, EUR/USD"
 
         // One of `PetService.styles`: how the pet is drawn, everywhere it is
         // drawn.
