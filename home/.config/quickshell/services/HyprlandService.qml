@@ -150,6 +150,10 @@ QtObject {
     // address without `0x` and an empty string for no window.
     property string focusedAddress: ""
 
+    // Class of the window with keyboard focus, or "". From `activewindow`,
+    // whose data is `class,title`.
+    property string focusedClass: ""
+
     readonly property Process focusedProcess: Process {
         command: ["hyprctl", "activewindow", "-j"]
         running: true
@@ -158,6 +162,8 @@ QtObject {
                 const window = root.parseJson(text)
                 root.focusedAddress = window && typeof window.address === "string"
                     ? window.address : ""
+                root.focusedClass = window && typeof window.class === "string"
+                    ? window.class : ""
             }
         }
     }
@@ -367,6 +373,9 @@ QtObject {
                 break
             // Focus changes only affect the client list, and only watchers
             // need it; skipping it otherwise saves a process per alt-tab.
+            case "activewindow":
+                root.focusedClass = event.data.split(",")[0]
+                break
             case "activewindowv2":
                 root.focusedAddress = event.data === "" ? "" : `0x${event.data}`
                 if (root.watchClients)

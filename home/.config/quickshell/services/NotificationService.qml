@@ -24,6 +24,9 @@ Singleton {
 
     signal arrived(var notification)
 
+    // Every notification that comes in, shown or not, by the program's name.
+    signal received(string appName)
+
     // For notifications that do not set their own timeout.
     readonly property int defaultTimeout: SettingsService.notificationTimeout
 
@@ -240,6 +243,8 @@ Singleton {
     }
 
     function present(notification: var): void {
+        root.received(notification.appName ?? "")
+
         // A transient notification asks not to be kept.
         if (!notification.transient) {
             root.keep([root.record(notification)]

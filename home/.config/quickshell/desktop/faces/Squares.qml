@@ -40,6 +40,7 @@ Item {
         updates: updatesSquare,
         weather: weatherSquare,
         github: githubSquare,
+        screentime: screenTimeSquare,
         markets: marketsSquare,
         stats: statsSquare,
         claude: claudeSquare,
@@ -589,6 +590,27 @@ Item {
                 color: root.ink.text
             }
             reading: MarketsService.short(MarketsService.lead)
+        }
+    }
+
+    // Today's total, the ring split by group, and the most used under it.
+    Component {
+        id: screenTimeSquare
+
+        WidgetFace {
+            ink: root.ink
+            label: Tr.t("Screen time")
+            reading: ScreenTimeService.duration(ScreenTimeService.todayTotal)
+            note: ScreenTimeService.todayNote
+
+            UsageRing {
+                anchors.fill: parent
+                anchors.margins: 4
+                parts: ScreenTimeService.todayParts
+                thickness: 5
+                accent: root.ink.accent
+                ink: root.ink.text
+            }
         }
     }
 }

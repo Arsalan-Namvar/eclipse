@@ -191,6 +191,23 @@ QtObject {
         "#26292e", "#0e4429", "#006d32", "#26a641", "#39d353"
     ]
 
+    // Ranked groups in a chart, as steps of the accent: one hue, so no two
+    // groups collide whatever the palette. Everything past them is `text` at
+    // `rankRest`.
+    readonly property var rankShades: [1, 0.62, 0.4, 0.24]
+    readonly property real rankRest: 0.14
+
+    function rankColor(rank: int): color {
+        return root.rankColorIn(rank, root.accent, root.text)
+    }
+
+    // The same steps off another accent and text, a widget's `ink`.
+    function rankColorIn(rank: int, accent: color, text: color): color {
+        return rank >= 0 && rank < root.rankShades.length
+            ? Qt.rgba(accent.r, accent.g, accent.b, root.rankShades[rank])
+            : Qt.rgba(text.r, text.g, text.b, root.rankRest)
+    }
+
     readonly property int paletteTransition: 260
 
     Behavior on background   { ColorAnimation { duration: root.paletteTransition } }

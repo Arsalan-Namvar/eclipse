@@ -32,6 +32,7 @@ Item {
         clock: clockBand,
         weather: weatherBand,
         github: githubBand,
+        screentime: screenTimeBand,
         markets: marketsBand,
         notes: notesBand,
         photo: photoBand,
@@ -280,6 +281,54 @@ Item {
                                 color: MarketsService.tint(column.modelData)
                             }
                         }
+                    }
+                }
+            ]
+        }
+    }
+
+    // Today large, its hours, and the sessions in a line under them.
+    Component {
+        id: screenTimeBand
+
+        WidgetFace {
+            ink: root.ink
+            label: Tr.t("Screen time")
+            reading: ScreenTimeService.duration(ScreenTimeService.todayTotal)
+            note: ScreenTimeService.todayNote
+
+            UsageRing {
+                anchors.fill: parent
+                anchors.margins: 4
+                parts: ScreenTimeService.todayParts
+                thickness: 5
+                accent: root.ink.accent
+                ink: root.ink.text
+            }
+            readingSize: Theme.fontSizeDisplay * 0.65
+            extraShare: 0.6
+
+            extra: [
+                Column {
+                    anchors.fill: parent
+                    spacing: 8
+
+                    UsageBars {
+                        width: parent.width
+                        height: parent.height - 18
+                        stacks: ScreenTimeService.todayDigest.stacks
+                        ceiling: 3600
+                        gap: 3
+                        accent: root.ink.accent
+                        ink: root.ink.text
+                    }
+
+                    SessionRibbon {
+                        width: parent.width
+                        height: 10
+                        sessions: ScreenTimeService.todayDigest.sessions
+                        accent: root.ink.accent
+                        ink: root.ink.text
                     }
                 }
             ]

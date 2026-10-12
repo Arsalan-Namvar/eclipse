@@ -312,6 +312,7 @@ bind(mainMod .. " + SHIFT + G", hl.dsp.global("quickshell:game"),       { descri
 bind(mainMod .. " + I",         hl.dsp.global("quickshell:packages"),   { description = "Shell · Open the packages" })
 bind(mainMod .. " + SHIFT + M", hl.dsp.global("quickshell:machines"),   { description = "Shell · Open the virtual machines" })
 bind(mainMod .. " + O",         hl.dsp.global("quickshell:servers"),    { description = "Shell · Open the development servers" })
+bind(mainMod .. " + Y",         hl.dsp.global("quickshell:screentime"), { description = "Shell · Open the screen time" })
 bind(mainMod .. " + SHIFT + W", hl.dsp.global("quickshell:camera"),     { description = "Shell · Open the camera effects" })
 
 -- · clipboard history is a launcher mode

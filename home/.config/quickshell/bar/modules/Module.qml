@@ -39,6 +39,7 @@ Item {
         weather: weatherModule,
         github: githubModule,
         markets: marketsModule,
+        screentime: screenTimeModule,
         stats: statsModule,
         updates: updatesModule,
         pet: petModule,
@@ -72,6 +73,7 @@ Item {
     Component { id: weatherModule;    WeatherModule {} }
     Component { id: githubModule;     GithubModule {} }
     Component { id: marketsModule;    MarketsModule {} }
+    Component { id: screenTimeModule; ScreenTimeModule {} }
     Component { id: statsModule;      StatsModule { compact: root.compact } }
     Component { id: updatesModule;    UpdatesModule {} }
     Component { id: petModule;        PetModule { compact: root.compact } }

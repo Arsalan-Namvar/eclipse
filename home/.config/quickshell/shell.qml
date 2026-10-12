@@ -48,6 +48,8 @@ ShellRoot {
         void ShortcutService.catalogue
         // Reads the user's name and face ahead of the first lock.
         void AccountService.user
+        // Counts the time in each application from the start of the session.
+        void ScreenTimeService.away
         // Registers the polkit agent, so a request is answered from the start.
         void PolkitService.asking
         // Probes for hyprpicker, so the first press is not the one that asks.
@@ -463,6 +465,12 @@ ShellRoot {
         name: "servers"
         description: "Open the development servers"
         onPressed: root.island?.toggle("servers")
+    }
+
+    GlobalShortcut {
+        name: "screentime"
+        description: "Open the screen time"
+        onPressed: root.island?.toggle("screentime")
     }
 
     GlobalShortcut {

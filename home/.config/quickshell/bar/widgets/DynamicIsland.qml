@@ -101,6 +101,7 @@ Rectangle {
         machines:   { width: 860,  height: 580 },
         // A row per server, from two to six before it scrolls.
         servers:    { width: ServersService.panelWidth, height: ServersService.panelHeight },
+        screentime: { width: 940,  height: 614 },
         camera:     { width: CameraService.panelWidth, height: CameraService.panelHeight },
         // A row per creature, plus one for the next egg.
         pet:        { width: 560,  height: 205 + 62 * PetService.family.length },
@@ -182,6 +183,7 @@ Rectangle {
         auth: authPanel,
         machines: machinesPanel,
         servers: serversPanel,
+        screentime: screenTimePanel,
         camera: cameraPanel,
         pet: petPanel,
         games: gamesPanel,
@@ -643,6 +645,11 @@ Rectangle {
     Component {
         id: serversPanel
         ServersPanel { onClosed: root.close() }
+    }
+
+    Component {
+        id: screenTimePanel
+        ScreenTimePanel { onClosed: root.close() }
     }
 
     Component {

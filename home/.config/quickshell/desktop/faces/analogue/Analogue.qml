@@ -30,6 +30,7 @@ Item {
         weather: weatherFace,
         github: githubFace,
         markets: marketsFace,
+        screentime: screenTimeFace,
         battery: batteryFace,
         stats: statsFace,
         claude: claudeFace,
@@ -57,6 +58,7 @@ Item {
     Component { id: weatherFace;    WeatherFace    { family: root.family; ink: root.ink } }
     Component { id: githubFace;     GithubFace     { family: root.family; ink: root.ink } }
     Component { id: marketsFace;    MarketsFace    { family: root.family; ink: root.ink } }
+    Component { id: screenTimeFace; ScreenTimeFace { family: root.family; ink: root.ink } }
     Component { id: batteryFace;    BatteryFace    { family: root.family; ink: root.ink } }
     Component { id: statsFace;      StatsFace      { family: root.family; ink: root.ink } }
     Component { id: claudeFace;     ClaudeFace     { family: root.family; ink: root.ink } }

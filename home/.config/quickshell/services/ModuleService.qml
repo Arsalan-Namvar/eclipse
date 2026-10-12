@@ -51,6 +51,7 @@ Singleton {
         { id: "notifications", name: "Notifications", bar: true,  desk: false, width: Theme.cardWidth, height: Theme.cardHeight(7, 0) },
         { id: "weather",       name: "Weather",       bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(0, 50) },
         { id: "markets",       name: "Markets",       bar: true,  width: Theme.cardWidth, height: MarketsService.cardHeight },
+        { id: "screentime",    name: "Screen time",   bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(4, Theme.cardRowGap + 44) },
         { id: "github",        name: "GitHub",        bar: false, width: Theme.cardWidth, height: Theme.cardHeight(0, GithubService.cardGrid) },
         { id: "stats",         name: "System",        bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(2, Theme.cardRowGap + 36) },
         { id: "updates",       name: "Updates",       bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(4, 0) },
@@ -143,6 +144,11 @@ Singleton {
                 MarketsService.subscribe()
             else
                 MarketsService.release()
+        } else if (id === "screentime") {
+            if (on)
+                ScreenTimeService.follow()
+            else
+                ScreenTimeService.unfollow()
         } else if (id === "updates") {
             if (on)
                 UpdatesService.subscribe()
@@ -204,6 +210,8 @@ Singleton {
             return WeatherService.glyph || "󰖐"
         case "markets":
             return MarketsService.glyph(MarketsService.lead)
+        case "screentime":
+            return "󰔛"
         case "updates":
             return "󰏖"
         case "notifications":
@@ -239,6 +247,8 @@ Singleton {
         case "markets":
             return MarketsService.lead
                 ? `${MarketsService.short(MarketsService.lead)} ${MarketsService.change(MarketsService.lead)}` : "—"
+        case "screentime":
+            return ScreenTimeService.short(ScreenTimeService.todayTotal)
         case "updates":
             return `${UpdatesService.count}`
         case "notifications":
@@ -591,6 +601,9 @@ Singleton {
             return GithubService.available
         case "stats":
             // The sampler runs from boot (shell.qml touches it).
+            return true
+        case "screentime":
+            // Recording from boot; an empty day still reads 0:00.
             return true
         case "updates":
             // False on a machine with neither checkupdates nor pacman.

@@ -67,6 +67,8 @@ Singleton {
           detail: "Updates, what is installed, the AUR",   panel: "packages" },
         { id: "servers",    icon: "󰒋", label: "Servers",
           detail: "The ports your projects listen on",     panel: "servers" },
+        { id: "screentime", icon: "󰔛", label: "Screen time",
+          detail: "Where the day went, app by app",        panel: "screentime" },
         { id: "camera",     icon: "󰄀", label: "Camera",
           detail: "Effects and reactions for your calls",  panel: "camera" }
     ]
