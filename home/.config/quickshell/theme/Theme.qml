@@ -50,6 +50,13 @@ QtObject {
         return style === "glass" ? root.terminalGround : root.island
     }
 
+    // A ground at a fraction of its own opacity: the Background slider's,
+    // which thins the glass the way it thins the black.
+    function groundAt(style: string, fraction: real): color {
+        const ground = root.groundOf(style)
+        return Qt.rgba(ground.r, ground.g, ground.b, ground.a * fraction)
+    }
+
     function rimOf(style: string): color {
         return style === "glass" ? Qt.rgba(1, 1, 1, 0.20) : "#262626"
     }
@@ -57,15 +64,14 @@ QtObject {
     readonly property color islandSurfaceHover: "#1f1f1f"
     readonly property color islandBorder: "#262626"
 
-    // The desk's widgets have a ground of their own, or the bar's
-    // (`SettingsService.desktopGround`, empty to follow).
+    // The desk's widgets have a ground of their own
+    // (`SettingsService.desktopGround`; empty, from an old file, follows).
     readonly property string deskStyle: SettingsService.desktopGround || root.surfaceStyle
     readonly property bool deskSolid: root.deskStyle !== "glass"
     readonly property bool deskGlass: root.deskStyle === "glass"
 
     // The dock's, the same way (`SettingsService.dockGround`).
     readonly property string dockStyle: SettingsService.dockGround || root.surfaceStyle
-    readonly property bool dockSolid: root.dockStyle !== "glass"
     readonly property bool dockGlass: root.dockStyle === "glass"
 
     // The same three on glass: white veils, by style. Only the bar's and the

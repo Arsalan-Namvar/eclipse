@@ -17,9 +17,10 @@ import "../components"
 import "../desktop"
 
 // Two parts: settings that belong to the modules themselves (read by the bar
-// chip as well as the widget), and the theme, style and opacity every desktop
-// widget follows unless it has its own. Widgets are placed, resized and
-// styled on the desktop itself; this page only enters that mode.
+// chip as well as the widget), and the face and opacity every desktop widget
+// follows unless it has its own; the ground is Appearance's. Widgets are
+// placed, resized and styled on the desktop itself; this page only enters
+// that mode.
 SettingsSection {
     id: root
 
@@ -222,7 +223,7 @@ SettingsSection {
         SettingGroup {
             title: Tr.t("Look")
             note: Tr.t("Every widget follows these unless it was given a look of its own.")
-            hint: Tr.t("While arranging, click a widget to override these for it alone. Modern shows a figure with a caption, Analogue draws an object such as a dial or a gauge, and Sticker cuts it out as coloured stickers on the wallpaper; the style and background set what sits behind the first two.")
+            hint: Tr.t("While arranging, click a widget to override these for it alone. Modern shows a figure with a caption, Analogue draws an object such as a dial or a gauge, and Sticker cuts it out as coloured stickers on the wallpaper; the background sets how opaque the first two are, on the ground chosen in Appearance beside the bar's and the dock's.")
 
             SettingTiles {
                 label: Tr.t("Face")
@@ -249,40 +250,6 @@ SettingsSection {
                 }
             }
 
-            // The widgets' own ground, or the bar's.
-            SettingTiles {
-                label: Tr.t("Ground")
-                reading: SettingsService.desktopGround === "" ? Tr.t("As the bar")
-                    : Theme.deskGlass ? Tr.t("The terminal's glass, over a blur") : Tr.t("Solid black")
-                locked: !DesktopService.capsuled
-                reason: Tr.t("No widget on the desk has a capsule")
-
-                Repeater {
-                    model: [
-                        { id: "", label: "As the bar" },
-                        { id: "classic", label: "Classic" },
-                        { id: "glass", label: "Glass" }
-                    ]
-
-                    PreviewTile {
-                        id: deskTile
-
-                        required property var modelData
-
-                        stageHeight: 56
-                        caption: Tr.t(deskTile.modelData.label)
-                        selected: SettingsService.desktopGround === deskTile.modelData.id
-                        onPicked: SettingsService.set("desktopGround", deskTile.modelData.id)
-
-                        GroundSwatch {
-                            anchors.centerIn: parent
-                            style: deskTile.modelData.id === "" ? SettingsService.surfaceStyle
-                                : deskTile.modelData.id
-                        }
-                    }
-                }
-            }
-
             SettingSlider {
                 label: Tr.t("Background")
                 value: SettingsService.desktopOpacity
@@ -290,10 +257,6 @@ SettingsSection {
                 to: 100
                 stepSize: 5
                 unit: "%"
-                // A see-through ground sets it: the capsules are the island's glass.
-                locked: !DesktopService.capsuled || !Theme.deskSolid
-                reason: !DesktopService.capsuled ? Tr.t("No widget on the desk has a capsule")
-                    : Tr.t("Choose the Classic ground above to change it")
                 onMoved: value => SettingsService.set("desktopOpacity", Math.round(value))
             }
         }

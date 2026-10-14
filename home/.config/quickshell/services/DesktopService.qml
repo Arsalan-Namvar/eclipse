@@ -1258,9 +1258,8 @@ Singleton {
     // ── APPEARANCE ──────────────────────────────────────────────────────────
     //
     // Opacity, like theme, defaults to the desktop setting unless the row
-    // overrides it; it is the solid ground's (`Theme.deskSolid`), since on glass a
-    // capsule is the island's material. Colours always come from the active
-    // palette.
+    // overrides it, and thins either ground. Colours always come from the
+    // active palette.
 
     // Notes draw their own paper, photos are their picture, the spectrum is
     // its bars and a sticker is cut out of nothing: no capsule.
@@ -1268,10 +1267,6 @@ Singleton {
         return !!widget && (widget.id === "notes" || widget.id === "photo" || widget.id === "spectrum"
             || root.themeOf(widget) === "sticker")
     }
-
-    // Whether any widget on the desk draws a capsule, and so has a use for
-    // the ground and the opacity.
-    readonly property bool capsuled: root.widgets.some(widget => !root.bare(widget))
 
     function opacityOf(widget: var): int {
         const own = widget ? widget.opacity : undefined

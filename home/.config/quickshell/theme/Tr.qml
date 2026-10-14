@@ -412,8 +412,8 @@ QtObject {
             "Look": "Aspecto",
             "Every widget follows these unless it was given a look of its own.":
                 "Todos los widgets siguen esto salvo que se les haya dado un aspecto propio.",
-            "While arranging, click a widget to override these for it alone. Modern shows a figure with a caption, Analogue draws an object such as a dial or a gauge, and Sticker cuts it out as coloured stickers on the wallpaper; the style and background set what sits behind the first two.":
-                "Mientras colocas, haz clic en un widget para cambiar esto solo para él. Modern muestra una cifra con un pie, Analógico dibuja un objeto, como una esfera o un indicador, y Pegatina lo recorta en pegatinas de colores sobre el fondo; el estilo y el fondo fijan lo que llevan detrás los dos primeros.",
+            "While arranging, click a widget to override these for it alone. Modern shows a figure with a caption, Analogue draws an object such as a dial or a gauge, and Sticker cuts it out as coloured stickers on the wallpaper; the background sets how opaque the first two are, on the ground chosen in Appearance beside the bar's and the dock's.":
+                "Mientras colocas, haz clic en un widget para cambiar esto solo para él. Modern muestra una cifra con un pie, Analógico dibuja un objeto, como una esfera o un indicador, y Pegatina lo recorta en pegatinas de colores sobre el fondo; el fondo fija lo opacos que son los dos primeros, sobre el material que se elige en Apariencia junto al de la barra y el del dock.",
 
             "Modern": "Modern",
             "Analogue": "Analógico",
@@ -624,10 +624,10 @@ QtObject {
             "Show the dock": "Mostrar el dock",
             "Edge": "Borde",
             "Alignment": "Alineación",
-            "Background sets how opaque the classic capsule is; lower it to let the blurred wallpaper through.":
-                "Fondo fija la opacidad de la cápsula clásica; bájalo para que se vea el fondo desenfocado.",
-            "The capsule's ground, and the icon size everything on the dock scales with.":
-                "El fondo de la cápsula, y el tamaño de icono con el que escala todo el dock.",
+            "Background sets how opaque the capsule is, classic or glass; lower it to let the blurred wallpaper through. The ground itself is chosen in Appearance, beside the bar's and the widgets'.":
+                "Fondo fija la opacidad de la cápsula, clásica o de cristal; bájalo para que se vea el fondo desenfocado. El material se elige en Apariencia, junto al de la barra y el de los widgets.",
+            "The icon size everything on the dock scales with, and how opaque it is.":
+                "El tamaño de icono con el que escala todo el dock, y lo opaco que es.",
             "Icon size": "Tamaño de icono",
             "Behaviour": "Comportamiento",
             "What else the dock shows, and which screens it is on.":
@@ -766,6 +766,9 @@ QtObject {
             "Blur shows behind anything translucent, such as the terminal. Glass (a Hyprland plugin, tuned in look.lua) frosts and refracts what is behind a window.":
                 "El desenfoque se ve tras todo lo translúcido, como el terminal. El cristal (un plugin de Hyprland, ajustado en look.lua) esmerila y refracta lo que hay detrás de una ventana.",
             "What is lifted off the wallpaper.": "Lo que se despega del fondo.",
+            "What the bar, the dock and the widgets are made of.": "De qué están hechos la barra, el dock y los widgets.",
+            "Classic is solid black and Glass the terminal's tinted ground over a blur of the wallpaper. How opaque either is, is set on the dock's and the widgets' own pages.":
+                "Clásico es negro sólido y Cristal el fondo teñido de la terminal sobre el fondo de pantalla desenfocado. Lo opaco que es cada uno se ajusta en las páginas del dock y de los widgets.",
             "Bar and dock": "Barra y dock",
             "Desktop widgets": "Widgets del escritorio",
             "size": "tamaño",

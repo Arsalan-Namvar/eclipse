@@ -247,7 +247,7 @@ Item {
                 radius: Theme.desktopRadius
                 color: Theme.deskSolid
                     ? Qt.rgba(root.ink.ground.r, root.ink.ground.g, root.ink.ground.b, root.solidity)
-                    : Theme.groundOf(Theme.deskStyle)
+                    : Theme.groundAt(Theme.deskStyle, root.solidity)
                 border.color: Theme.deskSolid ? root.rim : Theme.rimOf(Theme.deskStyle)
                 border.width: 1
 

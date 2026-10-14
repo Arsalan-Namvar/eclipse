@@ -102,34 +102,6 @@ SettingsSection {
                 }
             }
 
-            SettingTiles {
-                label: Tr.t("Ground")
-                reading: Tr.t(Theme.glass ? "The terminal's glass, over a blur" : "Solid black")
-
-                Repeater {
-                    model: [
-                        { id: "classic", label: "Classic" },
-                        { id: "glass", label: "Glass" }
-                    ]
-
-                    PreviewTile {
-                        id: groundTile
-
-                        required property var modelData
-
-                        stageHeight: 56
-                        caption: Tr.t(groundTile.modelData.label)
-                        selected: (Theme.solid ? "classic" : SettingsService.surfaceStyle) === groundTile.modelData.id
-                        onPicked: SettingsService.set("surfaceStyle", groundTile.modelData.id)
-
-                        GroundSwatch {
-                            anchors.centerIn: parent
-                            style: groundTile.modelData.id
-                        }
-                    }
-                }
-            }
-
             // Locked in one capsule, where the sides sit on its band.
             SettingRow {
                 label: Tr.t("Sides")

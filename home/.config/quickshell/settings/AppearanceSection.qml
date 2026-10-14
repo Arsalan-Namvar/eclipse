@@ -389,12 +389,49 @@ SettingsSection {
 
     // ── DEPTH ───────────────────────────────────────────────────────────────
     //
-    // How the shell sits on the wallpaper: a shadow under each layer.
+    // How the shell sits on the wallpaper: what each layer is made of, and a
+    // shadow under it.
 
     ColumnLayout {
         Layout.fillWidth: true
         spacing: root.spacing
         visible: root.tab === "depth"
+
+        // One ground per layer, each chosen on its own.
+        SettingGroup {
+            title: Tr.t("Ground")
+            note: Tr.t("What the bar, the dock and the widgets are made of.")
+            hint: Tr.t("Classic is solid black and Glass the terminal's tinted ground over a blur of the wallpaper. How opaque either is, is set on the dock's and the widgets' own pages.")
+
+            Repeater {
+                model: [
+                    { key: "surfaceStyle", label: "Bar and island" },
+                    { key: "dockGround", label: "Dock" },
+                    { key: "desktopGround", label: "Desktop widgets" }
+                ]
+
+                SettingRow {
+                    id: groundRow
+
+                    required property var modelData
+                    readonly property string value:
+                        SettingsService[groundRow.modelData.key] === "glass" ? "glass" : "classic"
+
+                    label: Tr.t(groundRow.modelData.label)
+                    reading: groundRow.value === "glass"
+                        ? Tr.t("The terminal's glass, over a blur") : Tr.t("Solid black")
+
+                    SegmentedControl {
+                        options: [
+                            { id: "classic", label: Tr.t("Classic") },
+                            { id: "glass", label: Tr.t("Glass") }
+                        ]
+                        current: groundRow.value
+                        onSelected: id => SettingsService.set(groundRow.modelData.key, id)
+                    }
+                }
+            }
+        }
 
         // One shadow per layer, side by side: the windows are Hyprland's, the
         // bar, the dock and the widgets the shell's own.

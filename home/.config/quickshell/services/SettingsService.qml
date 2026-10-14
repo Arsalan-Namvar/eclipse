@@ -458,10 +458,14 @@ Singleton {
         onLoaded: {
             root.arrived = true
             root.welcomeActivities()
-            // A ground named "frosted" is read as glass.
+            // A ground named "frosted" is read as glass, and an empty one,
+            // which followed the bar's, takes the bar's.
             for (const key of ["surfaceStyle", "desktopGround", "dockGround"])
                 if (config[key] === "frosted")
                     config[key] = "glass"
+            for (const key of ["desktopGround", "dockGround"])
+                if (config[key] === "")
+                    config[key] = config.surfaceStyle
         }
         // First run: write the defaults, which then count as read.
         onLoadFailed: error => {
@@ -534,8 +538,8 @@ Singleton {
         // (`Theme.islandGround`).
         property string surfaceStyle: "classic"
 
-        // The desktop widgets' ground, as above, or "" for the bar's.
-        property string desktopGround: ""
+        // The desktop widgets' ground, as above.
+        property string desktopGround: "classic"
 
         // The bar's sides: "capsule", each group in a capsule, or "bare",
         // the icons on the wallpaper. The one-capsule style has its band.
@@ -809,8 +813,8 @@ Singleton {
         // Percent; the compositor blurs behind the layer.
         property int dockOpacity: 100
 
-        // The capsule's ground, as `surfaceStyle`, or "" for the bar's.
-        property string dockGround: ""
+        // The capsule's ground, as `surfaceStyle`.
+        property string dockGround: "classic"
 
         // Also show running applications that aren't pinned.
         property bool dockRunning: true

@@ -117,7 +117,6 @@ TabStrip         1.0 components/TabStrip.qml
 LidPreview       1.0 components/LidPreview.qml
 MotionPreview    1.0 components/MotionPreview.qml
 IslandMotionPreview 1.0 components/IslandMotionPreview.qml
-GroundSwatch     1.0 components/GroundSwatch.qml
 EditTray         1.0 components/EditTray.qml
 Sticky           1.0 components/Sticky.qml
 PopMenu          1.0 components/PopMenu.qml

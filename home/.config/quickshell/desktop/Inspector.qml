@@ -972,10 +972,8 @@ Item {
 
             // ── OPACITY ─────────────────────────────────────────────────────
             //
-            // Solid ground only: on glass the capsule is the island's.
-
             Item {
-                visible: root.styled && Theme.deskSolid && !DesktopService.bare(root.row)
+                visible: root.styled && !DesktopService.bare(root.row)
                 width: parent.width
                 height: 40
 
