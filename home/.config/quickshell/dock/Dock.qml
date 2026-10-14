@@ -238,6 +238,7 @@ PanelWindow {
 
             GlassSheen {
                 shape: ground
+                style: Theme.dockStyle
                 visible: Theme.dockGlass
             }
         }
@@ -455,6 +456,7 @@ PanelWindow {
 
             GlassSheen {
                 shape: plate
+                style: Theme.dockStyle
                 visible: Theme.dockGlass
             }
 

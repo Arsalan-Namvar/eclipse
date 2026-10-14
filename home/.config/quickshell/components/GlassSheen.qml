@@ -22,9 +22,11 @@ Item {
     // Off where the ground runs on past its own rectangle (the attached
     // notch), whose edge follows the fillets instead (`NotchOutline`).
     property bool edges: true
+    // Whose glass: the bar's unless the dock or the desk hands in its own.
+    property string style: Theme.surfaceStyle
 
     anchors.fill: parent
-    visible: Theme.glass
+    visible: Theme.seeThrough(root.style)
 
     component Band: Rectangle {
         required property int inset
@@ -34,7 +36,7 @@ Item {
         anchors.margins: inset
         color: "transparent"
         border.width: 1
-        border.color: Qt.rgba(1, 1, 1, Theme.glassEdge * strength)
+        border.color: Qt.rgba(1, 1, 1, Theme.edgeOf(root.style) * strength)
         radius: Math.max(0, root.shape.radius - inset)
         topLeftRadius: Math.max(0, root.shape.topLeftRadius - inset)
         topRightRadius: Math.max(0, root.shape.topRightRadius - inset)
@@ -54,10 +56,10 @@ Item {
         readonly property real span: Theme.glassSheenDepth / Math.max(1, height)
 
         gradient: Gradient {
-            GradientStop { position: 0; color: Theme.glassSheen }
+            GradientStop { position: 0; color: Theme.sheenOf(root.style) }
             GradientStop {
                 position: Math.min(1, sheen.span)
-                color: Qt.rgba(1, 1, 1, Theme.glassSheen.a * Math.max(0, 1 - 1 / sheen.span))
+                color: Qt.rgba(1, 1, 1, Theme.sheenOf(root.style).a * Math.max(0, 1 - 1 / sheen.span))
             }
         }
     }

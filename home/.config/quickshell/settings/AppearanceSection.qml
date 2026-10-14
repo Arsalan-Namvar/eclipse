@@ -401,7 +401,7 @@ SettingsSection {
         SettingGroup {
             title: Tr.t("Ground")
             note: Tr.t("What the bar, the dock and the widgets are made of.")
-            hint: Tr.t("Classic is solid black and Glass the terminal's tinted ground over a blur of the wallpaper. How opaque either is, is set on the dock's and the widgets' own pages.")
+            hint: Tr.t("Classic is solid black, Glass the terminal's tinted ground over a blur of the wallpaper, and Liquid a clear frosted pane that lets the wallpaper's own colours through. How opaque each is, is set on the dock's and the widgets' own pages.")
 
             Repeater {
                 model: [
@@ -414,17 +414,19 @@ SettingsSection {
                     id: groundRow
 
                     required property var modelData
-                    readonly property string value:
-                        SettingsService[groundRow.modelData.key] === "glass" ? "glass" : "classic"
+                    readonly property string value: Theme.seeThrough(SettingsService[groundRow.modelData.key])
+                        ? SettingsService[groundRow.modelData.key] : "classic"
 
                     label: Tr.t(groundRow.modelData.label)
-                    reading: groundRow.value === "glass"
-                        ? Tr.t("The terminal's glass, over a blur") : Tr.t("Solid black")
+                    reading: groundRow.value === "liquid" ? Tr.t("Clear frosted glass, lit at the edge")
+                        : groundRow.value === "glass" ? Tr.t("The terminal's glass, over a blur")
+                        : Tr.t("Solid black")
 
                     SegmentedControl {
                         options: [
                             { id: "classic", label: Tr.t("Classic") },
-                            { id: "glass", label: Tr.t("Glass") }
+                            { id: "glass", label: Tr.t("Glass") },
+                            { id: "liquid", label: Tr.t("Liquid") }
                         ]
                         current: groundRow.value
                         onSelected: id => SettingsService.set(groundRow.modelData.key, id)

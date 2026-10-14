@@ -29,12 +29,18 @@ QtObject {
     // themed surface. What changes is how much of it there is
     // (`SettingsService.surfaceStyle`): solid, or glass — the terminal's own
     // ground, the accent scaled towards black at kitty's opacity, over the
-    // compositor's blur, with a lit edge. `island` stays opaque for what is
+    // compositor's blur, with a lit edge — or liquid, a clear pane of light
+    // frosted over the blur, lit harder. `island` stays opaque for what is
     // cut out of it; the island, the capsules and the toasts are painted in
     // `islandGround`, and what sits on them in white washes.
     readonly property string surfaceStyle: SettingsService.surfaceStyle
-    readonly property bool solid: root.surfaceStyle !== "glass"
-    readonly property bool glass: root.surfaceStyle === "glass"
+    readonly property bool solid: !root.seeThrough(root.surfaceStyle)
+    readonly property bool glass: root.seeThrough(root.surfaceStyle)
+
+    // Both glasses let the screen through; only classic does not.
+    function seeThrough(style: string): bool {
+        return style === "glass" || style === "liquid"
+    }
 
     readonly property color island: "#000000"
     readonly property color islandGround: root.groundOf(root.surfaceStyle)
@@ -45,9 +51,14 @@ QtObject {
     readonly property color terminalGround: Qt.rgba(root.accent.r * root.terminalTint,
         root.accent.g * root.terminalTint, root.accent.b * root.terminalTint, root.terminalOpacity)
 
+    // The liquid ground: a light, cool frost rather than the accent's tint,
+    // so the blurred wallpaper reads through it in its own colours.
+    readonly property color liquidGround: Qt.rgba(0.06, 0.07, 0.09, 0.50)
+
     // Any style's ground and rim, for a picture of one that is not chosen.
     function groundOf(style: string): color {
-        return style === "glass" ? root.terminalGround : root.island
+        return style === "liquid" ? root.liquidGround
+            : style === "glass" ? root.terminalGround : root.island
     }
 
     // A ground at a fraction of its own opacity: the Background slider's,
@@ -58,7 +69,8 @@ QtObject {
     }
 
     function rimOf(style: string): color {
-        return style === "glass" ? Qt.rgba(1, 1, 1, 0.20) : "#262626"
+        return style === "liquid" ? Qt.rgba(1, 1, 1, 0.34)
+            : style === "glass" ? Qt.rgba(1, 1, 1, 0.20) : "#262626"
     }
     readonly property color islandSurface: "#141414"
     readonly property color islandSurfaceHover: "#1f1f1f"
@@ -67,12 +79,12 @@ QtObject {
     // The desk's widgets have a ground of their own
     // (`SettingsService.desktopGround`; empty, from an old file, follows).
     readonly property string deskStyle: SettingsService.desktopGround || root.surfaceStyle
-    readonly property bool deskSolid: root.deskStyle !== "glass"
-    readonly property bool deskGlass: root.deskStyle === "glass"
+    readonly property bool deskSolid: !root.seeThrough(root.deskStyle)
+    readonly property bool deskGlass: root.seeThrough(root.deskStyle)
 
     // The dock's, the same way (`SettingsService.dockGround`).
     readonly property string dockStyle: SettingsService.dockGround || root.surfaceStyle
-    readonly property bool dockGlass: root.dockStyle === "glass"
+    readonly property bool dockGlass: root.seeThrough(root.dockStyle)
 
     // The same three on glass: white veils, by style. Only the bar's and the
     // desk's windows are glass, each in its own style (a `glassy` window
@@ -80,15 +92,18 @@ QtObject {
     // everything else — the settings, the lock — stays black, so a part
     // drawn in both asks by its window (`surfaceIn`).
     function veilOf(style: string): color {
-        return style === "glass" ? Qt.rgba(1, 1, 1, 0.08) : root.islandSurface
+        return style === "liquid" ? Qt.rgba(1, 1, 1, 0.07)
+            : style === "glass" ? Qt.rgba(1, 1, 1, 0.08) : root.islandSurface
     }
 
     function veilHoverOf(style: string): color {
-        return style === "glass" ? Qt.rgba(1, 1, 1, 0.14) : root.islandSurfaceHover
+        return style === "liquid" ? Qt.rgba(1, 1, 1, 0.13)
+            : style === "glass" ? Qt.rgba(1, 1, 1, 0.14) : root.islandSurfaceHover
     }
 
     function veilLineOf(style: string): color {
-        return style === "glass" ? Qt.rgba(1, 1, 1, 0.12) : root.islandBorder
+        return style === "liquid" ? Qt.rgba(1, 1, 1, 0.18)
+            : style === "glass" ? Qt.rgba(1, 1, 1, 0.12) : root.islandBorder
     }
 
     function styleIn(window: var): string {
@@ -121,6 +136,15 @@ QtObject {
     // rim, and falling from the top edge.
     readonly property real glassEdge: 0.12
     readonly property color glassSheen: Qt.rgba(1, 1, 1, 0.10)
+
+    // The same, by style: liquid catches twice the light.
+    function edgeOf(style: string): real {
+        return style === "liquid" ? 0.28 : root.glassEdge
+    }
+
+    function sheenOf(style: string): color {
+        return style === "liquid" ? Qt.rgba(1, 1, 1, 0.20) : root.glassSheen
+    }
     // How far down a shape that light reaches, in pixels, so a short pane and
     // a tall one are lit alike; a shape shorter than this keeps some at its
     // foot.

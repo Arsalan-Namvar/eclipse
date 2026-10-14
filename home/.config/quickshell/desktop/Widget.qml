@@ -256,6 +256,7 @@ Item {
 
             GlassSheen {
                 shape: capsule
+                style: Theme.deskStyle
                 visible: Theme.deskGlass && !root.onPicture
             }
 

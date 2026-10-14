@@ -533,9 +533,9 @@ Singleton {
         // `CompositorService` pushes it at login and after every reload.
         property bool windowGlass: false
 
-        // The island's and the bar's ground: "classic" solid black, or
-        // "glass", the terminal's ground over the compositor's blur
-        // (`Theme.islandGround`).
+        // The island's and the bar's ground: "classic" solid black,
+        // "glass", the terminal's ground over the compositor's blur, or
+        // "liquid", a clear frost over it (`Theme.islandGround`).
         property string surfaceStyle: "classic"
 
         // The desktop widgets' ground, as above.

@@ -88,6 +88,7 @@ Item {
 
         GlassSheen {
             shape: ground
+            style: Theme.dockStyle
             visible: Theme.dockGlass
         }
     }
