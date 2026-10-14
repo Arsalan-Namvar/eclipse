@@ -92,11 +92,15 @@ PanelWindow {
     readonly property bool holding: island.expanded
 
     // Maximum panel width. Spread, the sides stay put, so a panel gets the room
-    // between them; otherwise the sides move aside and it gets the whole bar.
-    readonly property int panelRoom: root.spread
-        ? root.width - 2 * (root.edgeMargin
-            + Math.max(leftZone.width, rightZone.width) + Theme.capsuleSpacing)
-        : root.width - 2 * root.edgeMargin
+    // between them, unless it is wider than that: then they hide as grouped
+    // sides do and it gets the whole bar, like everywhere else. A narrow
+    // screen with a full bar would otherwise cut a panel's columns off.
+    readonly property int roomBetween: root.width - 2 * (root.edgeMargin
+        + Math.max(leftZone.width, rightZone.width) + Theme.capsuleSpacing)
+    readonly property bool crowded: root.spread && island.expanded
+        && island.panelSize.width > root.roomBetween
+    readonly property int panelRoom: root.spread && !root.crowded
+        ? root.roomBetween : root.width - 2 * root.edgeMargin
 
     // Computed rather than read from `island.x`, which comes from an anchor
     // resolved during layout and would lag a frame behind the width.
@@ -184,10 +188,12 @@ PanelWindow {
     readonly property int collapsedHeight: Theme.barBand
 
     // Grouped, the sides make room for a module detail but hide for a panel.
-    // In one capsule they hide whenever the island takes the band.
+    // In one capsule they hide whenever the island takes the band, and spread
+    // only for a panel too wide to fit between them.
     readonly property bool sidesAway: root.unified
         ? root.islandTaken
-        : island.expanded && root.grouped && island.state.openPanel !== "module"
+        : root.crowded
+            || island.expanded && root.grouped && island.state.openPanel !== "module"
 
     anchors {
         top: true

@@ -131,7 +131,8 @@ Rectangle {
     readonly property var panelSize:
         root.panelSizes[islandState.openPanel] ?? root.panelSizes.controls
 
-    // Only the overview is ever wide enough to hit the limit.
+    // The bar's limit: the whole bar, or a spread bar's room between its
+    // sides, which hide instead for a panel wider than that (`Bar.crowded`).
     readonly property int panelWidth: Math.min(root.panelSize.width, root.roomForPanel)
     readonly property int panelHeight: root.panelSize.height
 
