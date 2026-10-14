@@ -178,6 +178,8 @@ Usage: ./setup <command> [options]
               infrared camera: installs howdy-next and enrols you
   camera      effects and gesture reactions on the webcam, for any call:
               installs the virtual camera and the face and hand models
+  splash      the boot splash: chooses the theme, adds splash to the kernel
+              command line and rebuilds the initramfs (asks for a password)
 
   files       the installed files you have edited or deleted, and each one
               put back: files [list | restore | reset | keep] [path…], paths
@@ -1009,6 +1011,16 @@ verb_uninstall() {
     if [[ -f /etc/modprobe.d/impasto-camera.conf || -f /etc/modules-load.d/impasto-camera.conf ]]; then
         act sudo rm -f /etc/modprobe.d/impasto-camera.conf /etc/modules-load.d/impasto-camera.conf
     fi
+    # The boot splash: its files went with system/, but the theme stays chosen
+    # and the initramfs and grub.cfg already built still carry it.
+    if command -v plymouth-set-default-theme >/dev/null && [[ $(plymouth-set-default-theme) == impasto ]]; then
+        act sudo plymouth-set-default-theme --reset
+        act sudo mkinitcpio -P >/dev/null || say 'the initramfs did not rebuild: sudo mkinitcpio -P'
+        if [[ -f /boot/grub/grub.cfg ]] && command -v grub-mkconfig >/dev/null; then
+            act sudo grub-mkconfig -o /boot/grub/grub.cfg >/dev/null 2>&1
+        fi
+        say 'removed  the boot splash · other boot loaders keep the splash argument, which does nothing now'
+    fi
     # So an install after this one sets the extras up again.
     act rm -rf "$APPLIED" "$PLUGINS_PENDING"
     if (( KEPT )); then say "not put back, the path is taken: $KEPT, kept in $STATE/backups"; fi
@@ -1018,7 +1030,8 @@ verb_uninstall() {
 # ── EXTRAS ──────────────────────────────────────────────────────────────────
 #
 # What a copied file cannot hold: what opens which file, dark GTK, the cursor,
-# Thunar, VSCodium, Vesktop, Spotify, face unlock and the camera effects.
+# Thunar, VSCodium, Vesktop, Spotify, face unlock, the camera effects and the
+# boot splash.
 # `install` sets each up once per machine, and one that cannot run yet is
 # skipped with the reason and tried again by the next install or update.
 # After that only its own verb runs it, so a setting changed in one of those
@@ -1052,6 +1065,7 @@ extras() {
     applied vesktop || soft vesktop verb_vesktop
     applied face || soft face verb_face
     applied camera || soft camera verb_camera
+    applied splash || soft splash verb_splash
     if ! applied spotify || [[ -f /opt/spotify/Apps/xpui.spa ]]; then soft spotify verb_spotify; fi
 }
 
@@ -1358,6 +1372,64 @@ verb_camera() {
     say 'ok · SUPER + SHIFT + W, and pick "impasto camera" in any call'
 }
 
+# Adds `splash` to a file of kernel command lines, on the lines that $2
+# matches, where it is not there yet. Says whether anything changed.
+splash_argument() {
+    local file=$1 lines=$2
+    sudo test -f "$file" || return 1
+    sudo grep -qE "$lines" "$file" || return 1
+    if sudo grep -E "$lines" "$file" | grep -qvE '(^|[[:space:]:=])splash([[:space:]]|$)'; then
+        act sudo sed -i -E "/$lines/{/(^|[[:space:]:=])splash([[:space:]]|$)/!s/[[:space:]]*\$/ splash/}" "$file" \
+            || return 1
+        say "splash   added to $file"
+    fi
+    return 0
+}
+
+# The boot splash: the theme and the initramfs drop-in are in system/, and
+# GRUB's `splash` is too; this names the theme, gives every other boot loader
+# the argument, and rebuilds the initramfs, which takes a minute.
+verb_splash() {
+    section 'boot splash'
+    [[ -z $ROOT ]] || refuse 'the boot splash is set up on the machine itself, not in a chroot' || return
+    command -v plymouth-set-default-theme >/dev/null || refuse 'plymouth is not installed (package: plymouth)' || return
+    command -v mkinitcpio >/dev/null || refuse 'the initramfs is not built by mkinitcpio' || return
+    [[ -f /usr/share/plymouth/themes/impasto/impasto.plymouth && -f /etc/mkinitcpio.conf.d/impasto.conf ]] \
+        || refuse 'the theme is not installed (./setup system)' || return
+    if (( DRY )); then
+        say 'would choose the theme, add splash to the kernel command line and rebuild the initramfs'
+        return 0
+    fi
+    sudo -v
+    if [[ $(plymouth-set-default-theme) != impasto ]]; then
+        act sudo plymouth-set-default-theme impasto || refuse 'the theme could not be chosen' || return
+    fi
+    say 'theme    impasto'
+    local loader= esp entry
+    if [[ -f /etc/default/grub ]] && command -v grub-mkconfig >/dev/null; then
+        loader=grub
+    fi
+    if esp=$(sudo bootctl --print-esp-path 2>/dev/null) && sudo test -d "$esp/loader/entries"; then
+        for entry in $(sudo find "$esp/loader/entries" -maxdepth 1 -name '*.conf'); do
+            splash_argument "$entry" '^options' && loader=${loader:-systemd-boot}
+        done
+    fi
+    splash_argument /etc/kernel/cmdline '.' && loader=${loader:-uki}
+    for entry in /boot/limine.conf /boot/limine/limine.conf ${esp:+"$esp/limine.conf"} \
+            ${esp:+"$esp/EFI/limine/limine.conf"}; do
+        splash_argument "$entry" '^[[:space:]]*(kernel_)?cmdline:' && loader=${loader:-limine}
+    done
+    [[ -n $loader ]] || refuse 'no boot loader found to give the splash argument to' || return
+    act sudo mkinitcpio -P >/dev/null || refuse 'the initramfs did not rebuild' || return
+    say 'rebuilt  the initramfs, with plymouth'
+    if [[ $loader == grub ]]; then
+        act sudo grub-mkconfig -o /boot/grub/grub.cfg >/dev/null 2>&1 || refuse 'grub-mkconfig failed' || return
+        say 'rebuilt  /boot/grub/grub.cfg'
+    fi
+    stamp splash
+    say 'ok · from the next boot'
+}
+
 
 # ── CHECKS ──────────────────────────────────────────────────────────────────
 
@@ -1548,7 +1620,7 @@ parts() {
                 packages) note="$pacman from the repositories, $aur from the AUR" ;;
                 system)   note='sddm, unless this machine already has one' ;;
                 plugins)  note='shake to find · glass on the windows' ;;
-                extras)   note='Thunar, VSCodium, Vesktop, Spotify, GTK, your face, the camera' ;;
+                extras)   note='Thunar, VSCodium, Vesktop, Spotify, GTK, your face, the camera, the boot splash' ;;
             esac
             if (( on[i] )); then box="$ACCENT◉$OFF"; else box="$FAINT○$OFF"; fi
             if (( i == at )); then
@@ -1678,6 +1750,7 @@ main() {
         vesktop)   verb_vesktop ;;
         face)      verb_face ;;
         camera)    verb_camera ;;
+        splash)    verb_splash ;;
         files)     verb_files ;;
         check)     verb_check ;;
         help|-h|--help) usage ;;

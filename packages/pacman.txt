@@ -142,6 +142,7 @@ cpio
 # ── LOGIN SCREEN ────────────────────────────────────────────────────────────
 
 sddm                         # ./setup system
+plymouth                     # the boot splash · ./setup splash
 accountsservice              # the account's full name, which both screens show
 
 
