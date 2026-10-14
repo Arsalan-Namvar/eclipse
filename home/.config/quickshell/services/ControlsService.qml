@@ -566,6 +566,12 @@ Singleton {
     readonly property int panelHeight: root.boardHeight + 2 * Theme.panelPadding
         + (root.topShown ? root.rowHeight + root.rowGap : 0)
 
+    // The panel at its largest, rows and top row: the fixed height of the
+    // cards beside it while it is arranged.
+    readonly property int tallestPanel: Theme.centreRows * Theme.centreCellHeight
+        + (Theme.centreRows - 1) * Theme.centreGutter + 2 * Theme.panelPadding
+        + root.rowHeight + root.rowGap
+
     function offsetX(col: int): real {
         return col * Theme.centreStrideX
     }
@@ -935,12 +941,6 @@ Singleton {
     // animating, so its position is mapped at query time.
     property Item tray: null
 
-    // Where the tray card was moved to, until arranging ends, and its size in
-    // columns and rows, for the rest of the session; null until it is moved
-    // or resized.
-    property var galleryAt: null
-    property var gallerySize: null
-
     // `x`, `y` are in the board's coordinates.
     function overTray(x: real, y: real): bool {
         if (!root.tray || !root.board)
@@ -956,7 +956,6 @@ Singleton {
         if (!on) {
             root.dragging = ""
             root.landing = null
-            root.galleryAt = null
         }
     }
 }

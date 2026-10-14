@@ -652,24 +652,95 @@ PanelWindow {
             anchors.fill: parent
             z: 3
 
-            // Right under the island, the grid's size, then the card of
-            // blocks.
+            // Beside the island when the screen has room on both sides for
+            // the card's widest block: two cards of one size on the left, the
+            // grid's size over the top row, and the card of blocks on the
+            // right, each side as tall as the island at its largest, whatever
+            // size it is now. Measured
+            // against the panel's declared size, not the island's, which is
+            // still opening. Otherwise the size and the blocks stack under it.
+            readonly property real side: (overlay.width - ControlsService.panelWidth) / 2
+                - 2 * Theme.desktopGutter
+            readonly property bool aside: blocks.item !== null && overlay.side >= blocks.item.narrowest
+            readonly property real tall: ControlsService.tallestPanel
+            readonly property real cardWidth: blocks.item ? blocks.item.card.width : 0
+            // Half the island each, unless the top row's editor needs more.
+            readonly property real half: Math.max((overlay.tall - Theme.desktopGutter) / 2,
+                sideCards.item ? sideCards.item.need : 0)
+
+            // Under the island, when there is no room beside it.
             Loader {
                 id: arranging
 
                 x: (parent.width - width) / 2
                 y: root.islandTopMargin + island.height + Theme.desktopGutter
-                active: root.live && ControlsService.editing
+                active: root.live && ControlsService.editing && !overlay.aside
                 sourceComponent: GridSize {}
             }
 
             Loader {
+                id: sideCards
+
+                x: (overlay.width - ControlsService.panelWidth) / 2
+                    - Theme.desktopGutter - overlay.cardWidth
+                y: root.islandTopMargin
+                active: root.live && ControlsService.editing && overlay.aside
+                sourceComponent: Column {
+                    readonly property real need: topRow.implicitHeight + 2 * Theme.panelPadding
+
+                    spacing: Theme.desktopGutter
+
+                    // The figure over the miniature, filling the card.
+                    Rectangle {
+                        width: overlay.cardWidth
+                        height: overlay.half
+                        radius: Theme.radiusLarge
+                        color: Theme.island
+                        border.color: Theme.borderIn(QsWindow.window)
+                        border.width: 1
+
+                        GridSize {
+                            anchors.fill: parent
+                            anchors.margins: Theme.panelPadding
+                            bare: true
+                            filling: true
+                        }
+                    }
+
+                    // The top row's buttons, arranged as on the settings page.
+                    Rectangle {
+                        width: overlay.cardWidth
+                        height: overlay.half
+                        radius: Theme.radiusLarge
+                        color: Theme.island
+                        border.color: Theme.borderIn(QsWindow.window)
+                        border.width: 1
+
+                        TopRowEditor {
+                            id: topRow
+
+                            x: Theme.panelPadding
+                            y: Theme.panelPadding
+                            width: parent.width - 2 * Theme.panelPadding
+                            fillTo: parent.height - 2 * Theme.panelPadding
+                        }
+                    }
+                }
+            }
+
+            Loader {
+                id: blocks
+
                 anchors.fill: parent
                 active: root.live && ControlsService.editing
                 sourceComponent: ControlsTray {
                     host: overlay
-                    homeTop: arranging.y + (arranging.item ? arranging.item.height : 0)
-                        + Theme.desktopGutter
+                    homeLeft: overlay.aside
+                        ? (overlay.width + ControlsService.panelWidth) / 2 + Theme.desktopGutter : -1
+                    room: overlay.side
+                    tall: 2 * overlay.half + Theme.desktopGutter
+                    homeTop: overlay.aside ? root.islandTopMargin
+                        : arranging.y + arranging.height + Theme.desktopGutter
                 }
             }
         }

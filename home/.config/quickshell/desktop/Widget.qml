@@ -332,6 +332,11 @@ Item {
                 DesktopService.selected = ""
                 return
             }
+            // Asked before the drag ends: the strip that removes is only
+            // there while something is carried.
+            const pointer = root.board.mapFromItem(
+                null, drag.centroid.scenePosition.x, drag.centroid.scenePosition.y)
+            const removed = DesktopService.overTray(root.screenName, pointer.x, pointer.y)
             DesktopService.dragging = ""
             DesktopService.landing = null
             DeckService.receiving = ""
@@ -339,9 +344,7 @@ Item {
             // edge joins that edge's deck, and a spectrum becomes the bars
             // along it; otherwise it goes to the cell under the pointer. `place` falls back to the nearest free cell or the
             // original one, and the binding above moves it there.
-            const pointer = root.board.mapFromItem(
-                null, drag.centroid.scenePosition.x, drag.centroid.scenePosition.y)
-            if (DesktopService.overTray(root.screenName, pointer.x, pointer.y)) {
+            if (removed) {
                 DesktopService.remove(root.key)
                 return
             }
@@ -399,8 +402,12 @@ Item {
             ? { screen: root.screenName, col: spot.col, row: spot.row, family: root.family } : null
     }
 
-    onXChanged: root.aim()
-    onYChanged: root.aim()
+    // The pointer rather than the widget: held against the board's edge the
+    // widget stops while the pointer goes on, onto the strip below it.
+    Connections {
+        target: drag
+        function onCentroidChanged() { root.aim() }
+    }
 
     // Dragged or resized, it keeps the card on this screen until it is let go.
     Binding {
