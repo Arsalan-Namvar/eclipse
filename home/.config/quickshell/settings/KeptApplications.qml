@@ -227,7 +227,7 @@ ColumnLayout {
             width: ListView.view.width
             height: 34
             radius: Theme.radiusSmall
-            color: optionMouse.containsMouse ? Theme.islandSurfaceHover : "transparent"
+            color: optionMouse.containsMouse ? Theme.islandSurfaceHover : Qt.alpha(Theme.islandSurfaceHover, 0)
 
             Behavior on color { ColorAnimation { duration: Theme.durationFast } }
 

@@ -113,7 +113,7 @@ Card {
                 width: ListView.view.width
                 height: 54
                 radius: Theme.radiusSmall
-                color: entryMouse.containsMouse ? Theme.surfaceHoverIn(QsWindow.window) : "transparent"
+                color: entryMouse.containsMouse ? Theme.surfaceHoverIn(QsWindow.window) : Qt.alpha(Theme.surfaceHoverIn(QsWindow.window), 0)
 
                 Behavior on color { ColorAnimation { duration: Theme.durationFast } }
 

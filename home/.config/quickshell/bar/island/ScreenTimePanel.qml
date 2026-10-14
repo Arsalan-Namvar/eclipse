@@ -70,7 +70,7 @@ ColumnLayout {
         implicitHeight: 28
         radius: width / 2
         opacity: arrow.live ? 1 : 0.3
-        color: press.containsMouse && arrow.live ? Theme.islandSurfaceHover : "transparent"
+        color: press.containsMouse && arrow.live ? Theme.islandSurfaceHover : Qt.alpha(Theme.islandSurfaceHover, 0)
 
         Behavior on color { ColorAnimation { duration: Theme.durationFast } }
 

@@ -616,7 +616,7 @@ Item {
                         width: parent.width
                         height: 26
                         radius: Theme.radiusSmall
-                        color: tickHover.hovered ? Theme.surfaceHoverIn(QsWindow.window) : "transparent"
+                        color: tickHover.hovered ? Theme.surfaceHoverIn(QsWindow.window) : Qt.alpha(Theme.surfaceHoverIn(QsWindow.window), 0)
 
                         Row {
                             anchors.left: parent.left

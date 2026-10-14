@@ -688,7 +688,7 @@ ColumnLayout {
                 width: catalogList.width
                 height: 44
                 radius: 14
-                color: system.current ? Theme.islandSurfaceHover : systemPress.containsMouse ? Theme.islandSurface : "transparent"
+                color: system.current ? Theme.islandSurfaceHover : systemPress.containsMouse ? Theme.islandSurface : Qt.alpha(Theme.islandSurface, 0)
                 border.width: system.current ? 1 : 0
                 border.color: Theme.accent
 

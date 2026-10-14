@@ -412,7 +412,7 @@ Item {
                             anchors.fill: parent
                             radius: Theme.radiusSmall
                             color: entry.active ? Theme.islandSurfaceHover
-                                : (entryMouse.containsMouse ? Theme.island : "transparent")
+                                : (entryMouse.containsMouse ? Theme.island : Qt.alpha(Theme.island, 0))
                             border.color: entry.active ? Theme.accent : "transparent"
                             border.width: 1
 
