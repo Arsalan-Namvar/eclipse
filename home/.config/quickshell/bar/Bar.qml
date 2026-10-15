@@ -664,6 +664,10 @@ PanelWindow {
             readonly property bool aside: blocks.item !== null && overlay.side >= blocks.item.narrowest
             readonly property real tall: ControlsService.tallestPanel
             readonly property real cardWidth: blocks.item ? blocks.item.card.width : 0
+            // The cards' top: the island's, but never flush with the screen
+            // edge when the island is attached, which the card of blocks
+            // cannot be either.
+            readonly property real cardsTop: Math.max(root.islandTopMargin, Theme.desktopGutter)
             // Half the island each, unless the top row's editor needs more.
             readonly property real half: Math.max((overlay.tall - Theme.desktopGutter) / 2,
                 sideCards.item ? sideCards.item.need : 0)
@@ -683,7 +687,7 @@ PanelWindow {
 
                 x: (overlay.width - ControlsService.panelWidth) / 2
                     - Theme.desktopGutter - overlay.cardWidth
-                y: root.islandTopMargin
+                y: overlay.cardsTop
                 active: root.live && ControlsService.editing && overlay.aside
                 sourceComponent: Column {
                     readonly property real need: topRow.implicitHeight + 2 * Theme.panelPadding
@@ -739,7 +743,7 @@ PanelWindow {
                         ? (overlay.width + ControlsService.panelWidth) / 2 + Theme.desktopGutter : -1
                     room: overlay.side
                     tall: 2 * overlay.half + Theme.desktopGutter
-                    homeTop: overlay.aside ? root.islandTopMargin
+                    homeTop: overlay.aside ? overlay.cardsTop
                         : arranging.y + arranging.height + Theme.desktopGutter
                 }
             }
