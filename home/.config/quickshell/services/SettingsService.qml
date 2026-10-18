@@ -602,7 +602,7 @@ Singleton {
         property string cameraEffect: "natural"
 
         // The gestures that set off a reaction, by `CameraService.reactions` id.
-        property var cameraReactions: ["thumbsup", "heart", "peace", "thumbsdown"]
+        property var cameraReactions: ["thumbsup", "heart", "peace", "thumbsdown", "horns", "ok"]
 
         // ── CLIPBOARD ───────────────────────────────────────────────
         //

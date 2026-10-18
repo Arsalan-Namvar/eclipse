@@ -144,56 +144,6 @@ ColumnLayout {
         }
     }
 
-    // ── HEAD ────────────────────────────────────────────────────────────────
-
-    RowLayout {
-        Layout.fillWidth: true
-        Layout.preferredHeight: 44
-        spacing: 12
-
-        Column {
-            Layout.fillWidth: true
-            spacing: 2
-
-            Text {
-                text: Tr.t("Camera")
-                font.family: Theme.fontFamily
-                font.pixelSize: 20
-                font.weight: Font.Bold
-                color: Theme.text
-            }
-
-            Text {
-                width: parent.width
-                elide: Text.ElideRight
-                text: !CameraService.checked ? ""
-                    : !CameraService.ready ? Tr.t("Not set up")
-                    : !CameraService.enabled ? Tr.t("Off · no program can use it")
-                    : CameraService.error !== "" ? CameraService.error
-                    : CameraService.others.length > 0
-                      ? `${Tr.t("In use by")} ${CameraService.others.map(name => name.charAt(0).toUpperCase() + name.slice(1)).join(", ")}`
-                    : `${Tr.t("Pick")} “impasto camera” ${Tr.t("in any call")}`
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSizeSmall
-                color: CameraService.error !== "" ? Theme.indicatorBad : Theme.textMuted
-            }
-        }
-
-        Text {
-            visible: CameraService.ready
-            text: Tr.t("Virtual camera")
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeRegular
-            color: Theme.text
-        }
-
-        ToggleSwitch {
-            visible: CameraService.ready
-            checked: CameraService.enabled
-            onToggled: checked => SettingsService.set("cameraEnabled", checked)
-        }
-    }
-
     // ── PREVIEW AND REACTIONS ───────────────────────────────────────────────
 
     RowLayout {
@@ -203,10 +153,13 @@ ColumnLayout {
         ClippingRectangle {
             id: preview
 
-            Layout.preferredWidth: 520
-            Layout.preferredHeight: 293
-            radius: 22
-            color: Theme.islandSurface
+            Layout.preferredWidth: 480
+            Layout.preferredHeight: 270
+            radius: Theme.radiusMedium
+            color: Theme.surfaceIn(QsWindow.window)
+            border.color: Theme.borderIn(QsWindow.window)
+            border.width: 1
+            contentUnderBorder: true
 
             MediaDevices { id: media }
 
@@ -331,73 +284,88 @@ ColumnLayout {
             }
         }
 
-        ColumnLayout {
+        Card {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 8
 
-            Text {
-                text: Tr.t("Reactions")
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSizeRegular
-                font.weight: Font.Bold
-                color: Theme.text
-            }
+            ColumnLayout {
+                anchors.fill: parent
+                spacing: 0
 
-            Repeater {
-                model: CameraService.reactions
+                CardHeading {
+                    Layout.preferredHeight: Theme.cardRow + 4
+                    verticalAlignment: Text.AlignTop
+                    text: Tr.t("Reactions")
+                }
 
-                Rectangle {
-                    id: reaction
-
-                    required property var modelData
-
-                    readonly property bool on: CameraService.reacting(reaction.modelData.id)
-
+                // A tile per gesture, lit while it sets off its reaction.
+                GridLayout {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 54
-                    radius: 18
-                    color: hover.containsMouse ? Theme.islandSurfaceHover : Theme.islandSurface
+                    columns: 2
+                    rowSpacing: 8
+                    columnSpacing: 8
 
-                    Behavior on color { ColorAnimation { duration: Theme.durationFast } }
+                    Repeater {
+                        model: CameraService.reactions
 
-                    MouseArea {
-                        id: hover
+                        Rectangle {
+                            id: reaction
 
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: CameraService.setReaction(reaction.modelData.id, !reaction.on)
-                    }
+                            required property var modelData
 
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 14
-                        anchors.rightMargin: 12
-                        spacing: 12
+                            readonly property bool on: CameraService.reacting(reaction.modelData.id)
 
-                        Text {
-                            text: reaction.modelData.gesture
-                            font.pixelSize: 22
-                        }
-
-                        Text {
                             Layout.fillWidth: true
-                            text: Tr.t(reaction.modelData.label)
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSizeRegular
-                            color: Theme.text
-                        }
+                            Layout.preferredWidth: 1
+                            Layout.preferredHeight: 44
+                            radius: Theme.radiusSmall
+                            color: hover.containsMouse ? Theme.surfaceHoverIn(QsWindow.window)
+                                : Qt.alpha(Theme.surfaceHoverIn(QsWindow.window), 0)
+                            border.width: 1
+                            border.color: reaction.on ? Theme.accent : Theme.borderIn(QsWindow.window)
 
-                        ToggleSwitch {
-                            checked: reaction.on
-                            onToggled: checked => CameraService.setReaction(reaction.modelData.id, checked)
+                            Behavior on color { ColorAnimation { duration: Theme.durationFast } }
+                            Behavior on border.color { ColorAnimation { duration: Theme.durationFast } }
+
+                            MouseArea {
+                                id: hover
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: CameraService.setReaction(reaction.modelData.id, !reaction.on)
+                            }
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 10
+                                anchors.rightMargin: 8
+                                spacing: 8
+
+                                Text {
+                                    text: reaction.modelData.gesture
+                                    font.pixelSize: 18
+                                    opacity: reaction.on ? 1 : 0.4
+
+                                    Behavior on opacity { NumberAnimation { duration: Theme.durationFast } }
+                                }
+
+                                Text {
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                    text: Tr.t(reaction.modelData.label)
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.fontSizeSmall
+                                    font.weight: reaction.on ? Font.DemiBold : Font.Normal
+                                    color: reaction.on ? Theme.text : Theme.textMuted
+                                }
+                            }
                         }
                     }
                 }
-            }
 
-            Item { Layout.fillHeight: true }
+                Item { Layout.fillHeight: true }
+            }
         }
     }
 
@@ -461,5 +429,48 @@ ColumnLayout {
         font.pixelSize: Theme.fontSizeSmall
         font.weight: Font.Bold
         color: Theme.text
+    }
+
+    Rectangle {
+        Layout.fillWidth: true
+        Layout.preferredHeight: 1
+        color: Theme.borderIn(QsWindow.window)
+    }
+
+    // ── STATUS LINE ─────────────────────────────────────────────────────────
+
+    RowLayout {
+        Layout.fillWidth: true
+        Layout.preferredHeight: 28
+        spacing: 12
+
+        Text {
+            Layout.fillWidth: true
+            elide: Text.ElideRight
+            text: !CameraService.checked ? ""
+                : !CameraService.ready ? Tr.t("Not set up")
+                : !CameraService.enabled ? Tr.t("Off · no program can use it")
+                : CameraService.error !== "" ? CameraService.error
+                : CameraService.others.length > 0
+                  ? `${Tr.t("In use by")} ${CameraService.others.map(name => name.charAt(0).toUpperCase() + name.slice(1)).join(", ")}`
+                : `${Tr.t("Pick")} “impasto camera” ${Tr.t("in any call")}`
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeSmall
+            color: CameraService.error !== "" ? Theme.indicatorBad : Theme.textMuted
+        }
+
+        Text {
+            visible: CameraService.ready
+            text: Tr.t("Virtual camera")
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeSmall
+            color: Theme.text
+        }
+
+        ToggleSwitch {
+            visible: CameraService.ready
+            checked: CameraService.enabled
+            onToggled: checked => SettingsService.set("cameraEnabled", checked)
+        }
     }
 }

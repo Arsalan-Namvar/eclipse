@@ -26,7 +26,7 @@ Singleton {
 
     // Declared for the island, which is sized before the panel exists.
     readonly property int panelWidth: 820
-    readonly property int panelHeight: 540
+    readonly property int panelHeight: 517
 
     // What `status` found: whether the effects can run, and what is missing.
     property bool ready: false
@@ -60,9 +60,12 @@ Singleton {
 
     readonly property var reactions: [
         { id: "thumbsup",   gesture: "👍", label: "Thumbs up" },
+        { id: "thumbsdown", gesture: "👎", label: "Thumbs down" },
         { id: "heart",      gesture: "🫶", label: "Heart" },
         { id: "peace",      gesture: "✌️", label: "Peace" },
-        { id: "thumbsdown", gesture: "👎", label: "Thumbs down" }
+        { id: "horns",      gesture: "🤘", label: "Horns" },
+        { id: "ok",         gesture: "👌", label: "OK" },
+        { id: "middle",     gesture: "🖕", label: "Middle finger" }
     ]
 
     readonly property string effect: SettingsService.cameraEffect
@@ -245,12 +248,10 @@ Singleton {
 
     readonly property string configuration: JSON.stringify({
         effect: root.effect,
-        reactions: {
-            thumbsup: root.reacting("thumbsup"),
-            heart: root.reacting("heart"),
-            peace: root.reacting("peace"),
-            thumbsdown: root.reacting("thumbsdown")
-        },
+        reactions: root.reactions.reduce((all, entry) => {
+            all[entry.id] = root.reacting(entry.id)
+            return all
+        }, {}),
         palette: {
             accent: String(Theme.accent),
             red: String(Theme.red),

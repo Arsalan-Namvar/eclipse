@@ -830,7 +830,8 @@ def run(out_fd):
         return cv2.resize(crop, (WIDTH, HEIGHT), interpolation=cv2.INTER_LINEAR)
 
     # ── reactions: the gesture's own emoji, rising from the hand that made it
-    REACTIONS = {"thumbsup": "👍", "heart": "❤️", "peace": "✌️", "thumbsdown": "👎"}
+    REACTIONS = {"thumbsup": "👍", "heart": "❤️", "peace": "✌️", "thumbsdown": "👎",
+                 "horns": "🤘", "ok": "👌", "middle": "🖕"}
     particles = []
 
     def burst(kind, origin):
@@ -890,7 +891,33 @@ def run(out_fd):
                     (a[8].y + b[8].y + a[4].y + b[4].y) / 4 * HEIGHT)
         return None
 
-    gestures = {"Thumb_Up": "thumbsup", "Victory": "peace", "Thumb_Down": "thumbsdown"}
+    def hand_pose(hand):
+        """The poses the recogniser has no category for, read off the fingers:
+        a finger is out when its tip is well past its knuckle from the wrist,
+        and folded when it is not. In pixels, so the frame's shape does not
+        stretch one axis."""
+        def at(i):
+            return (hand[i].x * WIDTH, hand[i].y * HEIGHT)
+
+        def gap(i, j):
+            (ax, ay), (bx, by) = at(i), at(j)
+            return math.hypot(ax - bx, ay - by)
+
+        reach = {tip: gap(0, tip) / max(1e-6, gap(0, tip - 3)) for tip in (8, 12, 16, 20)}
+        out = {tip: reach[tip] > 1.55 for tip in reach}
+        folded = {tip: reach[tip] < 1.3 for tip in reach}
+        # Seen from the front a folded ring finger still reads long, so the
+        # middle one only has to reach well past the other three.
+        if out[12] and reach[12] > 1.6 * max(reach[8], reach[16], reach[20]):
+            return "middle"
+        if out[8] and out[20] and folded[12] and folded[16]:
+            return "horns"
+        if gap(4, 8) < gap(0, 9) * .3 and out[12] and out[16] and out[20]:
+            return "ok"
+        return None
+
+    gestures = {"Thumb_Up": "thumbsup", "Victory": "peace", "Thumb_Down": "thumbsdown",
+                "ILoveYou": "horns"}
     held_kind, held_frames, last_fire = None, 0, 0.0
 
     stamp = 0
@@ -948,8 +975,12 @@ def run(out_fd):
                     seen = "heart" if where else None
                 if not seen:
                     for guess, hand in zip(result.gestures, result.hand_landmarks):
-                        kind = gestures.get(guess[0].category_name)
-                        if kind and reactions.get(kind) and guess[0].score > .6:
+                        kind = hand_pose(hand)
+                        if not (kind and reactions.get(kind)):
+                            kind = gestures.get(guess[0].category_name)
+                            if guess[0].score <= .6:
+                                kind = None
+                        if kind and reactions.get(kind):
                             seen, where = kind, palm(hand)
                 held_frames = held_frames + 1 if seen and seen == held_kind else (1 if seen else 0)
                 held_kind = seen
