@@ -70,41 +70,6 @@ ColumnLayout {
         }
     }
 
-    // ── HEAD ────────────────────────────────────────────────────────────────
-
-    Column {
-        Layout.fillWidth: true
-        Layout.preferredHeight: 44
-        spacing: 2
-
-        Text {
-            text: Tr.t("Servers")
-            font.family: Theme.fontFamily
-            font.pixelSize: 20
-            font.weight: Font.Bold
-            color: Theme.text
-        }
-
-        Text {
-            width: parent.width
-            elide: Text.ElideRight
-            text: ServersService.error !== "" ? ServersService.error
-                : ServersService.servers.length === 0 ? Tr.t("None listening")
-                : `${ServersService.servers.length} ${Tr.t("listening")}`
-                  + (ServersService.exposed > 0
-                      ? ` · ${ServersService.exposed} ${Tr.t("open to the network")}` : "")
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
-            color: ServersService.error !== "" ? Theme.indicatorBad : Theme.textMuted
-        }
-    }
-
-    Rectangle {
-        Layout.fillWidth: true
-        Layout.preferredHeight: 1
-        color: Theme.borderIn(QsWindow.window)
-    }
-
     // ── SERVERS ─────────────────────────────────────────────────────────────
 
     Item {
@@ -263,5 +228,28 @@ ColumnLayout {
                 }
             }
         }
+    }
+
+    Rectangle {
+        Layout.fillWidth: true
+        Layout.preferredHeight: 1
+        color: Theme.borderIn(QsWindow.window)
+    }
+
+    // ── STATUS LINE ─────────────────────────────────────────────────────────
+
+    Text {
+        Layout.fillWidth: true
+        Layout.preferredHeight: 20
+        verticalAlignment: Text.AlignVCenter
+        elide: Text.ElideRight
+        text: ServersService.error !== "" ? ServersService.error
+            : ServersService.servers.length === 0 ? Tr.t("None listening")
+            : `${ServersService.servers.length} ${Tr.t("listening")}`
+              + (ServersService.exposed > 0
+                  ? ` · ${ServersService.exposed} ${Tr.t("open to the network")}` : "")
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSizeSmall
+        color: ServersService.error !== "" ? Theme.indicatorBad : Theme.textMuted
     }
 }

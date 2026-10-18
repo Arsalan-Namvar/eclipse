@@ -46,9 +46,9 @@ ColumnLayout {
 
     component Caps: Text {
         font.family: Theme.fontFamily
-        font.pixelSize: 9
+        font.pixelSize: Theme.fontSizeLabel
         font.weight: Font.DemiBold
-        font.letterSpacing: 1.2
+        font.letterSpacing: 0.8
         font.capitalization: Font.AllUppercase
         color: Theme.textMuted
     }
@@ -57,40 +57,6 @@ ColumnLayout {
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSizeLabel
         color: Theme.textMuted
-    }
-
-    component Arrow: Rectangle {
-        id: arrow
-
-        property string glyph: ""
-        property bool live: true
-        signal pressed()
-
-        implicitWidth: 28
-        implicitHeight: 28
-        radius: width / 2
-        opacity: arrow.live ? 1 : 0.3
-        color: press.containsMouse && arrow.live ? Theme.islandSurfaceHover : Qt.alpha(Theme.islandSurfaceHover, 0)
-
-        Behavior on color { ColorAnimation { duration: Theme.durationFast } }
-
-        Text {
-            anchors.centerIn: parent
-            text: arrow.glyph
-            font.family: Theme.fontMono
-            font.pixelSize: Theme.fontSizeLarge
-            color: Theme.text
-        }
-
-        MouseArea {
-            id: press
-
-            anchors.fill: parent
-            enabled: arrow.live
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: arrow.pressed()
-        }
     }
 
     // ── WORDS ───────────────────────────────────────────────────────────────
@@ -206,19 +172,21 @@ ColumnLayout {
             onSelected: id => ScreenTimeService.show(id, ScreenTimeService.date)
         }
 
-        Arrow {
+        IconButton {
             Layout.alignment: Qt.AlignTop
-            glyph: "󰅁"
-            live: ScreenTimeService.canGoBack
-            onPressed: ScreenTimeService.step(-1)
+            icon: "󰅁"
+            enabled: ScreenTimeService.canGoBack
+            opacity: enabled ? 1 : 0.3
+            onClicked: ScreenTimeService.step(-1)
         }
 
-        Arrow {
+        IconButton {
             Layout.alignment: Qt.AlignTop
-            Layout.leftMargin: -8
-            glyph: "󰅂"
-            live: ScreenTimeService.canGoForward
-            onPressed: ScreenTimeService.step(1)
+            Layout.leftMargin: -6
+            icon: "󰅂"
+            enabled: ScreenTimeService.canGoForward
+            opacity: enabled ? 1 : 0.3
+            onClicked: ScreenTimeService.step(1)
         }
     }
 

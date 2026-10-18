@@ -97,7 +97,7 @@ def plain(word):
 
 def tool(script):
     """What a script path names: the package under node_modules, or the file."""
-    parts = script.split("/")
+    parts = os.path.normpath(script).split("/")
     if "node_modules" in parts:
         index = len(parts) - 1 - parts[::-1].index("node_modules")
         rest = parts[index + 1:]

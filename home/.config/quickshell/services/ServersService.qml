@@ -32,7 +32,7 @@ Singleton {
     // Declared for the island, which is sized before the panel exists.
     readonly property int panelWidth: 620
     readonly property int rowHeight: 76
-    readonly property int panelHeight: 105 + Math.max(2, Math.min(6, root.servers.length)) * (root.rowHeight + 8)
+    readonly property int panelHeight: 81 + Math.max(2, Math.min(6, root.servers.length)) * (root.rowHeight + 8)
 
     property int watchers: 0
 
