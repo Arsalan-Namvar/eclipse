@@ -112,11 +112,10 @@ qt6-declarative              # qmlls6 · quickshell brings it anyway
 
 # ── FILE MANAGER ────────────────────────────────────────────────────────────
 
-thunar                       # SUPER + E
-tumbler                      # thumbnails
+nautilus                     # SUPER + E
+nautilus-python              # its right-click menu
 ffmpegthumbnailer            # a video's thumbnail
 gvfs                         # the trash, and mounting
-xfconf                       # xfconf-query, which ./setup thunar writes with
 
 
 # ── QT ──────────────────────────────────────────────────────────────────────

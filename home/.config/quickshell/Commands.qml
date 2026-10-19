@@ -497,7 +497,7 @@ Scope {
     IpcHandler {
         target: "wallpaper"
 
-        // Kept as it was: Thunar's "Set as Wallpaper" calls it.
+        // Kept as it was: the file manager's "Set as Wallpaper" calls it.
         function set(path: string): string {
             if (!path)
                 return "usage: qs ipc call wallpaper set <path>"

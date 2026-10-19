@@ -162,12 +162,13 @@ QtObject {
     }
 
     // An application's icon, from the set `shell.qml` names. Some apps are
-    // drawn there under another name, and the file manager as somebody
+    // drawn there under another name, and every file manager as somebody
     // else's, so those ask for the picture meant for them.
     readonly property var appIconAliases: ({
         "vesktop": "Vesktop",
-        "thunar": "folder",
-        "org.xfce.thunar": "folder"
+        "org.gnome.Nautilus": "impasto-files",
+        "thunar": "impasto-files",
+        "org.xfce.thunar": "impasto-files"
     })
 
     function appIcon(name: string): string {

@@ -603,7 +603,8 @@ ShellRoot {
     //
     // Everything the impasto command and `qs ipc call` can reach. Every
     // palette push hangs off WallpaperService.applied, which only fires
-    // inside this process, so Thunar's "Set as Wallpaper" comes in here too:
+    // inside this process, so the file manager's "Set as Wallpaper" comes in
+    // here too:
     //   qs ipc call wallpaper set <path>
     Commands {
         island: root.island

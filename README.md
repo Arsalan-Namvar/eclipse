@@ -117,7 +117,7 @@ whole edge under the windows.
 
 **The palette comes out of the painting.** Pick a wallpaper and its colours
 reach everything at once: the island and the widgets, the terminal and the
-prompt, btop, cava, yazi, neovim, VSCodium, the GTK, Qt and KDE windows, Thunar
+prompt, btop, cava, yazi, neovim, VSCodium, the GTK, Qt and KDE windows, Nautilus
 down to its folders, Vesktop, Zen and Spotify. Or pick one of nine palettes
 instead. The desk comes with forty paintings, in the style it is named after,
 and a video of your own in `~/.local/share/wallpapers/animated` can be the
@@ -219,7 +219,7 @@ It installs the packages it is missing — upgrading the system in the same step
 as Arch asks — oh-my-zsh, everything in `home/` into your home and everything
 in `system/` into `/`, the two Hyprland plugins and the vector cursor, and the
 login screen, switched on unless your machine already uses another display
-manager. It sets up Thunar, VSCodium, Vesktop and Spotify, dark GTK
+manager. It sets up Nautilus, VSCodium, Vesktop and Spotify, dark GTK
 applications, and what opens which kind of file — leaving alone any your
 machine already has an answer for. Where there is an infrared camera it
 installs howdy-next and asks to enrol your face, and where there is a webcam
@@ -239,7 +239,7 @@ with somewhere to press them.
 | `--skip-packages` | install nothing; copy and build only |
 | `--skip-system` | leave `/` alone — no login screen, and no password for it |
 | `--skip-plugins` | no shake to find, no glass |
-| `--skip-extras` | leave Thunar, VSCodium, Vesktop, Spotify, GTK, face unlock, the camera and the boot splash alone |
+| `--skip-extras` | leave Nautilus, VSCodium, Vesktop, Spotify, GTK, face unlock, the camera and the boot splash alone |
 | `--aur-helper yay\|paru` | which helper builds the AUR half — built from the AUR if you have neither |
 | `--noconfirm` | take the default at every question |
 | `-n`, `--dry-run` | say what would happen, and do none of it |
@@ -285,7 +285,7 @@ rather than failing.
 | 📊 | System monitor | [btop](https://github.com/aristocratos/btop) |
 | 🎵 | Audio visualiser | [cava](https://github.com/karlstav/cava) |
 | 📁 | File manager | [yazi](https://yazi-rs.github.io) |
-| 🗂️ | File manager in a window | [Thunar](https://docs.xfce.org/xfce/thunar/start) |
+| 🗂️ | File manager in a window | [Nautilus](https://apps.gnome.org/Nautilus/) |
 | ✏️ | Editor | [neovim](https://neovim.io) |
 | 📝 | Editor in a window | [VSCodium](https://vscodium.com) |
 | 🖼️ | Image viewer | [imv](https://sr.ht/~exec64/imv/) |

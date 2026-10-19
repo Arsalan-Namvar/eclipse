@@ -172,7 +172,7 @@ Usage: ./setup <command> [options]
   cursors     fetch the vector cursor and build it in the chosen colour
   spotify     patch Spotify so it takes the palette (needs spicetify)
   vscodium    install the editor's extensions and merge its settings
-  thunar      apply the file manager's settings and right-click menu
+  nautilus    apply the file manager's settings and sidebar
   vesktop     tick the palette's theme in Vencord
   face        unlock the lock screen with your face, where there is an
               infrared camera: installs howdy-next and enrols you
@@ -1030,7 +1030,7 @@ verb_uninstall() {
 # ── EXTRAS ──────────────────────────────────────────────────────────────────
 #
 # What a copied file cannot hold: what opens which file, dark GTK, the cursor,
-# Thunar, VSCodium, Vesktop, Spotify, face unlock, the camera effects and the
+# Nautilus, VSCodium, Vesktop, Spotify, face unlock, the camera effects and the
 # boot splash.
 # `install` sets each up once per machine, and one that cannot run yet is
 # skipped with the reason and tried again by the next install or update.
@@ -1060,7 +1060,7 @@ stamp()   { if (( ! DRY )); then mkdir -p "$APPLIED"; touch "$APPLIED/$1"; fi; }
 extras() {
     applied defaults || soft defaults verb_defaults
     if [[ ! -d $CURSOR_SEED ]]; then soft cursors verb_cursors; fi
-    applied thunar || soft thunar verb_thunar
+    applied nautilus || soft nautilus verb_nautilus
     applied vscodium || soft vscodium verb_vscodium
     applied vesktop || soft vesktop verb_vesktop
     applied face || soft face verb_face
@@ -1076,7 +1076,7 @@ extras() {
 DEFAULT_APPS=(
     'imv.desktop image/jpeg image/png image/gif image/webp image/svg+xml'
     'nvim.desktop text/plain application/json'
-    'thunar.desktop inode/directory'
+    'org.gnome.Nautilus.desktop inode/directory'
     'zen.desktop text/html application/pdf x-scheme-handler/http x-scheme-handler/https'
 )
 
@@ -1224,17 +1224,20 @@ verb_vesktop() {
     say 'theme ticked'
 }
 
-# Colours come from gtk.css; the rest lives in xfconf and uca.xml (custom
-# actions). Thunar must be closed, since it writes its state back on exit.
-verb_thunar() {
-    section thunar
-    command -v thunar >/dev/null || refuse 'thunar is not installed' || return
-    if pgrep -x thunar >/dev/null; then
-        refuse 'close Thunar first: it writes to the same channel as it exits' || return
+# Colours come from gtk.css and the right-click menu is a file in home/; the
+# rest is gsettings and the sidebar's bookmarks. A folder still handed to
+# Thunar is handed to Nautilus instead.
+verb_nautilus() {
+    section nautilus
+    command -v nautilus >/dev/null || refuse 'nautilus is not installed' || return
+    command -v gsettings >/dev/null || refuse 'gsettings is not installed (package: glib2)' || return
+    act python3 "$THEME_MANAGER" apply-nautilus || refuse 'not every setting was applied' || return
+    if [[ $(xdg-mime query default inode/directory 2>/dev/null) == thunar.desktop ]]; then
+        act xdg-mime default org.gnome.Nautilus.desktop inode/directory || refuse 'xdg-mime failed' || return
+        say 'folders open in Nautilus'
     fi
-    act python3 "$THEME_MANAGER" apply-thunar || refuse 'not every setting was applied' || return
-    stamp thunar
-    say 'settings and right-click menu applied'
+    stamp nautilus
+    say 'settings and sidebar applied'
 }
 
 # The infrared half of a Windows Hello camera: the capture device that offers
@@ -1620,7 +1623,7 @@ parts() {
                 packages) note="$pacman from the repositories, $aur from the AUR" ;;
                 system)   note='sddm, unless this machine already has one' ;;
                 plugins)  note='shake to find · glass on the windows' ;;
-                extras)   note='Thunar, VSCodium, Vesktop, Spotify, GTK, your face, the camera, the boot splash' ;;
+                extras)   note='Nautilus, VSCodium, Vesktop, Spotify, GTK, your face, the camera, the boot splash' ;;
             esac
             if (( on[i] )); then box="$ACCENT◉$OFF"; else box="$FAINT○$OFF"; fi
             if (( i == at )); then
@@ -1746,7 +1749,7 @@ main() {
         cursors)   verb_cursors ;;
         spotify)   verb_spotify ;;
         vscodium)  verb_vscodium ;;
-        thunar)    verb_thunar ;;
+        nautilus)  verb_nautilus ;;
         vesktop)   verb_vesktop ;;
         face)      verb_face ;;
         camera)    verb_camera ;;
