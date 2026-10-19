@@ -233,9 +233,9 @@ SettingsSection {
         }
 
         SettingGroup {
-            title: Tr.t("Blur and glass")
+            title: Tr.t("Blur and refraction")
             note: Tr.t("What shows through a window.")
-            hint: Tr.t("Blur shows behind anything translucent, such as the terminal. Glass (a Hyprland plugin, tuned in look.lua) frosts and refracts what is behind a window.")
+            hint: Tr.t("Blur shows behind anything translucent, such as the terminal. Refraction (a Hyprland plugin, tuned in look.lua) frosts and bends what is behind a window, like wet glass.")
 
             SettingSlider {
                 label: Tr.t("Blur")
@@ -258,9 +258,9 @@ SettingsSection {
 
             // Locked, with the reason, when the hyprglass plugin is not loaded.
             SettingRow {
-                label: Tr.t("Glass")
+                label: Tr.t("Refraction")
                 locked: !CompositorService.glassAvailable
-                reason: Tr.t("Needs the glass plugin — run ./setup plugins")
+                reason: Tr.t("Needs the refraction plugin — run ./setup plugins")
 
                 ToggleSwitch {
                     checked: SettingsService.windowGlass

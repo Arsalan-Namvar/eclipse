@@ -460,7 +460,8 @@ QtObject {
             "In capsules": "En cápsulas",
             "On the wallpaper": "Sobre el fondo",
             "Bar and island": "Barra e isla",
-            "Blur and glass": "Desenfoque y cristal",
+            "Blur and refraction": "Desenfoque y refracción",
+            "Refraction": "Refracción",
             "What shows through a window.": "Lo que se ve a través de una ventana.",
             "Solid black": "Negro sólido",
             "The terminal's glass, over a blur": "El cristal de la terminal, sobre un desenfoque",
@@ -768,8 +769,8 @@ QtObject {
             "Inactive opacity": "Opacidad inactiva",
 
             "Depth": "Profundidad",
-            "Blur shows behind anything translucent, such as the terminal. Glass (a Hyprland plugin, tuned in look.lua) frosts and refracts what is behind a window.":
-                "El desenfoque se ve tras todo lo translúcido, como el terminal. El cristal (un plugin de Hyprland, ajustado en look.lua) esmerila y refracta lo que hay detrás de una ventana.",
+            "Blur shows behind anything translucent, such as the terminal. Refraction (a Hyprland plugin, tuned in look.lua) frosts and bends what is behind a window, like wet glass.":
+                "El desenfoque se ve tras todo lo translúcido, como la terminal. La refracción (un plugin de Hyprland, ajustado en look.lua) esmerila y deforma lo que hay detrás de una ventana, como un cristal mojado.",
             "What is lifted off the wallpaper.": "Lo que se despega del fondo.",
             "What the bar, the dock, the widgets and the terminal are made of.": "De qué están hechos la barra, el dock, los widgets y la terminal.",
             "Classic is solid black, Glass the terminal's tinted ground over a blur of the wallpaper, and Liquid a clear frosted pane that lets the wallpaper's own colours through. How opaque each is, is set on the dock's and the widgets' own pages; the terminal's follows its ground.":
@@ -781,8 +782,8 @@ QtObject {
             "Terminal": "Terminal",
             "size": "tamaño",
             "Glass": "Cristal",
-            "Needs the glass plugin — run ./setup plugins":
-                "Necesita el plugin del cristal — ejecuta ./setup plugins",
+            "Needs the refraction plugin — run ./setup plugins":
+                "Necesita el plugin de refracción — ejecuta ./setup plugins",
             "Shadow": "Sombra",
             "Lifted off the wallpaper": "Despegadas del fondo",
             "Flat": "Planas",
