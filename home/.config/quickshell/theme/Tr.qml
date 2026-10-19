@@ -771,13 +771,14 @@ QtObject {
             "Blur shows behind anything translucent, such as the terminal. Glass (a Hyprland plugin, tuned in look.lua) frosts and refracts what is behind a window.":
                 "El desenfoque se ve tras todo lo translúcido, como el terminal. El cristal (un plugin de Hyprland, ajustado en look.lua) esmerila y refracta lo que hay detrás de una ventana.",
             "What is lifted off the wallpaper.": "Lo que se despega del fondo.",
-            "What the bar, the dock and the widgets are made of.": "De qué están hechos la barra, el dock y los widgets.",
-            "Classic is solid black, Glass the terminal's tinted ground over a blur of the wallpaper, and Liquid a clear frosted pane that lets the wallpaper's own colours through. How opaque each is, is set on the dock's and the widgets' own pages.":
-                "Clásico es negro sólido, Cristal el fondo teñido de la terminal sobre el fondo de pantalla desenfocado, y Líquido un panel esmerilado y claro que deja pasar los colores del fondo de pantalla. Lo opaco que es cada uno se ajusta en las páginas del dock y de los widgets.",
+            "What the bar, the dock, the widgets and the terminal are made of.": "De qué están hechos la barra, el dock, los widgets y la terminal.",
+            "Classic is solid black, Glass the terminal's tinted ground over a blur of the wallpaper, and Liquid a clear frosted pane that lets the wallpaper's own colours through. How opaque each is, is set on the dock's and the widgets' own pages; the terminal's follows its ground.":
+                "Clásico es negro sólido, Cristal el fondo teñido de la terminal sobre el fondo de pantalla desenfocado, y Líquido un panel esmerilado y claro que deja pasar los colores del fondo de pantalla. Lo opaco que es cada uno se ajusta en las páginas del dock y de los widgets; el de la terminal va con su fondo.",
             "Liquid": "Líquido",
             "Clear frosted glass, lit at the edge": "Cristal esmerilado y claro, con el borde iluminado",
             "Bar and dock": "Barra y dock",
             "Desktop widgets": "Widgets del escritorio",
+            "Terminal": "Terminal",
             "size": "tamaño",
             "Glass": "Cristal",
             "Needs the glass plugin — run ./setup plugins":

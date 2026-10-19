@@ -400,14 +400,15 @@ SettingsSection {
         // One ground per layer, each chosen on its own.
         SettingGroup {
             title: Tr.t("Ground")
-            note: Tr.t("What the bar, the dock and the widgets are made of.")
-            hint: Tr.t("Classic is solid black, Glass the terminal's tinted ground over a blur of the wallpaper, and Liquid a clear frosted pane that lets the wallpaper's own colours through. How opaque each is, is set on the dock's and the widgets' own pages.")
+            note: Tr.t("What the bar, the dock, the widgets and the terminal are made of.")
+            hint: Tr.t("Classic is solid black, Glass the terminal's tinted ground over a blur of the wallpaper, and Liquid a clear frosted pane that lets the wallpaper's own colours through. How opaque each is, is set on the dock's and the widgets' own pages; the terminal's follows its ground.")
 
             Repeater {
                 model: [
                     { key: "surfaceStyle", label: "Bar and island" },
                     { key: "dockGround", label: "Dock" },
-                    { key: "desktopGround", label: "Desktop widgets" }
+                    { key: "desktopGround", label: "Desktop widgets" },
+                    { key: "terminalGround", label: "Terminal" }
                 ]
 
                 SettingRow {

@@ -61,6 +61,7 @@ Singleton {
     readonly property alias dockMagnify: config.dockMagnify
     readonly property alias dockOpacity: config.dockOpacity
     readonly property alias dockGround: config.dockGround
+    readonly property alias terminalGround: config.terminalGround
     readonly property alias dockRunning: config.dockRunning
     readonly property alias dockEverywhere: config.dockEverywhere
     readonly property alias dockAutohide: config.dockAutohide
@@ -823,6 +824,9 @@ Singleton {
 
         // The capsule's ground, as `surfaceStyle`.
         property string dockGround: "classic"
+
+        // kitty's ground, as `surfaceStyle`.
+        property string terminalGround: "glass"
 
         // Also show running applications that aren't pinned.
         property bool dockRunning: true

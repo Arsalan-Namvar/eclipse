@@ -50,6 +50,7 @@ STATE_FILE = os.path.join(STATE_DIR, "state.json")
 TERMINAL_PALETTE_FILE = os.path.join(STATE_DIR, "kitty-palette.conf")
 # Separate from the palette fragment, which is rewritten whole on every push.
 TERMINAL_FONT_FILE = os.path.join(STATE_DIR, "kitty-font.conf")
+TERMINAL_GROUND_FILE = os.path.join(STATE_DIR, "kitty-ground.conf")
 
 # kitty appends `-<pid>` to `listen_on`, so this globs every running
 # instance. Reaching none is fine: new terminals read the fragment anyway.
@@ -65,6 +66,17 @@ TERMINAL_TINT = 0.22
 
 # What kitty.conf falls back to when nothing has been pushed yet.
 TERMINAL_BACKGROUND_FALLBACK = "#000000"
+
+
+# The terminal's ground, named as the shell's: classic is opaque black, glass
+# the tinted ground at kitty.conf's opacity, liquid a neutral smoke thinner
+# than glass so the wallpaper comes through in its own colours. A background
+# of None keeps the palette's tinted one.
+TERMINAL_GROUNDS = {
+    "classic": ("#000000", 1.0),
+    "glass": (None, 0.90),
+    "liquid": ("#0f1217", 0.72),
+}
 
 
 def terminal_background(colors):
@@ -722,6 +734,66 @@ def push_terminal_palette(colors):
             # A stale socket from a closed terminal is normal; keep going.
             sys.stderr.write(f"{os.path.basename(socket_path)}: "
                              f"{result.stderr.strip()}\n")
+            continue
+        # The palette carries the tinted background; a ground with its own
+        # puts it back over it.
+        background = ground_background()
+        if background:
+            subprocess.run(
+                [kitten, "@", "--to", f"unix:{socket_path}", "set-colors", "--all",
+                 "--configured", f"background={background}"],
+                capture_output=True, text=True)
+
+
+def ground_background():
+    """The background the chosen ground sets, or None for the palette's."""
+    try:
+        with open(TERMINAL_GROUND_FILE, encoding="utf-8") as handle:
+            for line in handle:
+                if line.startswith("background "):
+                    return line.split()[1]
+    except OSError:
+        pass
+    return None
+
+
+def push_terminal_ground(style):
+    """Write the ground fragment and give it to running terminals.
+
+    The opacity reaches an open window only if it was started with
+    dynamic_background_opacity, which kitty.conf sets.
+    """
+    background, opacity = TERMINAL_GROUNDS.get(style, TERMINAL_GROUNDS["glass"])
+
+    ensure_state_dir()
+    with open(TERMINAL_GROUND_FILE, "w", encoding="utf-8") as handle:
+        handle.write("# Written by theme_manager.py; edits here are lost.\n")
+        handle.write(f"# The terminal's ground: {style}.\n")
+        handle.write(f"background_opacity {opacity:.2f}\n")
+        if background:
+            handle.write(f"background {background}\n")
+
+    kitten = shutil.which("kitten")
+    if not kitten:
+        sys.stderr.write("kitten not found; the ground applies to new terminals only\n")
+        return
+
+    for socket_path in sorted(glob.glob(KITTY_SOCKETS)):
+        target = ["--to", f"unix:{socket_path}"]
+        result = subprocess.run(
+            [kitten, "@", *target, "set-background-opacity", "--all", f"{opacity:.2f}"],
+            capture_output=True, text=True)
+        if result.returncode != 0:
+            # A stale socket from a closed terminal is normal; keep going.
+            sys.stderr.write(f"{os.path.basename(socket_path)}: "
+                             f"{result.stderr.strip()}\n")
+            continue
+        # Back to the palette's tinted background, or over it with the
+        # ground's own.
+        colors = [f"background={background}"] if background else [TERMINAL_PALETTE_FILE]
+        subprocess.run(
+            [kitten, "@", *target, "set-colors", "--all", "--configured", *colors],
+            capture_output=True, text=True)
 
 
 def write_greetings(colors):
@@ -4117,6 +4189,8 @@ def main():
         refresh_spotify()
     elif action == "push-terminal-font" and argument:
         push_terminal_font(argument)
+    elif action == "push-terminal-ground" and argument:
+        push_terminal_ground(argument)
     elif action == "apply-vscodium":
         colors = json.loads(argument) if argument else (
             extract_colors(get_current_wallpaper()) or {})
