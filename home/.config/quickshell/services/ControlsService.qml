@@ -502,12 +502,10 @@ Singleton {
         { id: "toggles",       col: 0, row: 0, size: "2x3" },
         { id: "volume",        col: 0, row: 3, size: "2x1" },
         { id: "brightness",    col: 0, row: 4, size: "2x1" },
-        { id: "appearance",    col: 0, row: 5, size: "2x2" },
-        { id: "session",       col: 0, row: 7, size: "2x1" },
+        { id: "appearance",    col: 0, row: 5, size: "2x3" },
         { id: "media",         col: 2, row: 0, size: "2x2" },
         { id: "weather",       col: 2, row: 2, size: "2x2" },
-        { id: "calendar",      col: 2, row: 4, size: "2x3" },
-        { id: "shortcuts",     col: 2, row: 7, size: "2x1" },
+        { id: "calendar",      col: 2, row: 4, size: "2x4" },
         { id: "notifications", col: 4, row: 0, size: "2x8" }
     ]
 
