@@ -32,6 +32,7 @@ import "../components"
 // takes the keyboard.
 PanelWindow {
     id: root
+    CornerGuard {}
 
     readonly property bool editing: DesktopService.editing
 

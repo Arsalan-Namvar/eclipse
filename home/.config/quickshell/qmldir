@@ -121,6 +121,7 @@ IslandMotionPreview 1.0 components/IslandMotionPreview.qml
 EditTray         1.0 components/EditTray.qml
 Sticky           1.0 components/Sticky.qml
 PopMenu          1.0 components/PopMenu.qml
+CornerGuard      1.0 components/CornerGuard.qml
 
 Bar              1.0 bar/Bar.qml
 Deck             1.0 deck/Deck.qml

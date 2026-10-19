@@ -34,6 +34,7 @@ import "../components"
 // fullscreen window (`DockService.coveredOn`).
 PanelWindow {
     id: root
+    CornerGuard {}
 
     // The dock only requests the launcher; `shell.qml` wires it to the island.
     signal launcherRequested()

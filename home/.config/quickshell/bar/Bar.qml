@@ -43,6 +43,7 @@ import "../components"
 // torn down, and what is under the pointer is always the one that answers it.
 PanelWindow {
     id: root
+    CornerGuard {}
 
     // Named for the blur behind it (`windowrules.lua`), which shows only
     // through a ground that is not solid.
