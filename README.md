@@ -17,6 +17,10 @@
 </p>
 
 <p align="center">
+  <a href="https://trendshift.io/repositories/233611"><img src="https://trendshift.io/api/badge/trendshift/repositories/233611/daily?language=QML" alt="#1 QML repository of the day on Trendshift" width="250" height="55"></a>
+</p>
+
+<p align="center">
   <a href="https://andreumassanet.github.io/impasto-docs/"><b>Documentation</b></a> ·
   <a href="#the-island">The island</a> ·
   <a href="#the-bar">The bar</a> ·
@@ -350,6 +354,15 @@ are other people's work, carried as they are:
 [Tokyo Night](https://github.com/folke/tokyonight.nvim),
 [Gruvbox](https://github.com/morhetz/gruvbox), [Nord](https://www.nordtheme.com)
 and [Rosé Pine](https://rosepinetheme.com).
+
+## Star history
+
+<a href="https://star-history.com/#andreumassanet/impasto&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=andreumassanet/impasto&type=Date&theme=dark">
+    <img src="https://api.star-history.com/svg?repos=andreumassanet/impasto&type=Date" alt="Star history of impasto" width="100%">
+  </picture>
+</a>
 
 ## License
 
