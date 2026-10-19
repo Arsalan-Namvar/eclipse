@@ -347,17 +347,18 @@ SettingsSection {
 
         SettingSlider {
             label: Tr.t("Workspaces shown")
-            value: SettingsService.workspaceCount
+            value: HyprlandService.slots
             from: 1
-            to: SettingsService.workspaceMax
+            to: HyprlandService.maximum
             onMoved: value => SettingsService.set("workspaceCount", Math.round(value))
         }
 
         SettingSlider {
             label: Tr.t("Workspaces available")
-            value: SettingsService.workspaceMax
+            // Per screen, each screen has ten.
+            value: HyprlandService.maximum
             from: 4
-            to: 20
+            to: HyprlandService.perScreen ? 10 : 20
             onMoved: value => {
                 const max = Math.round(value)
                 SettingsService.set("workspaceMax", max)

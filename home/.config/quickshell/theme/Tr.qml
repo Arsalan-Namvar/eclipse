@@ -837,6 +837,10 @@ QtObject {
             "Every screen shows the primary's": "Todas muestran lo de la principal",
             "Extended across all of them": "Repartido entre todas",
             "Extend": "Extender",
+            "Ten for each screen: the main one 1–10, the next 11–20": "Diez por pantalla: la principal 1–10, la siguiente 11–20",
+            "Every screen shares the same ten": "Todas las pantallas comparten los mismos diez",
+            "Shared": "Compartidos",
+            "Per screen": "Por pantalla",
             "Mirror": "Duplicar",
             "The main screen": "La pantalla principal",
             "Where anything with no screen of its own goes, and what mirroring copies.":

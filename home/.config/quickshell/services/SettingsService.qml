@@ -94,6 +94,7 @@ Singleton {
     readonly property alias spectrumOnEmpty: config.spectrumOnEmpty
     readonly property alias workspaceCount: config.workspaceCount
     readonly property alias workspaceMax: config.workspaceMax
+    readonly property alias workspaceMode: config.workspaceMode
     readonly property alias workspaceStyle: config.workspaceStyle
     readonly property alias motionScale: config.motionScale
     readonly property alias motionCurve: config.motionCurve
@@ -330,7 +331,7 @@ Singleton {
     // the person: kept across switches, left out of exports and untouched by
     // Reset. The recorder and capture entries are last-used state.
     readonly property var machineKeys: [
-        "displays", "lidPolicy",
+        "displays", "lidPolicy", "workspaceMode",
         "userName", "userAvatar", "language", "keyboard", "weatherPlace", "githubUser", "markets",
         "emojiTone",
         "doNotDisturb", "nightLight", "nightTemperature", "barHidden", "desktopHidden",
@@ -660,6 +661,9 @@ Singleton {
         // past `workspaceCount` still show while occupied.
         property int workspaceCount: 5
         property int workspaceMax: 10
+        // `shared`: every screen shares the same workspaces. `screen`: each
+        // has ten of its own, the main screen 1–10 and the rest after it.
+        property string workspaceMode: "shared"
         // How the strip draws each workspace: a shape (`dots`, `bars`, `rings`)
         // or its number written out (`numbers`, `roman`, `kanji`, `greek`).
         property string workspaceStyle: "dots"

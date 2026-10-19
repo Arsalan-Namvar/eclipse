@@ -199,6 +199,24 @@ SettingsSection {
                     onSelected: id => MonitorService.rememberPrimary(id)
                 }
             }
+
+            SettingRow {
+                label: Tr.t("Workspaces")
+                reading: HyprlandService.perScreen
+                    ? Tr.t("Ten for each screen: the main one 1–10, the next 11–20")
+                    : Tr.t("Every screen shares the same ten")
+                locked: root.single
+                reason: Tr.t("Only one screen is plugged in")
+
+                SegmentedControl {
+                    options: [
+                        { id: "shared", label: Tr.t("Shared") },
+                        { id: "screen", label: Tr.t("Per screen") }
+                    ]
+                    current: SettingsService.workspaceMode
+                    onSelected: id => SettingsService.set("workspaceMode", id)
+                }
+            }
         }
 
         SettingGroup {
