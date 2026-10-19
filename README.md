@@ -224,9 +224,8 @@ knowing first:
 
 These are worth your time whether or not you use this repository. No code was
 copied from any of them; what carried over from the shells are ideas — one file
-per island state, one transient signal for every ephemeral event, input
-debounced to one frame, and a capture that photographs the screen and draws the
-selection on the photograph.
+per island state, one transient signal for every ephemeral event, and input
+debounced to one frame.
 
 - [saneAspect](https://www.youtube.com/@saneAspect) — the Hyprland setups on
   YouTube that started all this
@@ -236,9 +235,6 @@ selection on the photograph.
   pill bar built to stay light without a dedicated GPU
 - [k4](https://github.com/k4ditano/k4) — a dynamic island bar with a documented
   plugin API
-- [HyprQuickshot](https://github.com/JamDon2/hyprquickshot) and its fork
-  [HyprQuickFrame](https://github.com/Ronin-CK/HyprQuickFrame) — a capture
-  surface in Quickshell
 - [diegoMalagrida/dotfiles](https://github.com/diegoMalagrida/dotfiles) — an
   Arch Linux desk ready to install on a fresh system
 
