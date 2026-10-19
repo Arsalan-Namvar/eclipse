@@ -9,7 +9,7 @@
 
 # The login screen's painting, blurred, with the palette board in the middle.
 # A daub of paint lands on the board for every fifth of the boot; a disk
-# password lifts the board and brings the island and the field in underneath.
+# password lifts the board and brings the field in underneath.
 # The pictures are drawn at twice a 1080-line screen and scaled to this one.
 
 
@@ -116,11 +116,6 @@ if (leaving) {
 
 # ── PASSWORD ────────────────────────────────────────────────────────────────
 
-island.image = fit(Image("island.png"));
-island.sprite = Sprite(island.image);
-island.sprite.SetX(screen.cx - island.image.GetWidth() / 2);
-island.sprite.SetZ(20);
-
 pill.image = fit(Image("pill.png"));
 pill.sprite = Sprite(pill.image);
 pill.x = screen.cx - pill.image.GetWidth() / 2;
@@ -158,8 +153,6 @@ fun show_dots() {
 fun place_asking() {
     local.e = 1 - (1 - asked) * (1 - asked) * (1 - asked);
     mark.top = mark.rest + (mark.raised - mark.rest) * local.e;
-    island.sprite.SetY(screen.y - island.image.GetHeight() * (1 - local.e));
-    island.sprite.SetOpacity(asked);
     pill.sprite.SetOpacity(asked);
     prompt.sprite.SetOpacity(asked);
     show_dots();
