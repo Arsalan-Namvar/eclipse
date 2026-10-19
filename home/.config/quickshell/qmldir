@@ -93,6 +93,7 @@ Figure           1.0 components/Figure.qml
 ModuleCard       1.0 components/ModuleCard.qml
 TopRowEditor     1.0 components/TopRowEditor.qml
 GlassSheen       1.0 components/GlassSheen.qml
+LitEdge          1.0 components/LitEdge.qml
 CardLimit        1.0 components/CardLimit.qml
 CardFact         1.0 components/CardFact.qml
 CardLevel        1.0 components/CardLevel.qml

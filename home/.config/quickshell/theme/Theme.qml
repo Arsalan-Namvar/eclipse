@@ -69,8 +69,10 @@ QtObject {
         return Qt.rgba(ground.r, ground.g, ground.b, ground.a * fraction)
     }
 
+    // Liquid's own rim is only a trace: its light is `litRim`, drawn by the
+    // sheen from one side.
     function rimOf(style: string): color {
-        return style === "liquid" ? Qt.rgba(1, 1, 1, 0.34)
+        return style === "liquid" ? Qt.rgba(1, 1, 1, 0.08)
             : style === "glass" ? Qt.rgba(1, 1, 1, 0.20) : "#262626"
     }
     readonly property color islandSurface: "#141414"
@@ -138,10 +140,20 @@ QtObject {
     readonly property real glassEdge: 0.12
     readonly property color glassSheen: Qt.rgba(1, 1, 1, 0.10)
 
-    // The same, by style: liquid catches twice the light.
+    // The same, by style: liquid catches more of it, from one side.
     function edgeOf(style: string): real {
-        return style === "liquid" ? 0.28 : root.glassEdge
+        return style === "liquid" ? 0.72 : root.glassEdge
     }
+
+    // Liquid is lit from one side (`LitEdge`): its rim and thick edge are full
+    // at the top-left and bottom-right corners and fade to `litTrace` toward
+    // the other two.
+    function litOf(style: string): bool {
+        return style === "liquid"
+    }
+
+    readonly property real litRim: 0.88
+    readonly property real litTrace: 0.06
 
     function sheenOf(style: string): color {
         return style === "liquid" ? Qt.rgba(1, 1, 1, 0.20) : root.glassSheen

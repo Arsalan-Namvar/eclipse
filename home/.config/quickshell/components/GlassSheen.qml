@@ -14,7 +14,8 @@ import "../theme"
 // Laid over a ground in the glass style (`Theme.glass`) and under what is on
 // it: the thick edge of a pane — light caught just inside the rim, fading in
 // over a few pixels — and light falling from the top. Takes its parent's
-// corners, since `clip` would cut it square.
+// corners, since `clip` would cut it square. Liquid's edge is lit from one
+// side (`LitEdge`).
 Item {
     id: root
 
@@ -64,9 +65,25 @@ Item {
         }
     }
 
-    Item {
+    LitEdge {
         anchors.fill: parent
+        style: root.style
         visible: root.edges
+
+        // A style lit from one side draws its rim's light here, where it
+        // can fade with the rest.
+        Rectangle {
+            anchors.fill: parent
+            visible: Theme.litOf(root.style)
+            color: "transparent"
+            border.width: 1
+            border.color: Qt.rgba(1, 1, 1, Theme.litRim)
+            radius: root.shape.radius
+            topLeftRadius: root.shape.topLeftRadius
+            topRightRadius: root.shape.topRightRadius
+            bottomLeftRadius: root.shape.bottomLeftRadius
+            bottomRightRadius: root.shape.bottomRightRadius
+        }
 
         Band { inset: 1; strength: 1 }
         Band { inset: 2; strength: 0.6 }

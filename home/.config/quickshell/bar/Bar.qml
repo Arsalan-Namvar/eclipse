@@ -776,34 +776,49 @@ PanelWindow {
         // On glass, attached, the island and its fillets are one pane: the
         // light from the top runs on into the fillets, and the thick edge
         // follows the outline below rather than the island's own rectangle.
-        Repeater {
-            model: SettingsService.islandAttached && Theme.glass && !island.paper
-                ? [[1, 1], [2, 0.6], [3, 0.35], [4, 0.15]] : []
+        // Its light falls as the sheen's does, from one side on liquid, over
+        // the whole pane fillets and all.
+        LitEdge {
+            id: notchEdge
 
-            NotchOutline {
-                required property var modelData
+            readonly property real fillet: Theme.radiusNotch * 2
+            readonly property real shapeHeight: root.unified ? band.height : island.height
 
-                inset: modelData[0]
-                shapeLeft: root.shapeLeft
-                shapeRight: root.shapeRight
-                shapeHeight: root.unified ? band.height : island.height
-                radius: island.radius
-                color: Qt.rgba(1, 1, 1, Theme.edgeOf(Theme.surfaceStyle) * modelData[1])
-            }
-        }
-
-        // Attached, the hairline runs down the fillets and round the shape, and
-        // not along the screen edge. In one capsule only while the island has
-        // the band, as `outline` above.
-        NotchOutline {
+            x: root.shapeLeft - notchEdge.fillet
+            width: root.shapeRight - root.shapeLeft + 2 * notchEdge.fillet
+            height: notchEdge.shapeHeight
             visible: SettingsService.islandAttached && !island.paper
-            shapeLeft: root.shapeLeft
-            shapeRight: root.shapeRight
-            shapeHeight: root.unified ? band.height : island.height
-            radius: island.radius
-            color: !root.unified || root.islandTaken ? Theme.islandRim : "transparent"
 
-            Behavior on color { ColorAnimation { duration: Theme.durationMedium } }
+            Repeater {
+                model: Theme.glass ? [[1, 1], [2, 0.6], [3, 0.35], [4, 0.15]] : []
+
+                NotchOutline {
+                    required property var modelData
+
+                    inset: modelData[0]
+                    shapeLeft: notchEdge.fillet
+                    shapeRight: notchEdge.width - notchEdge.fillet
+                    shapeHeight: notchEdge.shapeHeight
+                    radius: island.radius
+                    color: Qt.rgba(1, 1, 1, Theme.edgeOf(Theme.surfaceStyle) * modelData[1])
+                }
+            }
+
+            // Attached, the hairline runs down the fillets and round the shape,
+            // and not along the screen edge. In one capsule only while the
+            // island has the band, as `outline` above. Lit from one side, the
+            // rim's light is drawn here so it fades with the edge.
+            NotchOutline {
+                shapeLeft: notchEdge.fillet
+                shapeRight: notchEdge.width - notchEdge.fillet
+                shapeHeight: notchEdge.shapeHeight
+                radius: island.radius
+                color: !root.unified || root.islandTaken
+                    ? (notchEdge.lit ? Qt.rgba(1, 1, 1, Theme.litRim) : Theme.islandRim)
+                    : "transparent"
+
+                Behavior on color { ColorAnimation { duration: Theme.durationMedium } }
+            }
         }
 
         component BareShadow: MultiEffect {
