@@ -788,7 +788,7 @@ PanelWindow {
                 shapeRight: root.shapeRight
                 shapeHeight: root.unified ? band.height : island.height
                 radius: island.radius
-                color: Qt.rgba(1, 1, 1, Theme.glassEdge * modelData[1])
+                color: Qt.rgba(1, 1, 1, Theme.edgeOf(Theme.surfaceStyle) * modelData[1])
             }
         }
 
