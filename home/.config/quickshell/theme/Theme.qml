@@ -34,7 +34,8 @@ QtObject {
     // frosted over the blur, lit harder. `island` stays opaque for what is
     // cut out of it; the island, the capsules and the toasts are painted in
     // `islandGround`, and what sits on them in white washes.
-    readonly property string surfaceStyle: SettingsService.surfaceStyle
+    // Game mode is solid everywhere: no glass to blur behind.
+    readonly property string surfaceStyle: SettingsService.gameMode ? "classic" : SettingsService.surfaceStyle
     readonly property bool solid: !root.seeThrough(root.surfaceStyle)
     readonly property bool glass: root.seeThrough(root.surfaceStyle)
 
@@ -83,12 +84,14 @@ QtObject {
 
     // The desk's widgets have a ground of their own
     // (`SettingsService.desktopGround`; empty, from an old file, follows).
-    readonly property string deskStyle: SettingsService.desktopGround || root.surfaceStyle
+    readonly property string deskStyle: SettingsService.gameMode ? "classic"
+        : SettingsService.desktopGround || root.surfaceStyle
     readonly property bool deskSolid: !root.seeThrough(root.deskStyle)
     readonly property bool deskGlass: root.seeThrough(root.deskStyle)
 
     // The dock's, the same way (`SettingsService.dockGround`).
-    readonly property string dockStyle: SettingsService.dockGround || root.surfaceStyle
+    readonly property string dockStyle: SettingsService.gameMode ? "classic"
+        : SettingsService.dockGround || root.surfaceStyle
     readonly property bool dockGlass: root.seeThrough(root.dockStyle)
 
     // The same three on glass: white veils, by style. Only the bar's and the
@@ -112,7 +115,8 @@ QtObject {
     }
 
     function styleIn(window: var): string {
-        return !!window && window.glassy === true ? (window.groundStyle ?? root.surfaceStyle) : "classic"
+        return !!window && window.glassy === true && !SettingsService.gameMode
+            ? (window.groundStyle ?? root.surfaceStyle) : "classic"
     }
 
     function surfaceIn(window: var): color {
