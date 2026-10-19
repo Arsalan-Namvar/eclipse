@@ -360,7 +360,8 @@ QtObject {
     //
     // Everything scales off the icon size. The margin matches `gaps_out`.
     readonly property int dockIcon: SettingsService.dockIconSize
-    readonly property int dockPadding: 11
+    // Little room round the icons, so the icon is most of the dock.
+    readonly property int dockPadding: 6
     readonly property int dockGap: root.capsuleSpacing
     readonly property int dockMargin: root.desktopGutter
 
@@ -368,7 +369,11 @@ QtObject {
     // padding on the screen-edge side. An icon is drawn `dockInset` inside its
     // square, so the dot clears both it and the rim.
     readonly property int dockDot: 4
-    readonly property int dockInset: 2
+    readonly property int dockInset: 1
+
+    // The launcher button is a glyph narrower than an icon, so its square is
+    // too: the mark with room either side, or it reads as a gap.
+    readonly property int dockLauncher: Math.round(root.dockIcon * 0.7)
     readonly property int dockThickness: root.dockIcon + 2 * root.dockPadding
 
     // Screen-edge strip a hidden dock still listens on.
@@ -381,9 +386,14 @@ QtObject {
 
     readonly property int dockRadius: root.desktopRadius
 
-    // Hover scale. Small enough that neighbours never move, which keeps the
-    // input region computable.
+    // Hover scale when the dock does not magnify. Small enough that the
+    // neighbours never move.
     readonly property real dockLift: 1.125
+
+    // Magnifying, the icon under the pointer grows to this, and the swell
+    // falls off over this many icons either side.
+    readonly property real dockMagnify: 1.7
+    readonly property real dockReach: 2.5
 
     // Matches Hyprland's `rounding`: widgets sit among windows.
     readonly property int desktopRadius: 22

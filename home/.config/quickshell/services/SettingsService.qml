@@ -58,6 +58,7 @@ Singleton {
     readonly property alias dockEdge: config.dockEdge
     readonly property alias dockAlignment: config.dockAlignment
     readonly property alias dockIconSize: config.dockIconSize
+    readonly property alias dockMagnify: config.dockMagnify
     readonly property alias dockOpacity: config.dockOpacity
     readonly property alias dockGround: config.dockGround
     readonly property alias dockRunning: config.dockRunning
@@ -813,6 +814,9 @@ Singleton {
 
         // Every other dock metric derives from the icon size.
         property int dockIconSize: 44
+
+        // The icons swell under the pointer and the neighbours make room.
+        property bool dockMagnify: true
 
         // Percent; the compositor blurs behind the layer.
         property int dockOpacity: 100

@@ -135,7 +135,7 @@ SettingsSection {
 
     SettingGroup {
         title: Tr.t("Look")
-        note: Tr.t("The icon size everything on the dock scales with, and how opaque it is.")
+        note: Tr.t("The icon size everything on the dock scales with, whether it magnifies, and how opaque it is.")
         hint: Tr.t("Background sets how opaque the capsule is, classic or glass; lower it to let the blurred wallpaper through. The ground itself is chosen in Appearance, beside the bar's and the widgets'.")
 
         SettingSlider {
@@ -148,6 +148,17 @@ SettingsSection {
             locked: root.off
             reason: root.offReason
             onMoved: value => SettingsService.set("dockIconSize", Math.round(value))
+        }
+
+        SettingRow {
+            label: Tr.t("Magnify on hover")
+            locked: root.off
+            reason: root.offReason
+
+            ToggleSwitch {
+                checked: SettingsService.dockMagnify
+                onToggled: checked => SettingsService.set("dockMagnify", checked)
+            }
         }
 
         SettingSlider {

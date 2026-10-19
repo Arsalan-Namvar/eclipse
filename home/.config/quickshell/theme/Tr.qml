@@ -630,9 +630,10 @@ QtObject {
             "Alignment": "Alineación",
             "Background sets how opaque the capsule is, classic or glass; lower it to let the blurred wallpaper through. The ground itself is chosen in Appearance, beside the bar's and the widgets'.":
                 "Fondo fija la opacidad de la cápsula, clásica o de cristal; bájalo para que se vea el fondo desenfocado. El material se elige en Apariencia, junto al de la barra y el de los widgets.",
-            "The icon size everything on the dock scales with, and how opaque it is.":
-                "El tamaño de icono con el que escala todo el dock, y lo opaco que es.",
+            "The icon size everything on the dock scales with, whether it magnifies, and how opaque it is.":
+                "El tamaño de icono con el que escala todo el dock, si se amplía, y lo opaco que es.",
             "Icon size": "Tamaño de icono",
+            "Magnify on hover": "Ampliar al pasar el ratón",
             "Behaviour": "Comportamiento",
             "What else the dock shows, and which screens it is on.":
                 "Qué más muestra el dock, y en qué pantallas está.",

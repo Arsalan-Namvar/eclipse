@@ -78,6 +78,105 @@ PanelWindow {
         onTriggered: root.peeked = false
     }
 
+    // ── MAGNIFICATION ───────────────────────────────────────────────────────
+    //
+    // The icons near the pointer swell and push their neighbours apart, and
+    // the capsule grows to hold them. All of it is worked out from where the
+    // pointer is over the capsule at rest, never over the grown one, so an icon
+    // moving never moves what it is measured against. Off while dragging,
+    // while a menu is open and while the desk is being arranged.
+    readonly property bool magnifying: SettingsService.dockMagnify && hover.hovered
+        && DockService.dragging === "" && root.menuItem === null
+        && !DesktopService.editing
+
+    // Where the pointer is along the capsule at rest. Kept when it leaves, so
+    // the icons settle back from where they were.
+    property real pointer: 0
+
+    Binding {
+        target: root
+        property: "pointer"
+        value: root.vertical
+            ? hover.point.position.y - root.box.y
+            : hover.point.position.x - root.box.x
+        when: hover.hovered
+        restoreMode: Binding.RestoreNone
+    }
+
+    // 0 at rest, 1 magnifying, eased so entering and leaving are not a jump.
+    property real swell: root.magnifying ? 1 : 0
+
+    Behavior on swell {
+        NumberAnimation { duration: Theme.durationFast; easing.type: Theme.easing }
+    }
+
+    // Every slot's centre along the capsule at rest: the launcher button, then
+    // the applications.
+    readonly property var rest: {
+        const centres = []
+        if (DockService.hasLauncher)
+            centres.push(DockService.launcherOffset + Theme.dockLauncher / 2)
+        for (let i = 0; i < DockService.count; i++)
+            centres.push(DockService.offsetOf(i) + Theme.dockIcon / 2)
+        return centres
+    }
+
+    // How much each slot grows, as a fraction of the icon: a cosine bell
+    // centred on the pointer.
+    readonly property var gains: {
+        const reach = Theme.dockReach * (Theme.dockIcon + Theme.dockGap)
+        const top = (Theme.dockMagnify - 1) * root.swell
+        return root.rest.map(centre => {
+            const away = Math.abs(root.pointer - centre) / reach
+            return away >= 1 ? 0 : top * (1 + Math.cos(Math.PI * away)) / 2
+        })
+    }
+
+    // What the slots before each one have grown by, in pixels; the last entry
+    // is the whole growth.
+    readonly property var before: {
+        const sums = [0]
+        root.gains.forEach((gain, slot) =>
+            sums.push(sums[slot] + gain * root.sizeOf(slot)))
+        return sums
+    }
+
+    readonly property real grown: root.before[root.before.length - 1]
+
+    // How far the capsule's start moves back: the growth on the pointer's near
+    // side, so the icon under the pointer stays under it. An aligned dock
+    // keeps its end against the margin instead.
+    readonly property real backing: {
+        if (DockService.alignment === "start")
+            return 0
+        if (DockService.alignment === "end")
+            return root.grown
+        let sum = 0
+        root.gains.forEach((gain, slot) => {
+            const size = root.sizeOf(slot)
+            const start = root.rest[slot] - size / 2
+            const past = (root.pointer - start) / size
+            sum += gain * size * Math.max(0, Math.min(1, past))
+        })
+        return sum
+    }
+
+    // The scale an icon is drawn at grows away from the screen edge.
+    readonly property int growFrom: root.edge === "left" ? Item.Left
+        : (root.edge === "right" ? Item.Right : Item.Bottom)
+
+    // How long a slot is along the capsule: the launcher's is narrower.
+    function sizeOf(slot: int): real {
+        return slot === 0 && DockService.hasLauncher ? Theme.dockLauncher : Theme.dockIcon
+    }
+
+    // The slot an index of `DockService.items` sits in, or the launcher's.
+    function slotOf(index: int): int {
+        if (index === DockService.launcherIndex)
+            return 0
+        return index + (DockService.hasLauncher ? 1 : 0)
+    }
+
     // ── SURFACE ─────────────────────────────────────────────────────────────
 
     // Anchored to three edges: a layer surface anchored to fewer cannot claim
@@ -198,17 +297,34 @@ PanelWindow {
         // capsule.
         property int hoveredIndex: -1
 
-        x: root.box.x + root.offsetX
-        y: root.box.y + root.offsetY
-        width: root.box.width
-        height: root.box.height
+        readonly property real swell: root.swell
+        readonly property int growFrom: root.growFrom
 
-        // Animate the length as applications open and close.
+        // Where a slot resting at `rest` along the capsule is drawn, and the
+        // scale it is drawn at.
+        function alongOf(slot: int, rest: real): real {
+            return rest + (root.before[slot] ?? 0)
+                + root.sizeOf(slot) * (root.gains[slot] ?? 0) / 2
+        }
+
+        function scaleOf(slot: int): real {
+            return 1 + (root.gains[slot] ?? 0)
+        }
+
+        x: root.box.x + root.offsetX - (root.vertical ? 0 : root.backing)
+        y: root.box.y + root.offsetY - (root.vertical ? root.backing : 0)
+        width: root.box.width + (root.vertical ? 0 : root.grown)
+        height: root.box.height + (root.vertical ? root.grown : 0)
+
+        // Animate the length as applications open and close; magnifying, it
+        // follows the pointer.
         Behavior on width {
+            enabled: root.swell === 0
             NumberAnimation { duration: Theme.durationMedium; easing.type: Theme.easing }
         }
 
         Behavior on height {
+            enabled: root.swell === 0
             NumberAnimation { duration: Theme.durationMedium; easing.type: Theme.easing }
         }
 
@@ -251,18 +367,35 @@ PanelWindow {
             id: launcher
 
             visible: DockService.hasLauncher
-            width: Theme.dockIcon
-            height: Theme.dockIcon
+            width: root.vertical ? Theme.dockIcon : Theme.dockLauncher
+            height: root.vertical ? Theme.dockLauncher : Theme.dockIcon
 
-            x: root.vertical ? Theme.dockPadding : DockService.launcherOffset
-            y: root.vertical ? DockService.launcherOffset : Theme.dockPadding
+            readonly property real along: shelf.alongOf(0, DockService.launcherOffset)
+
+            x: root.vertical ? Theme.dockPadding : launcher.along
+            y: root.vertical ? launcher.along : Theme.dockPadding
 
             readonly property bool hovered: launcherHover.hovered
 
-            scale: launcher.hovered ? Theme.dockLift : 1
+            scale: SettingsService.dockMagnify
+                ? shelf.scaleOf(0) : (launcher.hovered ? Theme.dockLift : 1)
+            transformOrigin: SettingsService.dockMagnify ? root.growFrom : Item.Center
 
             Behavior on scale {
+                enabled: !SettingsService.dockMagnify
                 NumberAnimation { duration: Theme.durationFast; easing.type: Theme.easing }
+            }
+
+            // The grown icon and half the gap either side answer the pointer,
+            // so swollen icons leave no dead space between them.
+            containmentMask: Item {
+                readonly property real span: Theme.dockLauncher * launcher.scale + Theme.dockGap
+
+                parent: launcher
+                x: root.vertical ? -Theme.dockPadding : (launcher.width - span) / 2
+                y: root.vertical ? (launcher.height - span) / 2 : -Theme.dockPadding
+                width: root.vertical ? Theme.dockThickness : span
+                height: root.vertical ? span : Theme.dockThickness
             }
 
             Rectangle {
@@ -270,7 +403,7 @@ PanelWindow {
                 anchors.margins: -3
                 radius: Theme.radiusMedium
                 color: Theme.veilHoverOf(Theme.dockStyle)
-                opacity: launcher.hovered ? 1 : 0
+                opacity: launcher.hovered && !SettingsService.dockMagnify ? 1 : 0
                 visible: opacity > 0
 
                 Behavior on opacity {
@@ -278,8 +411,16 @@ PanelWindow {
                 }
             }
 
+            // Nudged toward the divider by half of what the room before it
+            // loses, to the padding being narrower than the gap and to the
+            // capsule's lit edge, so the room either side looks even.
+            readonly property real nudge: (Theme.dockGap - Theme.dockPadding
+                + (Theme.dockGlass ? 4 : 1)) / 2
+
             Text {
                 anchors.centerIn: parent
+                anchors.horizontalCenterOffset: root.vertical ? 0 : launcher.nudge
+                anchors.verticalCenterOffset: root.vertical ? launcher.nudge : 0
                 text: "󰀻"
                 font.family: Theme.fontMono
                 font.pixelSize: Math.round((Theme.dockIcon - 2 * Theme.dockInset) * 0.58)
@@ -323,8 +464,8 @@ PanelWindow {
             visible: DockService.hasLauncher && DockService.count > 0
             color: Theme.hairline
 
-            readonly property real along:
-                DockService.launcherOffset + Theme.dockIcon + Theme.dockGap
+            readonly property real along: DockService.launcherOffset
+                + Theme.dockLauncher + Theme.dockGap + (root.before[1] ?? 0)
 
             width: root.vertical ? Math.round(Theme.dockIcon * 0.5) : 1
             height: root.vertical ? 1 : Math.round(Theme.dockIcon * 0.5)
@@ -339,6 +480,7 @@ PanelWindow {
             readonly property real along:
                 DockService.offsetOf(DockService.pinnedCount - 1)
                     + Theme.dockIcon + Theme.dockGap
+                    + (root.before[root.slotOf(DockService.pinnedCount)] ?? 0)
 
             visible: DockService.divides
             color: Theme.hairline
@@ -409,11 +551,18 @@ PanelWindow {
         readonly property string text: label.onLauncher
             ? Tr.t("Applications") : (label.item ? label.item.name : "")
 
+        readonly property int slot: root.slotOf(label.shownIndex)
+
         readonly property real centre: label.onLauncher
-            ? DockService.launcherOffset + Theme.dockIcon / 2
+            ? shelf.alongOf(0, DockService.launcherOffset) + Theme.dockLauncher / 2
             : (label.shownIndex < 0 ? 0
-                : DockService.offsetOf(DockService.shifted(label.shownIndex))
+                : shelf.alongOf(label.slot,
+                    DockService.offsetOf(DockService.shifted(label.shownIndex)))
                     + Theme.dockIcon / 2)
+
+        // Clear of the icon however far it has grown out of the capsule.
+        readonly property real clear: Theme.dockGap
+            + Theme.dockIcon * (root.gains[label.slot] ?? 0)
 
         implicitWidth: plate.width
         implicitHeight: plate.height
@@ -422,8 +571,8 @@ PanelWindow {
 
         x: root.vertical
             ? (root.edge === "left"
-                ? shelf.x + shelf.width + Theme.dockGap
-                : shelf.x - width - Theme.dockGap)
+                ? shelf.x + shelf.width + label.clear
+                : shelf.x - width - label.clear)
             : Math.max(Theme.dockMargin,
                 Math.min(root.width - width - Theme.dockMargin,
                          shelf.x + centre - width / 2))
@@ -432,7 +581,7 @@ PanelWindow {
             ? Math.max(Theme.dockMargin,
                 Math.min(root.height - height - Theme.dockMargin,
                          shelf.y + centre - height / 2))
-            : shelf.y - height - Theme.dockGap
+            : shelf.y - height - label.clear
 
         // Hidden while dragging or while a menu is open. Visibility follows the
         // live hover; only the text uses the held index.
