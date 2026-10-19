@@ -140,15 +140,24 @@ Singleton {
         }
     }
 
-    // A sender's own icon, named or a path, or "" when it has none.
-    function iconOf(named: string): string {
-        if (!named)
-            return ""
+    // A sender's icon: the icon set's picture for it first, by the name it
+    // gives, its desktop entry or its own name, so a sender handing in its
+    // logo by path, or nothing, still looks like the rest; then that path.
+    // "" when there is none.
+    function iconOf(named: string, appName: string): string {
+        const entry = appName ? DesktopEntries.heuristicLookup(appName) : null
+        for (const name of [named, entry?.icon ?? "", appName.toLowerCase()]) {
+            if (name === "" || name.includes("/"))
+                continue
+            const themed = Theme.appIcon(name)
+            if (themed !== "")
+                return themed
+        }
         if (named.startsWith("/"))
             return `file://${named}`
         if (named.includes("://"))
             return named
-        return Theme.appIcon(named)
+        return ""
     }
 
     // For a sender with no icon of its own: the icon set's notifications

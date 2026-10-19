@@ -40,7 +40,7 @@ Item {
         const n = root.notification
         if (!n)
             return ""
-        return NotificationService.iconOf(n.appIcon || n.desktopEntry || "")
+        return NotificationService.iconOf(n.appIcon || n.desktopEntry || "", n.appName ?? "")
     }
 
     readonly property string picture: root.notification ? (root.notification.image ?? "") : ""

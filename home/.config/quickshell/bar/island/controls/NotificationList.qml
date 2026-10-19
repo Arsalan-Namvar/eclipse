@@ -147,7 +147,8 @@ Card {
                             id: mark
                             anchors.fill: parent
                             source: image.visible ? ""
-                                : (NotificationService.iconOf(entry.modelData.icon ?? "")
+                                : (NotificationService.iconOf(entry.modelData.icon ?? "",
+                                        entry.modelData.appName ?? "")
                                     || NotificationService.standIn(entry.critical))
                             visible: !image.visible && status === Image.Ready
                             asynchronous: true
