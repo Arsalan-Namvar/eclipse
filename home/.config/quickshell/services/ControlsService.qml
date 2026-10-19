@@ -314,16 +314,16 @@ Singleton {
             action: () => SettingsService.set("islandAttached", !SettingsService.islandAttached)
         },
         Toggle {
-            // All three at once; the settings set them one by one.
-            readonly property int count: [SettingsService.windowShadow,
-                SettingsService.barShadow, SettingsService.widgetShadow].filter(on => on).length
+            // All four at once; the settings set them one by one.
+            readonly property var shadows: ["windowShadow", "barShadow", "dockShadow", "widgetShadow"]
+            readonly property int count: shadows.filter(key => SettingsService[key]).length
 
             key: "shadow"; icon: "󰘷"; label: "Shadows"
-            detail: count === 3 ? "On" : count === 0 ? "Off" : `${count} of 3`
+            detail: count === shadows.length ? "On" : count === 0 ? "Off" : `${count} of ${shadows.length}`
             active: count > 0
             action: () => {
                 const on = count === 0
-                for (const key of ["windowShadow", "barShadow", "widgetShadow"])
+                for (const key of shadows)
                     SettingsService.set(key, on)
             }
         },

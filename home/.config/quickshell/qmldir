@@ -171,9 +171,12 @@ SettingsWindow        1.0 settings/SettingsWindow.qml
 SettingsPanel         1.0 settings/SettingsPanel.qml
 SettingsSection       1.0 settings/SettingsSection.qml
 BarSection            1.0 settings/BarSection.qml
+IslandSection         1.0 settings/IslandSection.qml
+ModulesSection        1.0 settings/ModulesSection.qml
 ModulesPart           1.0 settings/ModulesPart.qml
 LayoutEditor          1.0 settings/LayoutEditor.qml
 AppearanceSection     1.0 settings/AppearanceSection.qml
+WindowsSection        1.0 settings/WindowsSection.qml
 LauncherSection       1.0 settings/LauncherSection.qml
 SessionSection        1.0 settings/SessionSection.qml
 InputSection          1.0 settings/InputSection.qml

@@ -51,8 +51,6 @@ QtObject {
             "Size": "Tamaño",
             "Scale": "Escala",
             "Shape": "Forma",
-            "View": "Ver",
-            "Hide": "Ocultar",
             "Shown": "Visible",
             "Hidden": "Oculto",
             "None": "Ninguno",
@@ -104,9 +102,6 @@ QtObject {
             "THE DESK": "EL ESCRITORIO",
             "THE SESSION": "LA SESIÓN",
 
-            "Bar & Island": "Barra e isla",
-            "The top bar, the island and notifications.":
-                "La barra superior, la isla y las notificaciones.",
             "Modules": "Módulos",
             "Desktop": "Escritorio",
             "What sits on the wallpaper, under the windows.":
@@ -124,8 +119,6 @@ QtObject {
             "Sigils": "Prefijos",
             "Clipboard": "Portapapeles",
             "Appearance": "Apariencia",
-            "Palette, windows, fonts and animations.":
-                "Paleta, ventanas, tipografía y animaciones.",
             "Type": "Tipografía",
             "Motion": "Movimiento",
             "Displays": "Pantallas",
@@ -142,8 +135,6 @@ QtObject {
             "Every keybinding, the shell's and Hyprland's.":
                 "Todos los atajos, los del shell y los de Hyprland.",
             "Session": "Sesión",
-            "Your account, the lock screen and idle behaviour.":
-                "Tu cuenta, la pantalla de bloqueo y la inactividad.",
             "Lock screen": "Pantalla de bloqueo",
             "Lock": "Bloquear",
             "Suspend": "Suspender",
@@ -152,17 +143,11 @@ QtObject {
             "Shut down": "Apagar",
             "When you leave": "Cuando te vas",
             "System": "Sistema",
-            "Profiles, language, this machine and reset.":
-                "Perfiles, idioma, esta máquina y restablecer.",
             "Profiles": "Perfiles",
 
             // ── BAR & ISLAND ────────────────────────────────────────────────
             "The island": "La isla",
             "Island": "Isla",
-            "How the bar is drawn, and where the island meets the top edge.":
-                "Cómo se dibuja la barra, y dónde encuentra la isla el borde superior.",
-            "The style keeps what is on the bar and only changes how it is drawn: grouped round the island, spread to the two edges, or all inside one capsule. What each side carries is arranged in The bar.":
-                "El estilo conserva lo que hay en la barra y solo cambia cómo se dibuja: agrupada alrededor de la isla, repartida hacia los dos bordes, o todo dentro de una sola cápsula. Qué lleva cada lado se ordena en La barra.",
             "Grouped": "Agrupada",
             "Spread": "Repartida",
             "The workspaces, the island and the modules together in the middle.":
@@ -187,7 +172,6 @@ QtObject {
             "Flip": "Tarjetas",
             "Music": "Música",
             "Only while something is playing.": "Solo mientras suena algo.",
-            "The lyrics follow the Lyrics switch on the Bar & Island page, and are looked up on lrclib.net.": "La letra sigue el interruptor Letras de la página Barra e isla, y se busca en lrclib.net.",
             "Show": "Mostrar",
             "Nothing": "Nada",
             "The player": "El reproductor",
@@ -253,8 +237,6 @@ QtObject {
                 "Todas las piezas de la barra siguen esto salvo que se les haya dado uno propio.",
             "Like the bar": "Como la barra",
             "When": "Cuándo",
-            "The widgets": "Los widgets",
-            "Module settings": "Ajustes de módulos",
             "The bar": "La barra",
             "While it runs": "Mientras está en marcha",
             "Nothing to set: it is drawn one way.": "Nada que ajustar: se dibuja de una sola forma.",
@@ -297,11 +279,6 @@ QtObject {
             "Updates": "Actualizaciones",
             "Pet": "Mascota",
             "Spectrum": "Espectro",
-            "Sound bars from whatever is playing, on the grid or along an edge.":
-                "Barras de sonido de lo que esté sonando, en la cuadrícula o a lo largo de un borde.",
-            "The bars leave when a window opens on the workspace and come back when the last one closes, and stop listening meanwhile. Off, they stay under the windows.":
-                "Las barras se retiran cuando se abre una ventana en el espacio de trabajo y vuelven cuando se cierra la última, y mientras tanto dejan de escuchar. Apagado, se quedan debajo de las ventanas.",
-            "Only on an empty workspace": "Solo en un espacio vacío",
             "Under the windows": "Debajo de las ventanas",
             "Fill": "Relleno",
             "From the edge": "Desde el borde",
@@ -366,9 +343,6 @@ QtObject {
             "Handwriting": "A mano",
             "The signature's script": "La letra de la firma",
             "The interface face": "La tipografía de la interfaz",
-            "The notes stuck on the screen's edges leave when a window opens on the workspace and come back when the last one closes. Off, they stay over the windows.":
-                "Las notas pegadas a los bordes se retiran cuando se abre una ventana en el espacio de trabajo y vuelven cuando se cierra la última. Apagado, se quedan sobre las ventanas.",
-            "Edges only on an empty workspace": "Bordes solo en un espacio vacío",
             "Gone while a window is open": "Fuera mientras haya una ventana abierta",
             "Over the windows": "Sobre las ventanas",
 
@@ -408,12 +382,9 @@ QtObject {
             "Nothing on the wallpaper yet": "Nada en el fondo todavía",
             "Hide the widgets": "Ocultar los widgets",
             "Window layout": "Disposición de ventanas",
-            "Off the wallpaper until you show them again": "Fuera del fondo hasta que los vuelvas a mostrar",
             "Look": "Aspecto",
             "Every widget follows these unless it was given a look of its own.":
                 "Todos los widgets siguen esto salvo que se les haya dado un aspecto propio.",
-            "While arranging, click a widget to override these for it alone. Modern shows a figure with a caption, Analogue draws an object such as a dial or a gauge, and Sticker cuts it out as coloured stickers on the wallpaper; the background sets how opaque the first two are, on the ground chosen in Appearance beside the bar's and the dock's.":
-                "Mientras colocas, haz clic en un widget para cambiar esto solo para él. Modern muestra una cifra con un pie, Analógico dibuja un objeto, como una esfera o un indicador, y Pegatina lo recorta en pegatinas de colores sobre el fondo; el fondo fija lo opacos que son los dos primeros, sobre el material que se elige en Apariencia junto al de la barra y el del dock.",
 
             "Modern": "Modern",
             "Analogue": "Analógico",
@@ -452,17 +423,14 @@ QtObject {
             "Personal": "Personal",
             "Controls": "Controles",
             "Click the cell that should be the grid's corner": "Haz clic en la celda que será la esquina de la cuadrícula",
-            "Ground": "Fondo",
+            "Ground": "Material",
             "Sides": "Laterales",
             "The icons on the wallpaper": "Los iconos sobre el fondo",
             "Each group in a capsule": "Cada grupo en una cápsula",
             "In one island the sides sit on its band": "En una isla los laterales van sobre su banda",
             "In capsules": "En cápsulas",
             "On the wallpaper": "Sobre el fondo",
-            "Bar and island": "Barra e isla",
-            "Blur and refraction": "Desenfoque y refracción",
             "Refraction": "Refracción",
-            "What shows through a window.": "Lo que se ve a través de una ventana.",
             "Solid black": "Negro sólido",
             "The terminal's glass, over a blur": "El cristal de la terminal, sobre un desenfoque",
             "Classic": "Clásico",
@@ -629,25 +597,15 @@ QtObject {
             "Show the dock": "Mostrar el dock",
             "Edge": "Borde",
             "Alignment": "Alineación",
-            "Background sets how opaque the capsule is, classic or glass; lower it to let the blurred wallpaper through. The ground itself is chosen in Appearance, beside the bar's and the widgets'.":
-                "Fondo fija la opacidad de la cápsula, clásica o de cristal; bájalo para que se vea el fondo desenfocado. El material se elige en Apariencia, junto al de la barra y el de los widgets.",
-            "The icon size everything on the dock scales with, whether it magnifies, and how opaque it is.":
-                "El tamaño de icono con el que escala todo el dock, si se amplía, y lo opaco que es.",
             "Icon size": "Tamaño de icono",
             "Magnify on hover": "Ampliar al pasar el ratón",
             "Behaviour": "Comportamiento",
-            "What else the dock shows, and which screens it is on.":
-                "Qué más muestra el dock, y en qué pantallas está.",
             "The launcher button opens the island's launcher, and open applications appear after a divider while they run. Windows and widgets pass under the dock, so moving or hiding it moves nothing else.":
                 "El botón del lanzador abre el lanzador de la isla, y las aplicaciones abiertas aparecen tras un separador mientras están en marcha. Las ventanas y los widgets pasan por debajo del dock, así que moverlo u ocultarlo no mueve nada más.",
             "Launcher button": "Botón del lanzador",
             "Open applications": "Aplicaciones abiertas",
             "On every screen": "En todas las pantallas",
             "Zen": "Zen",
-            "The bar is away; the island still comes down to show something":
-                "La barra no está; la isla sigue bajando para enseñar algo",
-            "Hides the bar and gives its band to the windows":
-                "Oculta la barra y deja su franja a las ventanas",
             "One on each, all showing the same": "Uno en cada una, todos iguales",
             "Only on the screen you are on": "Solo en la pantalla en la que estás",
             "One on each, and the one you are on is the live one":
@@ -656,8 +614,6 @@ QtObject {
             "Kept on it": "Guardadas en él",
             "These stay whether they are running or not, and they lead the launcher's list too.":
                 "Estas se quedan estén o no en marcha, y también van delante en la lista del lanzador.",
-            "Their order is set by dragging them on the dock, and right-clicking a dock icon also keeps or removes it. The launcher uses this list too, so it stays editable with the dock off.":
-                "El orden se fija arrastrándolas en el dock, y con el botón derecho sobre un icono también lo guardas o lo quitas. El lanzador también usa esta lista, así que se puede editar con el dock apagado.",
             "Nothing kept yet.": "Todavía no hay nada guardado.",
             "This application is no longer installed":
                 "Esta aplicación ya no está instalada",
@@ -682,9 +638,6 @@ QtObject {
             "As tall as the answer": "Tan alta como la respuesta",
             "Only as tall as it needs": "Solo lo alta que necesite",
             "A fixed box": "Una caja fija",
-            "Kept applications": "Aplicaciones guardadas",
-            "They lead the list, and the dock keeps them too.":
-                "Van delante en la lista, y el dock también las guarda.",
             "Plain text searches applications, and a sigil in front switches mode. Click one to change it.":
                 "El texto normal busca aplicaciones, y un prefijo delante cambia de modo. Haz clic en uno para cambiarlo.",
 
@@ -769,16 +722,8 @@ QtObject {
             "Inactive opacity": "Opacidad inactiva",
 
             "Depth": "Profundidad",
-            "Blur shows behind anything translucent, such as the terminal. Refraction (a Hyprland plugin, tuned in look.lua) frosts and bends what is behind a window, like wet glass.":
-                "El desenfoque se ve tras todo lo translúcido, como la terminal. La refracción (un plugin de Hyprland, ajustado en look.lua) esmerila y deforma lo que hay detrás de una ventana, como un cristal mojado.",
-            "What is lifted off the wallpaper.": "Lo que se despega del fondo.",
-            "What the bar, the dock, the widgets and the terminal are made of.": "De qué están hechos la barra, el dock, los widgets y la terminal.",
-            "Classic is solid black, Glass the terminal's tinted ground over a blur of the wallpaper, and Liquid a clear frosted pane that lets the wallpaper's own colours through. How opaque each is, is set on the dock's and the widgets' own pages; the terminal's follows its ground.":
-                "Clásico es negro sólido, Cristal el fondo teñido de la terminal sobre el fondo de pantalla desenfocado, y Líquido un panel esmerilado y claro que deja pasar los colores del fondo de pantalla. Lo opaco que es cada uno se ajusta en las páginas del dock y de los widgets; el de la terminal va con su fondo.",
             "Liquid": "Líquido",
             "Clear frosted glass, lit at the edge": "Cristal esmerilado y claro, con el borde iluminado",
-            "Bar and dock": "Barra y dock",
-            "Desktop widgets": "Widgets del escritorio",
             "Terminal": "Terminal",
             "size": "tamaño",
             "Glass": "Cristal",
@@ -787,13 +732,6 @@ QtObject {
             "Shadow": "Sombra",
             "Lifted off the wallpaper": "Despegadas del fondo",
             "Flat": "Planas",
-            "Window rules": "Reglas de ventana",
-            "Every rule": "Todas las reglas",
-            "in windowrules.lua": "en windowrules.lua",
-            "Read from hypr/modules/windowrules.lua — changing them means editing that file.":
-                "Leídas de hypr/modules/windowrules.lua — cambiarlas es editar ese archivo.",
-            "Nothing to show — the file is missing or empty.":
-                "Nada que mostrar — el archivo falta o está vacío.",
 
             "Interface": "Interfaz",
             "Everything Quickshell draws.":
@@ -1149,7 +1087,67 @@ QtObject {
             "Reset this profile": "Restablecer este perfil",
             "Back to the defaults": "Volver a los valores por defecto",
             "A Hyprland shell, and the desk around it":
-                "Un shell para Hyprland, y el escritorio alrededor"
+                "Un shell para Hyprland, y el escritorio alrededor",
+
+            "A notch cuts the island into the top edge, and the bar's top margin no longer applies to it.":
+                "Una muesca encaja la isla en el borde superior, y el margen superior de la barra deja de aplicarse a ella.",
+            "Animation": "Animación",
+            "Bar": "Barra",
+            "Classic is solid black, Glass the accent-tinted ground over a blur of the wallpaper, and Liquid a clear frosted pane. Its typeface is the monospace one, under Type.":
+                "Clásico es negro sólido, Cristal el fondo teñido del acento sobre el fondo de pantalla desenfocado, y Líquido un panel esmerilado transparente. Su tipografía es la monoespaciada, en Tipografía.",
+            "Classic is solid black, Glass the terminal's tinted ground over a blur of the wallpaper, and Liquid a clear frosted pane that lets the wallpaper's own colours through. The island is always the bar's.":
+                "Clásico es negro sólido, Cristal el fondo teñido del terminal sobre el fondo de pantalla desenfocado, y Líquido un panel esmerilado transparente que deja pasar los colores del fondo de pantalla. La isla siempre es como la barra.",
+            "Classic is solid black, Glass the terminal's tinted ground over a blur of the wallpaper, and Liquid a clear frosted pane. Background sets how opaque the capsule is; lower it to let the blurred wallpaper through.":
+                "Clásico es negro sólido, Cristal el fondo teñido del terminal sobre el fondo de pantalla desenfocado, y Líquido un panel esmerilado transparente. Fondo ajusta la opacidad de la cápsula; bájalo para que se vea el fondo de pantalla desenfocado.",
+            "How Hyprland lays out, draws and animates windows.":
+                "Cómo Hyprland coloca, dibuja y anima las ventanas.",
+            "How the bar is drawn round the island.":
+                "Cómo se dibuja la barra alrededor de la isla.",
+            "How the top bar is drawn, what it carries and its workspaces.":
+                "Cómo se dibuja la barra superior, qué lleva y sus espacios de trabajo.",
+            "Inactive opacity fades the windows without focus. Blur shows behind anything translucent, such as the terminal. Refraction (a Hyprland plugin, tuned in look.lua) frosts and bends what is behind a window, like wet glass.":
+                "La opacidad inactiva atenúa las ventanas sin foco. El desenfoque se ve detrás de todo lo translúcido, como el terminal. La refracción (un plugin de Hyprland, ajustado en look.lua) esmerila y curva lo que hay detrás de una ventana, como cristal mojado.",
+            "Look them up": "Buscarlas",
+            "Looked up on lrclib.net by title and artist, which needs no account. They show in the island's glance and its media card, in the desktop's lyrics widget and on the lock screen when it is set to show them.":
+                "Se buscan en lrclib.net por título y artista, sin necesidad de cuenta. Aparecen en el vistazo de la isla y en su tarjeta de música, en el widget de letras del escritorio y en la pantalla de bloqueo cuando está configurada para mostrarlas.",
+            "Notes on the edges": "Notas en los bordes",
+            "Position": "Posición",
+            "Profiles, updates, language and this machine.":
+                "Perfiles, actualizaciones, idioma y este equipo.",
+            "The icon size everything on the dock scales with, and what the capsule is made of.":
+                "El tamaño de icono con el que escala todo el dock, y de qué está hecha la cápsula.",
+            "The island at rest, what runs beside the time, and notifications.":
+                "La isla en reposo, lo que corre junto a la hora, y las notificaciones.",
+            "The lyrics follow the Lyrics switch on the Modules page, and are looked up on lrclib.net.":
+                "Las letras siguen el interruptor Letras de la página Módulos, y se buscan en lrclib.net.",
+            "The notes stuck on the screen's edges and the spectrum's bars leave when a window opens and come back when the last one closes; the spectrum stops listening meanwhile. Off, the notes stay over the windows and the bars under them.":
+                "Las notas pegadas en los bordes de la pantalla y las barras del espectro se van cuando se abre una ventana y vuelven cuando se cierra la última; mientras tanto el espectro deja de escuchar. Desactivado, las notas se quedan sobre las ventanas y las barras debajo.",
+            "The style keeps what is on the bar and only changes how it is drawn: grouped round the island, spread to the two edges, or all inside one capsule. What each side carries is arranged in Layout.":
+                "El estilo mantiene lo que hay en la barra y solo cambia cómo se dibuja: agrupada alrededor de la isla, repartida hacia los dos bordes, o todo dentro de una cápsula. Lo que lleva cada lado se coloca en Disposición.",
+            "The words of whatever is playing, wherever they are shown.":
+                "La letra de lo que suena, allí donde se muestre.",
+            "Their order is set by dragging them on the dock, and right-clicking a dock icon also keeps or removes it. The launcher puts them first, so the list stays editable with the dock off.":
+                "Su orden se cambia arrastrándolas en el dock, y el clic derecho sobre un icono del dock también la guarda o la quita. El lanzador las pone primero, así que la lista sigue editable con el dock apagado.",
+            "Wallpaper, terminal, fonts and the shell's motion.":
+                "Fondo de pantalla, terminal, tipografías y el movimiento del shell.",
+            "What else the dock shows, and when it hides.":
+                "Qué más muestra el dock, y cuándo se oculta.",
+            "What kitty's window is made of.": "De qué está hecha la ventana de kitty.",
+            "What makes way when a window opens on the workspace.":
+                "Lo que se aparta cuando se abre una ventana en el espacio de trabajo.",
+            "What shows through a window, and what lifts it off the wallpaper.":
+                "Lo que se ve a través de una ventana, y lo que la despega del fondo de pantalla.",
+            "What the bar and the island are made of.":
+                "De qué están hechas la barra y la isla.",
+            "What the modules know, on the bar, the desktop and the panels.":
+                "Lo que saben los módulos, en la barra, el escritorio y los paneles.",
+            "Where the island meets the top edge, and what opens it.":
+                "Dónde se encuentra la isla con el borde superior, y qué la abre.",
+            "While arranging, click a widget to override these for it alone. Modern shows a figure with a caption, Analogue draws an object such as a dial or a gauge, and Sticker cuts it out as coloured stickers on the wallpaper; the ground and the background set what the first two are made of and how opaque.":
+                "Al colocar, haz clic en un widget para cambiar esto solo para él. Moderno muestra una cifra con un rótulo, Analógico dibuja un objeto como una esfera o un indicador, y Pegatina lo recorta como pegatinas de colores sobre el fondo de pantalla; el material y el fondo deciden de qué están hechos los dos primeros y su opacidad.",
+            "With more screens": "Con más pantallas",
+            "Your account, the lock screen, face unlock and idle behaviour.":
+                "Tu cuenta, la pantalla de bloqueo, el desbloqueo facial y la inactividad."
         }
     })
 }

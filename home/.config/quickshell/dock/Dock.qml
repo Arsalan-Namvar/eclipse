@@ -328,14 +328,14 @@ PanelWindow {
             NumberAnimation { duration: Theme.durationMedium; easing.type: Theme.easing }
         }
 
-        // The same shadow, and the same switch, as the bar and the windows: a
+        // The same shadow as the bar and the windows, on its own switch: a
         // blurred copy grown by `shadowSpread`, so the falloff's midpoint sits
         // outside the capsule. The Loader sizes it to the capsule plus the
         // shadow's reach, since a layer effect is clipped to its item.
         Loader {
             anchors.fill: parent
             anchors.margins: -Theme.shadowBarRange
-            active: SettingsService.barShadow
+            active: SettingsService.dockShadow
             sourceComponent: caster
         }
 

@@ -103,6 +103,7 @@ Singleton {
     readonly property alias animationPreset: config.animationPreset
     readonly property alias windowShadow: config.windowShadow
     readonly property alias barShadow: config.barShadow
+    readonly property alias dockShadow: config.dockShadow
     readonly property alias widgetShadow: config.widgetShadow
     readonly property alias windowGlass: config.windowGlass
     readonly property alias surfaceStyle: config.surfaceStyle
@@ -469,6 +470,9 @@ Singleton {
             for (const key of ["desktopGround", "dockGround"])
                 if (config[key] === "")
                     config[key] = config.surfaceStyle
+            // The dock shared the bar's shadow before it had its own.
+            if (!/"dockShadow"/.test(file.text()))
+                config.dockShadow = config.barShadow
         }
         // First run: write the defaults, which then count as read.
         onLoadFailed: error => {
@@ -526,10 +530,11 @@ Singleton {
         // over whatever the rest of the settings say.
         property bool gameMode: false
 
-        // Three shadows, one per layer: Hyprland's under the windows, the
-        // shell's under the bar and the dock, and under the desk's widgets.
+        // Four shadows, one per layer: Hyprland's under the windows, the
+        // shell's under the bar, the dock and the desk's widgets.
         property bool windowShadow: false
         property bool barShadow: false
+        property bool dockShadow: false
         property bool widgetShadow: false
 
         // hyprglass. Dimmed in the settings when the plugin is not built;
