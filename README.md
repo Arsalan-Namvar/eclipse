@@ -18,13 +18,14 @@
 
 <p align="center">
   <a href="https://trendshift.io/repositories/233611"><img src="https://trendshift.io/api/badge/trendshift/repositories/233611/daily?language=QML" alt="#1 QML repository of the day on Trendshift" width="250" height="55"></a>
+  <a href="https://trendshift.io/repositories/233611"><img src="https://trendshift.io/api/badge/trendshift/repositories/233611/weekly?language=QML" alt="#4 QML repository of the week on Trendshift" width="250" height="55"></a>
 </p>
 
 <p align="center">
   <a href="https://andreumassanet.github.io/impasto-docs/"><b>Documentation</b></a> ·
   <a href="#the-island">The island</a> ·
   <a href="#the-bar">The bar</a> ·
-  <a href="#the-launcher-and-the-dock">The launcher</a> ·
+  <a href="#liquid-glass">Liquid glass</a> ·
   <a href="#the-desktop">The desktop</a> ·
   <a href="#installation">Installation</a> ·
   <a href="#keys">Keys</a>
@@ -83,54 +84,33 @@ own and the dock is on all of them, a workspace number brings that workspace to
 the screen you are on, and the brightness keys dim that screen — an external
 monitor over DDC/CI.
 
-## The launcher and the dock
+## Liquid glass
 
 <p align="center">
-  <img src=".github/assets/launcher-and-dock.jpg" alt="The launcher listing applications ranked by use, the clipboard history with an image drawn in its row, and the dock with the terminal's menu open over its windows" width="100%">
+  <img src=".github/assets/liquid-glass.gif" alt="The island, the bar, the dock and two widgets in liquid glass over a painting of a rocket launch; the island opens a glance and the control centre, then a terminal slides across the rocket and bends it at its edges" width="100%">
 </p>
 
-**The first character says what the field is for.** Plain text searches
-applications, `=` calculates, `@` finds an open window, `!` starts a countdown,
-`'` is the clipboard history, `:` picks an emoji, and `>` is the shell itself —
-every panel and setting by name. Applications are ranked by what you actually launch.
-
-**The dock holds what you pinned, then whatever else is open**, and the same
-pins come first in the launcher. Right-click an icon for its windows by name.
+**Every layer can be glass.** The island and the bar, the dock, the widgets and
+the terminal each take a ground of their own: classic black, glass, or liquid —
+a clear pane lit from one side, with the painting showing through in its own
+colours. The windows can refract what is behind them as well, bending the
+wallpaper at their edges.
 
 ## The desktop
-
-<p align="center">
-  <img src=".github/assets/desktop-themes.jpg" alt="The same desk split in three: Modern on the left, figures with captions; Analogue in the middle, a thermometer, a wall calendar, a battery cell, a knob, a parcel, a joystick; Sticker on the right, die-cut shapes in pastel colours for the weather, the pet, the date, a clock and the processor" width="100%">
-</p>
-
-**Any module can live on the wallpaper**, on a grid, in four shapes: a square,
-a card, a large square and a band. Right-click the wallpaper to arrange — a card
-holds every module, a corner is pulled for another shape, and a click
-opens that widget's own look — for a photo widget, the picture of your own it
-holds.
-
-**Three themes on the same modules**: *Modern* is a figure with a caption,
-*Analogue* draws each one as an object, *Sticker* cuts it out as coloured
-stickers that sit on the wallpaper without filling their squares, and any of
-them is a choice per widget. A
-spectrum of whatever is playing sits on the grid as bare bars, or runs along a
-whole edge under the windows.
 
 <p align="center">
   <img src=".github/assets/repaint.gif" alt="The wallpaper changing three times, and the bar, the widgets, the terminal and the system monitor repainting with each one" width="100%">
 </p>
 
 **The palette comes out of the painting.** Pick a wallpaper and its colours
-reach everything at once: the island and the widgets, the terminal and the
-prompt, btop, cava, yazi, neovim, VSCodium, the GTK, Qt and KDE windows, Nautilus
-down to its folders, Vesktop, Zen and Spotify. Or pick one of nine palettes
-instead. The desk comes with forty paintings, in the style it is named after,
-and a video of your own in `~/.local/share/wallpapers/animated` can be the
-wallpaper too: it plays under the windows and the palette comes from its first
-frame.
+reach everything at once: the island and the widgets, the terminal, neovim,
+VSCodium, the GTK and Qt windows, Nautilus down to its folders, Vesktop, Zen
+and Spotify. Forty paintings come with it, and a video can be the wallpaper
+too.
 
-In the terminal, the prompt is laid out like the bar, and `fa` greets you with
-fastfetch beside an animated scene drawn in pixel art out of the palette.
+**Any module can live on the wallpaper**, on a grid, in four shapes, drawn in
+one of three themes: *Modern*, *Analogue* or *Sticker*. Right-click the
+wallpaper to arrange it.
 
 ## Notes and tasks
 
@@ -161,13 +141,15 @@ away costs nothing.
 ## Lock and login
 
 <p align="center">
-  <img src=".github/assets/lock-and-login.jpg" alt="The lock screen resting on its clock over the blurred desk, the island growing round the padlock while it looks for a face, and the SDDM login screen over a blurred painting — the same island, clock and pill" width="100%">
+  <img src=".github/assets/lock.gif" alt="The lock screen over the blurred cover of the track playing, the lyrics moving line by line beside the cover, then a touch: a ring turns round the padlock, closes green, and the blur lifts off the desk" width="100%">
 </p>
 
 **The shell locks the session itself**, over the blurred desk, and the login
 screen is the same lock with the desk taken away: an SDDM theme with the same
 island, the same clock and the same pill, over a blurred painting. Both rest on
-the clock alone. Any key brings in your account and the field, and is already
+the clock alone. When something is playing, the lock shows it: the cover
+blurred behind everything, and the lyrics beside it, line by line in time with
+the track. Any key brings in your account and the field, and is already
 the first letter of your password; Escape sends them away again. The clock is
 stacked or on one line, in Settings → Session → Lock screen, and the login
 screen always stacks it. The picture and the name are your account's, and
@@ -196,16 +178,6 @@ blurred, centre stage, sunglasses, a crown) and the gestures beside it. A
 thumbs up lets balloons go, a heart made with both hands sends hearts, a
 victory sign throws confetti. Pick *impasto camera* in Discord, a browser or
 OBS; the webcam turns on only while one of them is reading it.
-
-## Settings
-
-<p align="center">
-  <img src=".github/assets/settings.jpg" alt="Two pages of the settings window: the bar arranged on a picture of it from a catalogue of modules and buttons, and the desktop's module settings with the pet drawn in its four styles" width="100%">
-</p>
-
-**Settings is the one panel that is not the island** — an ordinary window where
-each option is drawn as the thing it changes, and profiles keep whole desks
-under names: *Moon castle*, *Fuji* and *Night bay* come with it.
 
 ## Installation
 
