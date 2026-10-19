@@ -421,7 +421,7 @@ ColumnLayout {
                 anchors.fill: parent
                 visible: !usage.group && status === Image.Ready
                 source: !usage.group && (usage.entry.icon ?? "") !== ""
-                    ? Quickshell.iconPath(usage.entry.icon, true) : ""
+                    ? Theme.appIcon(usage.entry.icon) : ""
                 sourceSize: Qt.size(44, 44)
                 asynchronous: true
             }

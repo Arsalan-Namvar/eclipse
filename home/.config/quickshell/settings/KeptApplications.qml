@@ -68,7 +68,7 @@ ColumnLayout {
 
             readonly property var entry: DockService.entryOf(kept.modelData)
             readonly property string picture: kept.entry && kept.entry.icon
-                ? Quickshell.iconPath(kept.entry.icon, true) : ""
+                ? Theme.appIcon(kept.entry.icon) : ""
 
             Layout.fillWidth: true
             implicitHeight: 52
@@ -222,7 +222,7 @@ ColumnLayout {
             required property var modelData
 
             readonly property string picture: option.modelData.icon
-                ? Quickshell.iconPath(option.modelData.icon, true) : ""
+                ? Theme.appIcon(option.modelData.icon) : ""
 
             width: ListView.view.width
             height: 34

@@ -128,7 +128,8 @@ Card {
                         Layout.preferredHeight: 30
                         Layout.alignment: Qt.AlignVCenter
                         radius: width * Theme.pictureCorner
-                        color: entry.critical ? Theme.red : Theme.surfaceHoverIn(QsWindow.window)
+                        color: mark.visible ? "transparent"
+                            : (entry.critical ? Theme.red : Theme.surfaceHoverIn(QsWindow.window))
 
                         Image {
                             id: image
@@ -141,9 +142,22 @@ Card {
                             sourceSize.height: 60
                         }
 
+                        // The sender's icon, else the icon set's stand-in.
+                        Image {
+                            id: mark
+                            anchors.fill: parent
+                            source: image.visible ? ""
+                                : (NotificationService.iconOf(entry.modelData.icon ?? "")
+                                    || NotificationService.standIn(entry.critical))
+                            visible: !image.visible && status === Image.Ready
+                            asynchronous: true
+                            sourceSize.width: 60
+                            sourceSize.height: 60
+                        }
+
                         Text {
                             anchors.centerIn: parent
-                            visible: !image.visible
+                            visible: !image.visible && !mark.visible
                             text: entry.critical ? "󰀪" : "󰂚"
                             font.family: Theme.fontMono
                             font.pixelSize: 13

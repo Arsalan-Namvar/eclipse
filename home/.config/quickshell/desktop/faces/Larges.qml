@@ -970,7 +970,7 @@ Item {
                                 sourceSize: Qt.size(32, 32)
                                 asynchronous: true
                                 source: (used.modelData.icon ?? "") !== ""
-                                    ? Quickshell.iconPath(used.modelData.icon, true) : ""
+                                    ? Theme.appIcon(used.modelData.icon) : ""
                             }
 
                             Text {

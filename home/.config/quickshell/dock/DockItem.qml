@@ -113,7 +113,7 @@ Item {
         // The desktop entry's icon from the icon theme, falling back to the
         // launcher mark when it is missing.
         readonly property string iconSource: root.modelData.icon
-            ? Quickshell.iconPath(root.modelData.icon, true) : ""
+            ? Theme.appIcon(root.modelData.icon) : ""
 
         Image {
             id: picture

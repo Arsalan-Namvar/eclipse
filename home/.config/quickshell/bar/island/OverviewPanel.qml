@@ -380,7 +380,7 @@ ColumnLayout {
                                         width: Math.min(26, parent.width * 0.5)
                                         height: width
                                         visible: root.toplevelFor(thumb.modelData) === null
-                                        source: Quickshell.iconPath(thumb.modelData.class, true)
+                                        source: Theme.appIcon(thumb.modelData.class)
                                         sourceSize.width: 52
                                         sourceSize.height: 52
                                     }

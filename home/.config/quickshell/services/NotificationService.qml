@@ -14,6 +14,8 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Notifications
 
+import "../theme"
+
 // Owns org.freedesktop.Notifications. If another daemon holds the name, the
 // server stays unregistered and takes over by itself once it is released.
 //
@@ -131,10 +133,28 @@ Singleton {
             summary: notification.summary,
             body: notification.body,
             appName: notification.appName,
+            icon: notification.appIcon || notification.desktopEntry || "",
             image: notification.image,
             urgency: notification.urgency,
             lock: pixels ? root.retainer.createObject(root, { object: notification }) : null
         }
+    }
+
+    // A sender's own icon, named or a path, or "" when it has none.
+    function iconOf(named: string): string {
+        if (!named)
+            return ""
+        if (named.startsWith("/"))
+            return `file://${named}`
+        if (named.includes("://"))
+            return named
+        return Theme.appIcon(named)
+    }
+
+    // For a sender with no icon of its own: the icon set's notifications
+    // icon, or its alert for a critical one.
+    function standIn(critical: bool): string {
+        return Theme.appIcon(critical ? "com.github.timecraft.notifier" : "cs-notifications")
     }
 
     // The open notification behind a history entry, while it is still open.
@@ -326,6 +346,7 @@ Singleton {
             summary: entry.summary,
             body: entry.body,
             appName: entry.appName,
+            icon: entry.icon ?? "",
             image: entry.image.startsWith("image://qsimage/") ? "" : entry.image,
             urgency: entry.urgency
         }))

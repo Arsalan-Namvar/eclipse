@@ -10,6 +10,7 @@
 pragma Singleton
 
 import QtQuick
+import Quickshell
 
 import "../services"
 
@@ -145,6 +146,20 @@ QtObject {
     function sheenOf(style: string): color {
         return style === "liquid" ? Qt.rgba(1, 1, 1, 0.20) : root.glassSheen
     }
+
+    // An application's icon, from the set `shell.qml` names. Some apps are
+    // drawn there under another name, and the file manager as somebody
+    // else's, so those ask for the picture meant for them.
+    readonly property var appIconAliases: ({
+        "vesktop": "Vesktop",
+        "thunar": "folder",
+        "org.xfce.thunar": "folder"
+    })
+
+    function appIcon(name: string): string {
+        return Quickshell.iconPath(root.appIconAliases[name] ?? name, true)
+    }
+
     // How far down a shape that light reaches, in pixels, so a short pane and
     // a tall one are lit alike; a shape shorter than this keeps some at its
     // foot.
