@@ -30,11 +30,11 @@ Singleton {
     readonly property alias barHeight: config.barHeight
     readonly property alias barMargin: config.barMargin
     readonly property alias islandAttached: config.islandAttached
-    readonly property alias barFullWidth: config.barFullWidth
     readonly property alias barSideMargin: config.barSideMargin
     readonly property alias barStyle: config.barStyle
     readonly property alias barEverywhere: config.barEverywhere
     readonly property alias barHidden: config.barHidden
+    readonly property alias screenCorners: config.screenCorners
     readonly property alias gameMode: config.gameMode
     readonly property alias barLeft: config.barLeft
     readonly property alias barRight: config.barRight
@@ -168,8 +168,13 @@ Singleton {
     readonly property var barStyles: [
         { id: "grouped", label: "Grouped",    note: "The workspaces, the island and the modules together in the middle." },
         { id: "spread",  label: "Spread",     note: "The workspaces at one edge, the modules at the other, the island between them." },
-        { id: "island",  label: "One island", note: "Everything inside a single capsule." }
+        { id: "island",  label: "One island", note: "Everything inside a single capsule." },
+        { id: "bezel",   label: "Bezel",      note: "A band across the whole top edge, with the island dropping out of its middle." }
     ]
+
+    // The island is cut into the top edge: chosen, or the bezel, which is
+    // always cut in.
+    readonly property bool notched: config.islandAttached || config.barStyle === "bezel"
 
     // Used while `barLeft`/`barRight` are null. `workspaces` is the strip,
     // `tray` the applications' icons and `split` starts a new capsule; none is
@@ -473,6 +478,9 @@ Singleton {
             // The dock shared the bar's shadow before it had its own.
             if (!/"dockShadow"/.test(file.text()))
                 config.dockShadow = config.barShadow
+            // One island spanning the screen is the bezel now.
+            if (/"barFullWidth":\s*true/.test(file.text()) && config.barStyle === "island")
+                config.barStyle = "bezel"
         }
         // First run: write the defaults, which then count as read.
         onLoadFailed: error => {
@@ -511,11 +519,6 @@ Singleton {
         // A notch flush with the top edge instead of a floating capsule.
         property bool islandAttached: false
 
-        // One-island style only: the band spans the screen (less
-        // `barSideMargin`) instead of fitting its contents. Off by default so
-        // the island can still grow and shrink.
-        property bool barFullWidth: false
-
         property int barSideMargin: 18
 
         // A bar on every screen, or only on the one being worked on. The
@@ -525,6 +528,9 @@ Singleton {
         // Zen: the bar off the screen and its band given to the windows; the
         // island still comes down for what it has to show.
         property bool barHidden: false
+
+        // Every screen's four corners rounded off in black.
+        property bool screenCorners: false
 
         // Game mode: no animations, blur, shadow or glass on the compositor,
         // over whatever the rest of the settings say.

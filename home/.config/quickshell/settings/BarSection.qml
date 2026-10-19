@@ -33,7 +33,7 @@ SettingsSection {
         SettingGroup {
             title: Tr.t("Shape")
             note: Tr.t("How the bar is drawn round the island.")
-            hint: Tr.t("The style keeps what is on the bar and only changes how it is drawn: grouped round the island, spread to the two edges, or all inside one capsule. What each side carries is arranged in Layout.")
+            hint: Tr.t("The style keeps what is on the bar and only changes how it is drawn: grouped round the island, spread to the two edges, all inside one capsule, or a bezel across the top edge. What each side carries is arranged in Layout. Rounded corners round every screen, and curve under the bezel's ends.")
 
             SettingTiles {
                 label: Tr.t("Style")
@@ -61,13 +61,25 @@ SettingsSection {
                 }
             }
 
+            SettingRow {
+                label: Tr.t("Rounded corners")
+                reading: SettingsService.screenCorners
+                    ? Tr.t("Every screen's corners curve like the windows")
+                    : Tr.t("Square, as the panel is")
+
+                ToggleSwitch {
+                    checked: SettingsService.screenCorners
+                    onToggled: checked => SettingsService.set("screenCorners", checked)
+                }
+            }
+
             // Locked in one capsule, where the sides sit on its band.
             SettingRow {
                 label: Tr.t("Sides")
                 reading: SettingsService.barSides === "bare"
                     ? Tr.t("The icons on the wallpaper")
                     : Tr.t("Each group in a capsule")
-                locked: SettingsService.barStyle === "island"
+                locked: SettingsService.barStyle === "island" || SettingsService.barStyle === "bezel"
                 reason: Tr.t("In one island the sides sit on its band")
 
                 SegmentedControl {
@@ -77,22 +89,6 @@ SettingsSection {
                     ]
                     current: SettingsService.barSides
                     onSelected: id => SettingsService.set("barSides", id)
-                }
-            }
-
-            // Only the single-capsule style has a band that can span the
-            // screen; locked in the other two.
-            SettingRow {
-                label: Tr.t("Span the whole screen")
-                reading: SettingsService.barFullWidth
-                    ? Tr.t("As wide as the bar can be")
-                    : Tr.t("As wide as the island needs")
-                locked: SettingsService.barStyle !== "island"
-                reason: Tr.t("Only one island can span the screen")
-
-                ToggleSwitch {
-                    checked: SettingsService.barFullWidth
-                    onToggled: checked => SettingsService.set("barFullWidth", checked)
                 }
             }
 
@@ -134,8 +130,6 @@ SettingsSection {
                 onMoved: value => SettingsService.set("barMargin", Math.round(value))
             }
 
-            // Applies in every style, including the spanning band: its full
-            // width is the screen less this margin.
             SettingSlider {
                 label: Tr.t("Side margin")
                 value: SettingsService.barSideMargin

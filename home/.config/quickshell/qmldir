@@ -122,6 +122,9 @@ EditTray         1.0 components/EditTray.qml
 Sticky           1.0 components/Sticky.qml
 PopMenu          1.0 components/PopMenu.qml
 CornerGuard      1.0 components/CornerGuard.qml
+ScreenCorner     1.0 components/ScreenCorner.qml
+BezelOutline     1.0 components/BezelOutline.qml
+BezelShape       1.0 components/BezelShape.qml
 
 Bar              1.0 bar/Bar.qml
 Deck             1.0 deck/Deck.qml
@@ -230,3 +233,4 @@ BrightnessDetail 1.0 bar/island/BrightnessDetail.qml
 TrayMenuPanel    1.0 bar/island/TrayMenuPanel.qml
 BluetoothDetail  1.0 bar/island/BluetoothDetail.qml
 Commands         1.0 Commands.qml
+ScreenCorners    1.0 ScreenCorners.qml

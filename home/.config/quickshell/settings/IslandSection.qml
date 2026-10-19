@@ -46,7 +46,9 @@ SettingsSection {
 
             SettingTiles {
                 label: Tr.t("Position")
-                reading: SettingsService.islandAttached
+                locked: SettingsService.barStyle === "bezel"
+                reason: Tr.t("The bezel is always cut into the top edge")
+                reading: SettingsService.notched
                     ? Tr.t("Cut into the top edge")
                     : Tr.t("Floating below the top edge")
 

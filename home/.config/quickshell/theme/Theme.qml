@@ -424,6 +424,8 @@ QtObject {
 
     // Matches Hyprland's `rounding`: widgets sit among windows.
     readonly property int desktopRadius: 22
+    // The screen's own corners, when they are rounded: the same curve.
+    readonly property int screenRadius: root.desktopRadius
 
     readonly property int radiusSmall: 8
     readonly property int radiusMedium: 12

@@ -59,7 +59,7 @@ Rectangle {
             return root.lit ? Theme.islandGroundLit : Theme.islandGround
         if (root.lit)
             return Theme.islandSurfaceHover
-        return SettingsService.islandAttached ? Theme.islandGround : Theme.islandSurface
+        return SettingsService.notched ? Theme.islandGround : Theme.islandSurface
     }
 
     // ── HOSTED ──────────────────────────────────────────────────────────────
@@ -158,7 +158,7 @@ Rectangle {
 
     // Attached, only the shape reaches up to the screen edge; the contents keep
     // their padding, so nothing already drawn moves.
-    readonly property int notchPad: SettingsService.islandAttached ? Theme.barTopMargin : 0
+    readonly property int notchPad: SettingsService.notched ? Theme.barTopMargin : 0
 
     readonly property var layerComponents: ({
         modules: restLayer,
@@ -216,7 +216,7 @@ Rectangle {
     GlassSheen {
         shape: root
         visible: Theme.glass && !root.paper && !root.hosted
-        edges: !SettingsService.islandAttached
+        edges: !SettingsService.notched
     }
 
     IslandState {
@@ -360,13 +360,13 @@ Rectangle {
     // edge. `Bar.qml` draws the outline over both. Attached, `Bar.qml` draws
     // it too, down the fillets and open along the screen edge.
     readonly property bool inBand: root.hosted
-    border.width: root.paper || root.inBand || SettingsService.islandAttached ? 0 : 1
+    border.width: root.paper || root.inBand || SettingsService.notched ? 0 : 1
     clip: true
 
     // Attached, the upper corners go square: the curve is added outside the
     // island by NotchFillet, flaring away from it rather than cutting into it.
-    topLeftRadius: SettingsService.islandAttached ? 0 : root.radius
-    topRightRadius: SettingsService.islandAttached ? 0 : root.radius
+    topLeftRadius: SettingsService.notched ? 0 : root.radius
+    topRightRadius: SettingsService.notched ? 0 : root.radius
 
     Behavior on topLeftRadius {
         enabled: root.animated

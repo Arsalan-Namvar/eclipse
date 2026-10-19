@@ -155,6 +155,10 @@ QtObject {
             "The workspaces at one edge, the modules at the other, the island between them.":
                 "Los espacios en un borde, los módulos en el otro, y la isla entre ellos.",
             "Everything inside a single capsule.": "Todo dentro de una sola cápsula.",
+            "A band across the whole top edge, with the island dropping out of its middle.":
+                "Una banda a lo largo de todo el borde superior, con la isla saliendo de su centro.",
+            "Bezel": "Marco",
+            "The bezel is always cut into the top edge": "El marco siempre va pegado al borde superior",
             "A glance on hover": "Un vistazo al pasar el cursor",
             "Resting the pointer on the island opens it": "Dejar el cursor sobre la isla lo abre",
             "Only a click opens anything": "Solo un clic abre algo",
@@ -183,12 +187,7 @@ QtObject {
             "Floating below the top edge": "Flotando bajo el borde superior",
             "Floating": "Flotante",
             "One island": "Una isla",
-            "Span the whole screen": "Ocupar toda la pantalla",
             "Edge to edge": "De borde a borde",
-            "As wide as the island needs": "Lo ancha que la isla necesite",
-            "As wide as the bar can be": "Tan ancha como pueda ser la barra",
-            "Only one island can span the screen":
-                "Solo una isla puede ocupar la pantalla",
             "The bar itself is the preview: it repaints over this window as the sliders move.":
                 "La vista previa es la propia barra: se repinta sobre esta ventana mientras mueves los controles.",
             "Everything on the bar scales with its height. The top margin is the gap to the screen edge (the island ignores it in notch mode), and the side margin is the inset from the left and right edges.":
@@ -196,7 +195,6 @@ QtObject {
             "Bar height": "Altura de la barra",
             "Top margin": "Margen superior",
             "Side margin": "Margen lateral",
-            "Set by \"Span the whole screen\"": "Lo fija \"Ocupar toda la pantalla\"",
             "The shown workspaces are always drawn; the rest, up to the available count, appear only while they have windows.":
                 "Los espacios visibles se dibujan siempre; el resto, hasta los disponibles, solo aparecen mientras tienen ventanas.",
             "Workspaces shown": "Espacios visibles",
@@ -802,6 +800,9 @@ QtObject {
             "The only screen there is": "La única pantalla que hay",
             "Only one screen is plugged in": "Solo hay una pantalla conectada",
             "Only one screen is on": "Solo hay una pantalla encendida",
+            "Rounded corners": "Esquinas redondeadas",
+            "Every screen's corners curve like the windows": "Las esquinas de cada pantalla se curvan como las ventanas",
+            "Square, as the panel is": "Rectas, como el panel",
             "Resolution": "Resolución",
             "What the monitor itself reported, largest first.":
                 "Lo que ha reportado el propio monitor, de mayor a menor.",
@@ -1122,8 +1123,8 @@ QtObject {
                 "Las letras siguen el interruptor Letras de la página Módulos, y se buscan en lrclib.net.",
             "The notes stuck on the screen's edges and the spectrum's bars leave when a window opens and come back when the last one closes; the spectrum stops listening meanwhile. Off, the notes stay over the windows and the bars under them.":
                 "Las notas pegadas en los bordes de la pantalla y las barras del espectro se van cuando se abre una ventana y vuelven cuando se cierra la última; mientras tanto el espectro deja de escuchar. Desactivado, las notas se quedan sobre las ventanas y las barras debajo.",
-            "The style keeps what is on the bar and only changes how it is drawn: grouped round the island, spread to the two edges, or all inside one capsule. What each side carries is arranged in Layout.":
-                "El estilo mantiene lo que hay en la barra y solo cambia cómo se dibuja: agrupada alrededor de la isla, repartida hacia los dos bordes, o todo dentro de una cápsula. Lo que lleva cada lado se coloca en Disposición.",
+            "The style keeps what is on the bar and only changes how it is drawn: grouped round the island, spread to the two edges, all inside one capsule, or a bezel across the top edge. What each side carries is arranged in Layout. Rounded corners round every screen, and curve under the bezel's ends.":
+                "El estilo mantiene lo que hay en la barra y solo cambia cómo se dibuja: agrupada alrededor de la isla, repartida hacia los dos bordes, todo dentro de una cápsula, o un marco a lo largo del borde superior. Lo que lleva cada lado se coloca en Disposición. Las esquinas redondeadas redondean cada pantalla y se curvan bajo los extremos del marco.",
             "The words of whatever is playing, wherever they are shown.":
                 "La letra de lo que suena, allí donde se muestre.",
             "Their order is set by dragging them on the dock, and right-clicking a dock icon also keeps or removes it. The launcher puts them first, so the list stays editable with the dock off.":

@@ -204,6 +204,18 @@ ShellRoot {
         }
     }
 
+    // The screens' corners, rounded off only while the setting is on.
+    Variants {
+        model: SettingsService.screenCorners ? Quickshell.screens : []
+
+        ScreenCorners {
+            required property var modelData
+
+            screen: modelData
+            live: modelData.name === root.liveScreenName
+        }
+    }
+
     // Notes docked on the screen edges, on every screen, for the desktop's
     // reason. A deck is a row like a widget and carries its screen too.
     Variants {

@@ -62,9 +62,10 @@ arrives there with its buttons, and stays in the control centre's list.
   <img src=".github/assets/bar-styles.jpg" alt="The same bar in its three styles: grouped round the island, spread to the two edges, and everything inside one capsule" width="100%">
 </p>
 
-**Three styles, one layout.** Pieces are dragged out of a catalogue onto a
-picture of the bar, then drawn grouped round the island, spread to the edges, or
-all inside one capsule. A module tells you something and opens its detail; a
+**Four styles, one layout.** Pieces are dragged out of a catalogue onto a
+picture of the bar, then drawn grouped round the island, spread to the edges,
+all inside one capsule, or on a bezel across the top edge that the island
+drops out of. The screen's corners can be rounded to match. A module tells you something and opens its detail; a
 button opens something — any panel the control centre does, the capture
 surface, or Settings. Each shows its symbol or its ring, with its figure
 always, never or under the pointer — two settings for the whole bar, and any
