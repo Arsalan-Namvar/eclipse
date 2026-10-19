@@ -54,7 +54,9 @@ QtObject {
 
     // The liquid ground: a light, cool frost rather than the accent's tint,
     // so the blurred wallpaper reads through it in its own colours.
-    readonly property color liquidGround: Qt.rgba(0.06, 0.07, 0.09, 0.50)
+    // Dense enough that muted text holds over a light wallpaper: at half
+    // alpha the island over a pale one measured mid grey.
+    readonly property color liquidGround: Qt.rgba(0.06, 0.07, 0.09, 0.66)
 
     // Any style's ground and rim, for a picture of one that is not chosen.
     function groundOf(style: string): color {
@@ -184,7 +186,15 @@ QtObject {
     property color surfaceHover: "#202020"
     property color border: "#282828"
     property color text: "#ffffff"
-    property color textMuted: "#8e8e93"
+    property color paletteMuted: "#8e8e93"
+    // The palette's muted grey, lifted toward the text while any ground is
+    // liquid: over a pale wallpaper that glass measures mid grey, where the
+    // palette's own grey is under 2:1.
+    readonly property color textMuted: root.litOf(root.surfaceStyle)
+            || root.litOf(root.dockStyle) || root.litOf(root.deskStyle)
+        ? Qt.tint(root.paletteMuted, Qt.alpha(root.text, root.mutedLift))
+        : root.paletteMuted
+    readonly property real mutedLift: 0.45
     property color accent: "#0a84ff"
     property color accentHover: "#409cff"
     property color accentText: "#ffffff"
@@ -272,7 +282,7 @@ QtObject {
     Behavior on surfaceHover { ColorAnimation { duration: root.paletteTransition } }
     Behavior on border       { ColorAnimation { duration: root.paletteTransition } }
     Behavior on text         { ColorAnimation { duration: root.paletteTransition } }
-    Behavior on textMuted    { ColorAnimation { duration: root.paletteTransition } }
+    Behavior on paletteMuted { ColorAnimation { duration: root.paletteTransition } }
     Behavior on accent       { ColorAnimation { duration: root.paletteTransition } }
     Behavior on accentHover  { ColorAnimation { duration: root.paletteTransition } }
     Behavior on accentText   { ColorAnimation { duration: root.paletteTransition } }
@@ -587,7 +597,7 @@ QtObject {
             root.activeName = name
         for (const token of root.tokens) {
             if (colors[token])
-                root[token] = colors[token]
+                root[token === "textMuted" ? "paletteMuted" : token] = colors[token]
         }
     }
 }
