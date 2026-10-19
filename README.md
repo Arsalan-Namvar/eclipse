@@ -25,8 +25,8 @@
   <a href="https://andreumassanet.github.io/impasto-docs/"><b>Documentation</b></a> ·
   <a href="#the-island">The island</a> ·
   <a href="#the-bar">The bar</a> ·
-  <a href="#liquid-glass">Liquid glass</a> ·
   <a href="#the-desktop">The desktop</a> ·
+  <a href="#liquid-glass">Liquid glass</a> ·
   <a href="#installation">Installation</a> ·
   <a href="#keys">Keys</a>
 </p>
@@ -84,18 +84,6 @@ own and the dock is on all of them, a workspace number brings that workspace to
 the screen you are on, and the brightness keys dim that screen — an external
 monitor over DDC/CI.
 
-## Liquid glass
-
-<p align="center">
-  <img src=".github/assets/liquid-glass.gif" alt="The island, the bar, the dock and two widgets in liquid glass over a painting of a rocket launch; the island opens a glance and the control centre, then a terminal slides across the rocket and bends it at its edges" width="100%">
-</p>
-
-**Every layer can be glass.** The island and the bar, the dock, the widgets and
-the terminal each take a ground of their own: classic black, glass, or liquid —
-a clear pane lit from one side, with the painting showing through in its own
-colours. The windows can refract what is behind them as well, bending the
-wallpaper at their edges.
-
 ## The desktop
 
 <p align="center">
@@ -112,31 +100,26 @@ too.
 one of three themes: *Modern*, *Analogue* or *Sticker*. Right-click the
 wallpaper to arrange it.
 
-## Notes and tasks
+## Liquid glass
 
 <p align="center">
-  <img src=".github/assets/notes-and-tasks.jpg" alt="The deck of pastel notes in handwriting, one note open with the island become yellow paper, the kanban board with three lanes, and a task open with its day and lane" width="100%">
+  <img src=".github/assets/liquid-glass.jpg" alt="The control centre three times over a painting of a rocket launch: solid black, tinted glass over the blur, and clear liquid glass lit from one side" width="100%">
 </p>
 
-**A note is paper**: a pastel square with a title and the body in handwriting.
-`SUPER + S` opens the deck; on the wallpaper a note sits on a square, or stacks
-with others along an edge as tabs that peek out under the pointer.
+**Every layer picks its material**: the island and the bar, the dock, the
+widgets and the terminal, each classic, glass or liquid. The windows can bend
+the painting at their edges too.
 
-**A board for what has to be done.** `SUPER + K` is to do, doing, done, with
-cards dragged between the lanes, and a task's day shows as a dot under the
-month wherever a month is drawn.
-
-## Games and pets
+## Everything else, in the island
 
 <p align="center">
-  <img src=".github/assets/games-and-pets.jpg" alt="Tetris and Whack-a-Mole played in the island, and the pets' page with Pip out and the rest of the family waiting" width="100%">
+  <img src=".github/assets/panels.jpg" alt="Six panels of the island: notes in handwriting on pastel paper, Tetris, the task board with three lanes, a day of screen time by app, the virtual machine catalogue, and the local servers listening with their ports" width="100%">
 </p>
 
-**Eleven small games, played in the island** — `SUPER + G` opens a shelf, and
-the island becomes the board. **A family of five small creatures lives on the
-bar**: one out at a time, earning levels from being fed and played with, each
-hatched from an egg and drawn in one of four styles. Nothing dies, and a week
-away costs nothing.
+**Every tool is a panel of the island**, not a window: notes, tasks, eleven
+games, screen time, virtual machines, the servers you have running, your
+packages and effects for the webcam in any call. A pet lives on the bar, and
+<kbd>SUPER</kbd> <kbd>H</kbd> lists the key for each.
 
 ## Lock and login
 
@@ -144,47 +127,13 @@ away costs nothing.
   <img src=".github/assets/lock.gif" alt="The lock screen over the blurred cover of the track playing, the lyrics moving line by line beside the cover, then a touch: a ring turns round the padlock, closes green, and the blur lifts off the desk" width="100%">
 </p>
 
-**The shell locks the session itself**, over the blurred desk, and the login
-screen is the same lock with the desk taken away: an SDDM theme with the same
-island, the same clock and the same pill, over a blurred painting. Both rest on
-the clock alone. When something is playing, the lock shows it: the cover
-blurred behind everything, and the lyrics beside it, line by line in time with
-the track. Any key brings in your account and the field, and is already
-the first letter of your password; Escape sends them away again. The clock is
-stacked or on one line, in Settings → Session → Lock screen, and the login
-screen always stacks it. The picture and the name are your account's, and
-Settings → Session changes them for both screens at once: drop an image on the
-card and it is made square and kept where the login screen reads it; type a
-name and it becomes the account's full name.
-
-**With an infrared camera, the lock opens for your face.** Touch a key or the
-pointer and the island grows under the camera, a ring turns around its
-padlock while it looks, closes green, the padlock opens and the blur lifts off
-the desk. It is its own conversation beside the password, so a face it does
-not know never costs you a try, and the login screen still asks for the
-password after a boot. Settings → Session lists the faces it knows, adds
-another, removes one, and lets you try it without locking.
-
-**Before either of them, the boot.** A Plymouth splash over the same blurred
-painting: the palette board and the name in the middle, and a daub of paint
-lands on the board for every fifth of the way. An encrypted disk asks for its
-password with the login screen's island and pill, and shutting down shows the
-board fully painted.
-
-**The webcam has effects for any call.** <kbd>SUPER</kbd> <kbd>SHIFT</kbd>
-<kbd>W</kbd> opens it on the island: what the others will see, a strip of
-effects under it (the palette's colour, black and white, the background
-blurred, centre stage, sunglasses, a crown) and the gestures beside it. A
-thumbs up lets balloons go, a heart made with both hands sends hearts, a
-victory sign throws confetti. Pick *impasto camera* in Discord, a browser or
-OBS; the webcam turns on only while one of them is reading it.
+**The lock shows what is playing**: the cover blurred behind it and the
+lyrics in time. **With an infrared camera it opens for your face.** The login
+screen and the boot splash are the same design, before there is a session.
 
 ## Installation
 
-Arch Linux, and Hyprland 0.56 or newer (tested on 0.56.2), configured in Lua.
-Run it from a terminal, in the Hyprland session or on a console before there
-is one. The two plugins are built against the compositor that is running, so
-from a console the first session opens a terminal that builds them:
+Arch Linux and Hyprland 0.56 or newer, from a terminal or a console:
 
 ```bash
 git clone https://github.com/andreumassanet/impasto.git ~/impasto
@@ -192,24 +141,13 @@ cd ~/impasto
 ./setup install
 ```
 
-It installs the packages it is missing — upgrading the system in the same step,
-as Arch asks — oh-my-zsh, everything in `home/` into your home and everything
-in `system/` into `/`, the two Hyprland plugins and the vector cursor, and the
-login screen, switched on unless your machine already uses another display
-manager. It sets up Nautilus, VSCodium, Vesktop and Spotify, dark GTK
-applications, and what opens which kind of file — leaving alone any your
-machine already has an answer for. Where there is an infrared camera it
-installs howdy-next and asks to enrol your face, and where there is a webcam
-it installs the virtual camera the effects go out through. It turns the boot
-splash on, which rebuilds the initramfs once. It asks for your password
-through sudo for pacman, for the copy into `/`, and to let spicetify patch
-Spotify. A program that is open, or a Spotify you have never started, is
-skipped with the reason and set up by the next `update`. After that they follow
-the wallpaper on their own; Spotify from its next start.
+It installs what is missing, copies `home/` and `system/` into place, and sets
+up the login screen, the plugins and the programs around the shell. Run
+`./setup` alone to pick from a menu instead.
 
-Run `./setup` with nothing after it and it asks instead: the verbs on one
-screen, and what an install may leave out on the next, which is the flags below
-with somewhere to press them.
+<details>
+<summary><b>Flags</b></summary>
+<br>
 
 | Flag | |
 |---|---|
@@ -221,28 +159,16 @@ with somewhere to press them.
 | `--noconfirm` | take the default at every question |
 | `-n`, `--dry-run` | say what would happen, and do none of it |
 
+</details>
+
 ```bash
 ./setup update       # git pull, then install again — the same flags
 ./setup uninstall    # remove what it installed, and put back what it moved aside
 ./setup help         # every verb and flag
 ```
 
-`update` follows the branch you cloned: `main` moves only when a version is
-released, and work in progress lives on `dev`. The version installed is under
-Settings → System, with what the branch has waiting since it and a button that
-runs `update` in a terminal.
-
-**Nothing is linked: `setup` copies**, and remembers what it wrote. A file of
-yours already in the way is moved to `~/.local/state/impasto/backups/` first; a
-file you edit afterwards is left alone, with the new version beside it as
-`<name>.new`, and one you delete stays deleted — the wallpapers you do not want,
-say. Settings → System lists both, each with a button to put impasto's version
-back. Editing the repository itself? `./setup sync` copies it onto the
-desk, and `./setup sync --watch` keeps doing it on every save.
-
-Every package is listed in `packages/pacman.txt` and `packages/aur.txt`, grouped
-by what it is for; an optional one that is missing takes its own control away
-rather than failing.
+Nothing is linked: `setup` copies, keeps a backup of anything in the way, and
+never overwrites a file you edited.
 
 <details>
 <summary><b>Components</b></summary>
