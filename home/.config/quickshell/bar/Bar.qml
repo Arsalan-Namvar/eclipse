@@ -399,7 +399,7 @@ PanelWindow {
         // does not work inside a Repeater.
         Loader {
             anchors.fill: parent
-            active: SettingsService.barShadow
+            active: Theme.barShadowShown
             sourceComponent: shadowBody
         }
 

@@ -142,7 +142,7 @@ Item {
         readonly property int reach: Theme.shadowRange + 4
         readonly property bool cut: !Theme.deskSolid || root.solidity < 1
 
-        visible: SettingsService.widgetShadow && !root.onPicture
+        visible: Theme.widgetShadowShown && !root.onPicture
             && (!Theme.deskSolid || root.solidity > 0)
         x: -cast.reach
         y: -cast.reach
@@ -219,7 +219,7 @@ Item {
 
         anchors.fill: parent
         anchors.margins: -reach
-        layer.enabled: root.sticker ? SettingsService.widgetShadow
+        layer.enabled: root.sticker ? Theme.widgetShadowShown
             : root.onPicture && root.moduleId !== "spectrum"
         layer.effect: MultiEffect {
             shadowEnabled: true

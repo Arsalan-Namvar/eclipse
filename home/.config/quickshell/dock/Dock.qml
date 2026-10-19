@@ -336,7 +336,7 @@ PanelWindow {
         Loader {
             anchors.fill: parent
             anchors.margins: -Theme.shadowBarRange
-            active: SettingsService.dockShadow
+            active: Theme.dockShadowShown
             sourceComponent: caster
         }
 

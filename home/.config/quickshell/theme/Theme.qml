@@ -545,6 +545,11 @@ QtObject {
     // nothing loops while it is on.
     readonly property real motion: SettingsService.gameMode ? 0 : SettingsService.motionScale / 100
     readonly property bool lively: !SettingsService.gameMode
+    // The shell's own shadows are blurred on the GPU, so game mode drops them
+    // with the compositor's; the settings come back when it is off.
+    readonly property bool barShadowShown: SettingsService.barShadow && !SettingsService.gameMode
+    readonly property bool dockShadowShown: SettingsService.dockShadow && !SettingsService.gameMode
+    readonly property bool widgetShadowShown: SettingsService.widgetShadow && !SettingsService.gameMode
 
     readonly property var easingCurves: [
         { id: "OutCubic", label: "Smooth",  type: Easing.OutCubic },
