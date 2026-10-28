@@ -103,6 +103,16 @@ in terminals requires explicit safe handling, not blind Ctrl + X forwarding.
 Opening the session menu must not execute a session action. Keep the existing
 power-action confirmations.
 
+### Target-test refinement: Settings
+
+The owner reports the exercised keybindings work, but prefers **Super + comma**
+for Settings instead of **Super + Ctrl + S**. This preference is recorded for
+implementation; the table above still describes the deployed initial binding.
+Update the shared defaults, saved-profile migration and this reference together,
+and verify the comma key in both English and Persian. No shortcut change was
+deployed when recording this feedback.
+
+
 ## No dedicated keyboard shortcut by default (proposed)
 
 - GitHub panel: control-centre entry and launcher's `>` shell-action search.

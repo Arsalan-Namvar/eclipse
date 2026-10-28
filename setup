@@ -1268,7 +1268,7 @@ verb_strata() {
 # Never upload/send a theme or touch Telegram account storage to fake sync.
 verb_telegram() {
     section telegram
-    command -v telegram-desktop >/dev/null || refuse 'telegram-desktop is not installed' || return
+    command -v Telegram >/dev/null || refuse 'Telegram is not installed (package: telegram-desktop)' || return
     act python3 "$THEME_MANAGER" prepare-telegram || refuse 'theme generation failed' || return
 }
 

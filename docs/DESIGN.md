@@ -50,7 +50,7 @@ and suggestions are not evidence of the owner's preference.
 | Area | Topics | Status |
 | --- | --- | --- |
 | Everyday workflow | Applications, shortcuts, workspaces, window management | Complete initial map, independent per-screen workspaces, movement, clipboard, and scratchpad accepted; implementation pending |
-| Shell | Island, bar, launcher, control centre, panels | Existing interaction retained; GitHub navigator, OMP integration, and VPN controls added; BUG-01 unresolved |
+| Shell | Island, bar, launcher, control centre, panels | Existing interaction retained; GitHub navigator, OMP integration, and VPN controls added; BUG-01 crash resolved with owner confirmation on target |
 | Appearance | Palettes, materials, motion, fonts, wallpapers | Both palette approaches, three materials, animations, fonts, game mode, and animated wallpapers retained; effect research and final artwork pending |
 | Desktop extras | Widgets, notes, tasks, games, pets | Remove general grid, dock, arcade, and pets; retain island notes/tasks plus edge note decks and edge spectrum |
 | Applications | File manager, editor, messaging, media, shell, AI | Strata/chooser, Kitty, Zen+Sine, LazyVim, Telegram themes, Spotify/Spicetify, viewers, Bash+ble.sh+Starship, helpers, and OMP selected |
@@ -93,10 +93,28 @@ for approval of decisions already recorded; handle new discoveries explicitly.
   Do not require the owner to choose APIs or pretend capability is already proven.
 - Refine detailed panel layouts, numeric visual tuning, and first-use styling
   through actual implementation and test-laptop use; preserve agreed behavior.
-- BUG-01 remains pending affected-laptop confirmation. A related full nested
-  Settings/Edit focus-handoff failure was fixed and exercised; see VERIFICATION.
-- Test-laptop access/deployment is not established. Do not modify the current
-  workstation as a substitute for deployment or claim hardware scenarios passed.
+- BUG-01's reported crash is resolved: after deployment and reboot, the owner
+  physically exercised the Edit transition and confirmed it works. The owner
+  also confirmed block save/persistence, Escape and reopening; see VERIFICATION.
+- Test-laptop SSH access and user-configuration deployment are established.
+  Do not modify the current workstation as a substitute for target testing or
+  claim remaining hardware scenarios passed.
+
+### Target feedback follow-ups — 2026-10-28
+
+The owner reports the exercised keybindings work as intended. Keep the following
+items open for focused implementation/testing; recording them is not a claim
+that they have been fixed or deployed.
+
+| Item | Owner observation / desired result | Follow-up acceptance |
+| --- | --- | --- |
+| Strata dynamic theme | Strata does not dynamically follow Eclipse's palette | Investigate supported theming; visually verify palette changes in the running file manager, documenting any actual limitations |
+| Dolphin theming exploration | Also try theming Dolphin | Evaluate palette integration and inspect the actual application; this is not a decision to replace Strata or change default folder/portal associations |
+| Persian layout mismatch | Target Persian layout is not the one on the development laptop | Compare actual compositor/input-method configuration on both laptops, match the owner's familiar character mapping, then physically verify Persian letters/punctuation and switching |
+| Settings shortcut preference | Prefer Super + comma over Super + Ctrl + S | Implement the preference in the shared map/profile migration and reference sheet; verify collisions and behavior in both English and Persian before deployment |
+
+These changes are deferred from the current feedback-recording step. Keep the
+existing deployed configuration until the relevant follow-up is implemented.
 
 ### Implementation checkpoint — 2026-10-28
 
@@ -116,12 +134,12 @@ state paths, IPC endpoints, CLI identifiers, and the installed SDDM theme path
 are deliberately preserved. Plymouth identity/artwork details remain in
 `SPLASH.md`; final scene artwork is not approved.
 
-Observed verification is recorded in `VERIFICATION.md`, including real isolated
-runtime behavior and its limits. No laptop deployment, complete authentication,
-OpenVPN traffic/DNS, or hardware acceptance is claimed. A related Settings Edit
-focus/lifetime failure is corrected, but BUG-01 still needs affected-laptop
-evidence. Original artwork remains a candidate for review. Historical status
-paragraphs below record the earlier review stage; this checkpoint and the
+Observed verification is recorded in `VERIFICATION.md`, including isolated
+runtime behavior, target user-configuration deployment, successful startup
+after an owner reboot, and owner confirmation that the original Edit crash is
+resolved. Complete authentication, OpenVPN traffic/DNS and hardware acceptance
+are not claimed. Original artwork remains a candidate for review. Historical
+status paragraphs below record earlier review stages; this checkpoint and the
 verification record supersede their no-implementation/no-runtime statements
 without marking every acceptance criterion passed.
 
@@ -1457,11 +1475,12 @@ the QML handoff/components, not actual pointer input, the full DynamicIsland,
 Hyprland focus/layer surfaces, GPU rendering, or the test laptop's environment.
 Earlier harness import errors were harness errors, not evidence of this bug.
 
-**Status:** not fixed; no speculative source patch applied. Need the existing
-test-laptop crash log/core metadata, installed version/commit, or access to that
-machine to distinguish lifecycle, rendering, runtime-version, and compositor
-causes. No SSH hosts are configured. Further diagnosis should use the original
-crash evidence before asking the owner to trigger it again.
+**Status:** reported crash resolved. The persistent SettingsWindow now defers
+arrangement until Settings has closed/unloaded. Full nested-runtime checks
+exercised this handoff, and after target deployment and an owner reboot the
+owner physically tried Edit and confirmed it works well, then confirmed the
+block save/persistence, Escape and reopening checks. Target editor acceptance
+is passed; the original native crash cause is not retrospectively proven.
 
 **Fix acceptance:** actual Edit interaction enters arrangement mode without
 crashing; blocks can be edited and saved; Escape exits; reopening Settings and
@@ -2154,13 +2173,13 @@ and TOML syntax. It does not validate QML or exercise a running desktop.
 The original inherited baseline stopped at a missing zsh dependency; zsh has
 since been removed from the selected shell/configuration and current check.
 
-Current evidence: syntax checks passed; isolated keyboard/scratchpad/runtime
-smoke checks were performed in the development environment and QML panels
-loaded. These are not target-laptop results or proof that all acceptance
-criteria passed. BUG-01 remains unresolved; the intended laptop is unavailable.
-No laptop deployment, hardware acceptance, or complete VPN traffic/DNS and
-authentication verification is claimed. No additional checks were run for the
-README/wordmark documentation update.
+Current evidence includes successful syntax/regression/migration checks,
+isolated runtime smoke checks, target user-configuration deployment, live
+Settings/control-centre/Strata/Telegram inspection, and working Eclipse startup
+after an owner reboot. BUG-01's reported crash is closed by the owner's target
+confirmation. Complete hardware acceptance, VPN traffic/DNS/authentication,
+account-dependent app flows and boot-artwork acceptance remain pending. See
+`VERIFICATION.md` for exercised checks and limits.
 
 ## References
 

@@ -17,5 +17,5 @@ return {
     editor       = "kitty -- nvim",
     agent        = [[bash "$HOME/.config/quickshell/scripts/omp-launch.sh" --general]],
     music        = "spotify",
-    messenger    = "telegram-desktop",
+    messenger    = "Telegram",
 }

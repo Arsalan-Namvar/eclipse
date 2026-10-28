@@ -47,9 +47,14 @@ closes/unloads Settings first, then queues enabling arrangement and opening
 controls from the surviving window. Actual nested-runtime checks then reported
 `settings:false, editing:true, panel:"controls"`, remained stable, and passed
 repeat close/open/edit. A real compositor screenshot showed the grid/catalogue.
-This fixes the observed focus/lifetime handoff failure, **not proof that the
-laptop crash is fixed**. Verify Edit, block save, Escape, reopening, and crash
-logs on the affected laptop before closing BUG-01.
+After user-configuration deployment and a subsequent owner reboot, SSH checks
+confirmed Hyprland and Quickshell running, working Eclipse status IPC and no
+Hyprland configuration errors. The owner then physically exercised the requested
+Settings → Control Centre → Panel → Edit path and reported: “yes I did it, and
+it works well.” BUG-01's reported crash is closed by affected-laptop confirmation.
+The owner then completed the requested block move/save, close/reopen persistence,
+Escape exit and Settings reopening checks and reported “its works good”. These
+editor acceptance checks are passed by owner observation on the target laptop.
 
 ## Concrete fixes found while verifying
 
@@ -68,21 +73,181 @@ logs on the affected laptop before closing BUG-01.
   under `/usr/share/dbus-1/services/`; competing per-user providers are backed
   up while unrelated service files and repeat setup are preserved.
 
+## Dedicated laptop: initial SSH inspection
+
+Password-authenticated SSH to `arsalan@192.168.4.74` succeeded. The credential
+is not recorded here or in project configuration. Read-only inspection found:
+
+- Arch Linux, kernel `7.2.11-arch1-1`; Hyprland `0.56.2`, Quickshell `0.3.2`
+  (Arch build), NetworkManager `1.58.1`.
+- SDDM is already active and enabled. Ly remains installed; a service cutover
+  must not be performed merely because the historical plan mentioned Ly.
+- Running Hyprland and Quickshell use the installed Impasto configuration.
+  `~/impasto` remains at starting commit
+  `1a2ce200f4494aca9b5d3e17ea00f807c6086231`; its README has local edits.
+  Preserve that checkout rather than repurpose it as Eclipse.
+- Installed SettingsWindow matches the original Impasto source, not the new
+  deferred-handoff implementation. No Quickshell/qs core dumps were returned
+  by coredumpctl; this does not invalidate the owner's crash report.
+- AC power connected; approximately 838 GiB available on root and 848 MiB on
+  `/boot`. Bash, Git, Kitty, Neovim, Zen, gh, OMP, Lua and yay are available.
+  Strata and Telegram were not found in the inspected command PATH.
+
+No deployment, package installation, service change, desktop reload, or remote
+credential persistence was performed during this inspection. Next agree the
+backup/staging scope before modifying the installed desktop. SSH access is now
+available; target acceptance checks remain pending.
+
+## Dedicated laptop: user-configuration deployment
+
+Following the owner's instruction to continue, Eclipse was staged in
+`~/Projects/eclipse` from the fork plus a checksum-verified snapshot of the
+current development tree. The existing `~/impasto` checkout was left intact.
+
+- Verified rollback archives are in
+  `~/eclipse-backups/pre-eclipse-20261028-153701/`: `desktop.tar.gz`,
+  `user-config-complete.tar.gz`, and `managed-data.tar.gz`. The directory is
+  private; archives cover configuration, managed app data, and editor state.
+- Target `./setup check`, all 18 Python regressions, and Lua keyboard-migration
+  checks passed before deployment. `setup sync --dry-run` was reviewed first.
+- `setup sync` deployed user files; it preserved the locally edited Kitty file
+  and wrote the candidate as `.new`. Existing Neovim config/data/state/cache
+  were preserved under the installer's timestamped `backups/.../lazyvim` tree.
+  Repeated sync reported `nothing to do`.
+- Hyprland reload succeeded and `hyprctl configerrors` returned empty.
+  Live IPC status answered; screenshots showed the control centre and branded
+  Settings window. File-copy reloads briefly logged unavailable QML types;
+  subsequent full reloads reported `Configuration Loaded`.
+- Installed `bash-completion` 2.18.0, Telegram Desktop 7.3.3, Strata 1.1.0 and
+  ble.sh `0.4.0-devel4+cb9c2c37`. A real interactive SSH PTY rendered Starship,
+  reported that ble.sh version and `EDITOR=nvim`, and resolved fnm/zoxide.
+- Strata launched and was visually inspected. `setup strata` completed;
+  `inode/directory` selects `io.github.lgse.Strata.desktop`; per-user portal
+  configuration selects Strata for FileChooser without overriding other APIs.
+  Actual app chooser and screen-sharing flows remain unverified.
+- Target packaging exposed a Telegram executable mismatch: Arch ships
+  `/usr/bin/Telegram`. Corrected the setup preflight and Hyprland messenger
+  command to use it, reran syntax checks and sync, generated the native theme,
+  and visually observed Telegram's welcome screen. Account theme import is not
+  yet verified.
+- SDDM remains active/enabled. No system deployment, PAM modification,
+  Plymouth activation, bootloader change, plugin build, or reboot occurred.
+
+The owner subsequently confirmed the original Edit transition works on the
+affected laptop after reboot; see BUG-01 above. The runtime has inherited
+IPC-property warnings; an empty Hyprland error list is not a claim of a
+warning-free shell or full desktop acceptance.
+
+## Owner feedback: physical shortcut check
+
+The owner completed the requested shortcut/input batch and reported that every
+keybinding works as expected. Record the exercised shortcut batch as passed,
+not blanket acceptance of every hardware/multi-monitor binding. Additional
+observations and preferences are tracked in DESIGN's target follow-up table:
+Strata does not dynamically follow the palette, Dolphin theming should be tried,
+the Persian layout differs from the development laptop, and Settings should
+prefer Super + comma. No live changes were made for this feedback. The Persian
+layout is not accepted merely because switching layouts works.
+
+## Owner acceptance: single-display workspaces and scratchpad
+
+Read-only SSH inspection found one active built-in display (`eDP-1`) and no
+Hyprland configuration errors. The owner completed the seven-step physical
+workspace/scratchpad batch and reported “works correctly”: open Kitty on local
+workspace 1; move it to 2 and follow; switch away/back with placement preserved;
+send to scratchpad; show/hide/show with the same window alive; switch workspace
+to hide it; show and retrieve onto normal workspace 1, where scratchpad toggling
+no longer hides that window. These single-display behaviors pass by owner
+observation. Multi-monitor independence and transfer remain untested on target.
+
+## Owner acceptance: lock and password unlock
+
+The owner completed the requested physical lock/unlock batch and reported “it
+works correctly”: Super + Ctrl + L renders the lock screen, the desktop beneath
+cannot be interacted with, an incorrect password leaves the session locked and
+permits retry, the correct password restores the existing session/windows, and
+a second lock/unlock succeeds. These checks pass by owner observation. This
+does not verify face authentication, suspend/resume, or login-manager PAM.
+
+## Owner acceptance: explicit suspend and resume
+
+With AC connected and the lid open, the owner completed the requested session
+menu Suspend test and reported “it works correctly”: suspend, wake after about
+15 seconds, return to a protected lock screen, successful password unlock,
+existing windows intact, Wi-Fi recovery and responsive bar/control centre.
+These checks pass by owner observation. Before the test, read-only inspection
+found the shell's lock-before-sleep delay inhibitor active; CanSuspend returned
+`challenge`. No conclusion about whether authorization was actually prompted
+is inferred. Lid-triggered behavior was subsequently checked below; battery
+operation remains unverified.
+
+## Owner acceptance: lid-close sleep and wake
+
+The owner completed the requested AC-powered lid-close test with no external
+display and reported “it works correctly”: close the lid, wait about 15 seconds,
+open/wake, return to the lock screen, unlock successfully, normal display
+resolution, preserved window, recovered Wi-Fi and responsive bar. These checks
+pass by owner observation. Whether lid opening alone woke the machine or a
+brief power-button press was needed is not separately established. Battery
+operation and external-monitor lid policy remain unverified.
+
+## Owner acceptance: audio controls and playback
+
+After the sleep/wake checks, read-only SSH inspection found PipeWire,
+pipewire-pulse and WirePlumber active and a default output at 43% volume. The
+owner completed the requested audio-control/playback batch and reported “it
+works good”: volume-key level changes and indicator, mute/unmute and indicator,
+control-centre volume agreement, and pause/resume playback. These checks pass
+by owner observation. Optional wired-headphone switching was not separately
+confirmed and remains unverified; microphone/Bluetooth audio and edge spectrum
+animation are not covered by this result.
+
+## Owner acceptance: display brightness
+
+The owner completed the requested brightness-key and control-centre slider
+batch and reported “it works well”: physical screen brightness changes and
+on-screen indicators/percentage agree. This passes by owner observation; the
+latest remote brightness query timed out, so no fresh device reading is claimed.
+
+## Session handoff — owner stopping for the day
+
+The owner plans to shut down and continue tomorrow. Do not interpret the
+expected SSH loss as a crash or reconnect/deploy while the laptop is off.
+Local records are current; the latest audio/brightness entries have not been
+confirmed copied to the target because the last remote command timed out.
+
+Resume by re-establishing the target's LAN address and authenticated SSH, then
+continue remaining acceptance checks. Completed target batches: control-centre
+Edit/save/persistence/Escape/reopen, exercised launch shortcuts, single-display
+workspaces/scratchpad, lock/password retry/repeated unlock, AC explicit suspend
+and lid sleep/wake, audio controls/playback, and display brightness.
+
+Deferred GitHub follow-ups: [Settings shortcut #1](https://github.com/Arsalan-Namvar/eclipse/issues/1),
+[Dolphin theming #2](https://github.com/Arsalan-Namvar/eclipse/issues/2),
+[Persian layout #3](https://github.com/Arsalan-Namvar/eclipse/issues/3), and
+[Strata dynamic theme #4](https://github.com/Arsalan-Namvar/eclipse/issues/4).
+Next suggested physical batch: retained notes/task board and edge surfaces,
+before account-dependent app flows and controlled VPN checks. No further live
+change, shutdown command or deployment was performed for this handoff.
+
 ## Remaining target gates
 
-1. Establish access to the dedicated laptop and preserve a recovery path.
-2. Run installation and repeat update using the accepted fork, including
-   backups/local edits and an explicit `setup login` next-boot SDDM migration.
-3. Exercise supported Strata/Zen/Telegram file dialogs and screen sharing;
+1. SSH access and rollback archives are established; retain them throughout
+   target testing. Exercise full install/update and recovery beyond the observed
+   successful user sync; SDDM is already enabled, so no blind login cutover.
+2. Exercise supported Strata/Zen/Telegram file dialogs and screen sharing;
    verify Sine in the selected browser profile after restart and native Telegram
    theme import/reapplication. No unsupported automatic theme application claimed.
-4. Complete real OpenVPN and WireGuard manual/import UI, traffic, DNS,
+3. Complete real OpenVPN and WireGuard manual/import UI, traffic, DNS,
    authentication/cancellation and full/split route checks.
-5. Verify physical English/Persian keys, switch choices, clipboard, monitors,
-   scratchpad, retained panels, edge gestures/audio, effects and game mode.
-6. Verify lock/password/optional compatible face auth, suspend/lid/resume, SDDM
-   login/session startup, and the new Plymouth theme during actual boot.
-7. Review the original visual candidate and finalize desired artwork/tuning.
+4. Verify physical English/Persian mapping, remaining clipboard behavior,
+   multi-monitor independence/transfer, retained panels, edge gestures/audio,
+   effects and game mode. Single-display workspace/scratchpad checks passed.
+5. Verify optional compatible face auth, external-monitor lid policy, battery
+   sleep, SDDM login/session startup, and the new Plymouth theme during boot.
+   Physical lock/password retry/repeat unlock, explicit AC suspend/resume and
+   AC lid-close sleep/wake with Wi-Fi/session recovery passed by owner report.
+6. Review the original visual candidate and finalize desired artwork/tuning.
 
 The overall goal is still active. Passing these limited checks must not be
 reported as a finished personalized desktop or a verified laptop deployment.
