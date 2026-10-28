@@ -30,7 +30,12 @@ ColumnLayout {
 
     spacing: Theme.cardGap
 
-    Component.onCompleted: NetworkService.scan(false)
+    Component.onCompleted: {
+        NetworkService.scan(false)
+        VpnService.watchers++
+        VpnService.refresh()
+    }
+    Component.onDestruction: VpnService.watchers--
 
     // The heading a module's card has (`ModuleCard`), with the back arrow in
     // front of it when there is somewhere to go back to.
@@ -68,7 +73,7 @@ ColumnLayout {
 
             Text {
                 Layout.fillWidth: true
-                text: "Wi-Fi"
+                text: "Network"
                 elide: Text.ElideRight
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeMedium
@@ -78,9 +83,10 @@ ColumnLayout {
 
             Text {
                 Layout.fillWidth: true
-                text: NetworkService.radioOn
-                    ? (NetworkService.scanning ? "Scanning…" : NetworkService.connectionName)
-                    : "Radio off"
+                text: NetworkService.wiredConnected ? NetworkService.stateLine
+                    : (NetworkService.radioOn
+                        ? (NetworkService.scanning ? "Scanning…" : NetworkService.connectionName)
+                        : "Wi-Fi radio off")
                 elide: Text.ElideRight
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeSmall
@@ -112,6 +118,79 @@ ColumnLayout {
             checked: NetworkService.radioOn
             onToggled: checked => NetworkService.setWifi(checked)
         }
+    }
+
+    RowLayout {
+        Layout.fillWidth: true
+        Text {
+            Layout.fillWidth: true
+            text: "VPN · NetworkManager"
+            color: Theme.text
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeSmall
+            font.weight: Font.DemiBold
+        }
+        PillButton { text: "Refresh"; onClicked: VpnService.refresh() }
+    }
+
+    Text {
+        Layout.fillWidth: true
+        visible: VpnService.profiles.length === 0
+        text: "Add OpenVPN / WireGuard in Settings → VPN. Ethernet works with Wi-Fi off."
+        wrapMode: Text.WordWrap
+        color: Theme.textMuted
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSizeSmall
+    }
+
+    ListView {
+        Layout.fillWidth: true
+        Layout.preferredHeight: Math.min(156, VpnService.profiles.length * 52)
+        visible: VpnService.profiles.length > 0
+        clip: true
+        spacing: 4
+        model: VpnService.profiles
+        boundsBehavior: Flickable.StopAtBounds
+        delegate: RowLayout {
+            required property var modelData
+            width: ListView.view.width
+            height: 48
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 2
+                Text {
+                    Layout.fillWidth: true
+                    text: modelData.name
+                    elide: Text.ElideRight
+                    color: modelData.active ? Theme.accent : Theme.text
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeSmall
+                }
+                Text {
+                    Layout.fillWidth: true
+                    text: modelData.protocol + " · " + modelData.state
+                    elide: Text.ElideRight
+                    color: Theme.textMuted
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeSmall
+                }
+            }
+            PillButton {
+                text: modelData.engaged ? "Disconnect" : "Connect…"
+                enabled: !VpnService.busy
+                onClicked: modelData.engaged ? VpnService.disconnect(modelData.uuid) : VpnService.connect(modelData.uuid)
+            }
+        }
+    }
+
+    Text {
+        Layout.fillWidth: true
+        visible: VpnService.profiles.length > 0 || VpnService.error !== ""
+        text: VpnService.error || "Connect opens a secure terminal prompt. Active ≠ verified traffic or peer handshake."
+        wrapMode: Text.WordWrap
+        color: Theme.textMuted
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSizeSmall
     }
 
     Text {

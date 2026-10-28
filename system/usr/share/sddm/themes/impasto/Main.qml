@@ -25,6 +25,18 @@ Rectangle {
 
     color: Theme.island
 
+
+    Image {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: 32
+        width: 180
+        height: 28
+        source: "eclipse-wordmark.svg"
+        fillMode: Image.PreserveAspectFit
+        Accessible.name: "Eclipse"
+        z: 1
+    }
     // ── BACKGROUND ──────────────────────────────────────────────────────────
     //
     // Blurred like the lock screen's desktop, and darkened as a whole: the

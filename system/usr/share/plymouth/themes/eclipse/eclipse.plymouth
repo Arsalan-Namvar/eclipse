@@ -1,0 +1,11 @@
+# Eclipse conjunction theme, GPL-3.0-or-later.
+# Derived from Impasto's Plymouth integration by Andreu Massanet:
+# https://github.com/andreumassanet/impasto
+[Plymouth Theme]
+Name=Eclipse
+Description=An original astral seal; quiet meridians converge as startup progresses
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/eclipse
+ScriptFile=/usr/share/plymouth/themes/eclipse/eclipse.script

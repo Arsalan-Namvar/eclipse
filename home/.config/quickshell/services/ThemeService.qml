@@ -138,7 +138,6 @@ QtObject {
     function pushTerminalSettings(): void {
         root.pushTerminalFont()
         root.pushTerminalGround()
-        root.pushGreeting()
     }
 
     Component.onCompleted: root.pushTerminalSettings()
@@ -150,57 +149,6 @@ QtObject {
         }
     }
 
-    // ── GREETING ────────────────────────────────────────────────────────────
-    //
-    // Which scene `fa` shows. The palette push redraws all of them
-    // (`greeting.py`); this only records the choice. `random` is resolved
-    // by `fa`.
-    readonly property var greetings: [
-        { id: "lava", label: "Lava lamp" },
-        { id: "critters", label: "Critters" },
-        { id: "koi", label: "Koi" },
-        { id: "invaders", label: "Invaders" },
-        { id: "random", label: "Random" }
-    ]
-
-    readonly property string greetingScript: Quickshell.shellPath("scripts/greeting.py")
-    readonly property string greeting: SettingsService.greeting
-
-    onGreetingChanged: root.pushGreeting()
-
-    // A running Process ignores being started again, so queue the latest
-    // pick.
-    property bool greetingPending: false
-
-    function pushGreeting(): void {
-        if (root.greetingProcess.running) {
-            root.greetingPending = true
-            return
-        }
-        root.greetingProcess.command = [root.greetingScript, "choose", SettingsService.greeting]
-        root.greetingProcess.running = true
-    }
-
-    readonly property Process greetingProcess: Process {
-        onExited: {
-            if (root.greetingPending) {
-                root.greetingPending = false
-                root.pushGreeting()
-            }
-        }
-    }
-
-    // Written by `greeting.py` once every scene is redrawn. The settings
-    // tiles reload on this rather than on the palette change, when the new
-    // scenes are still being drawn.
-    property string greetingStamp: ""
-
-    readonly property FileView greetingStampView: FileView {
-        path: `${SettingsService.stateDirectory}/greeting.stamp`
-        watchChanges: true
-        onFileChanged: reload()
-        onLoaded: root.greetingStamp = text().trim()
-    }
 
     // The backend writes the colour fragment kitty.conf includes and repaints
     // open kitty windows.

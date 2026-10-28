@@ -14,13 +14,10 @@ import "../theme"
 import "../services"
 import "../components"
 
-// Bindings are read from the running compositor. Lua binds are closures, so
-// hyprctl reports their dispatcher as `__lua`; the description every bind in
-// keybinds.lua carries is what identifies it.
-//
-// Every profile holds a combination for every bind and keybinds.lua binds the
-// active profile's (`ShortcutService`), so the shell's and the compositor's
-// keys are both edited here. Mouse binds are shown but not editable.
+// Shared defaults and sparse profile overrides come from ShortcutService;
+// Hyprland supplies bindings outside that map and confirms the active binds.
+// Descriptions identify Lua closures because hyprctl reports only `__lua` as
+// their dispatcher. Mouse bindings are shown but cannot be rebound here.
 SettingsSection {
     id: root
 

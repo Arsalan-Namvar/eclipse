@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 112" fill="none">
+  <title>Eclipse — original outlined wordmark</title>
+  <desc>Hand-constructed geometric letterforms, not a font or a borrowed brand. Copyright 2026 Eclipse contributors; GPL-3.0-or-later.</desc>
+  <g stroke="#eee4cc" stroke-width="8" stroke-linejoin="miter" stroke-linecap="square">
+    <path d="M84 16 H24 V96 H84 M24 54 H70"/>
+    <path d="M194 16 H164 L136 42 V70 L164 96 H194"/>
+    <path d="M246 16 V96 H306"/>
+    <path d="M366 16 V96"/>
+    <path d="M426 96 V16 H464 L488 36 V51 L466 70 H426"/>
+    <path d="M594 16 H550 L528 34 V48 L590 65 V80 L570 96 H526"/>
+    <path d="M696 16 H636 V96 H696 M636 54 H682"/>
+  </g>
+  <path d="M356 5 L366 0 L376 5 L366 10Z" fill="#cbbb92"/>
+</svg>

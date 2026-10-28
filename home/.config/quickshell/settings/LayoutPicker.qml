@@ -21,17 +21,20 @@ import "../components"
 Rectangle {
     id: root
 
-    // The stored value: a comma-separated list, possibly empty.
+    // XKB lists are positional; an empty variant still occupies a slot.
     property string current: ""
+    property string variants: ""
 
     property bool expanded: false
 
-    signal changed(string value)
+    signal changed(string layouts, string variants)
 
-    readonly property var chosen: root.current
-        .split(",")
-        .map(entry => entry.trim())
-        .filter(entry => entry !== "")
+    readonly property var chosen: {
+        const variants = root.variants.split(",")
+        return root.current.split(",").map((id, index) =>
+            ({ id: id.trim(), variant: (variants[index] ?? "").trim() }))
+            .filter(entry => entry.id !== "")
+    }
 
     property string filter: ""
 
@@ -41,21 +44,40 @@ Rectangle {
             return CompositorService.layouts
         return CompositorService.layouts.filter(
             entry => entry.label.toLowerCase().includes(term)
-                || entry.id.toLowerCase().includes(term))
+                || entry.id.toLowerCase().includes(term)
+                || entry.variant.toLowerCase().includes(term))
     }
 
-    function toggle(id: string): void {
+    function selected(id: string, variant: string): int {
+        return root.chosen.findIndex(entry => entry.id === id && entry.variant === variant)
+    }
+
+    function save(next: var): void {
+        root.changed(next.map(entry => entry.id).join(","),
+            next.map(entry => entry.variant).join(","))
+    }
+
+    function toggle(id: string, variant: string): void {
         const next = root.chosen.slice()
-        const at = next.indexOf(id)
+        const at = root.selected(id, variant)
         if (at >= 0) {
-            // Keep at least one layout loaded.
             if (next.length === 1)
                 return
             next.splice(at, 1)
         } else {
-            next.push(id)
+            next.push({ id: id, variant: variant })
         }
-        root.changed(next.join(","))
+        root.save(next)
+    }
+
+    function move(index: int, direction: int): void {
+        const next = root.chosen.slice()
+        const target = index + direction
+        if (target < 0 || target >= next.length)
+            return
+        const entry = next.splice(index, 1)[0]
+        next.splice(target, 0, entry)
+        root.save(next)
     }
 
     // Sits in a `SettingGroup`'s card, padded like its rows.
@@ -112,57 +134,57 @@ Rectangle {
             }
         }
 
-        Flow {
+        ColumnLayout {
             Layout.fillWidth: true
             spacing: 6
 
             Repeater {
                 model: root.chosen
 
-                Rectangle {
+                RowLayout {
                     id: chip
 
-                    required property string modelData
+                    required property var modelData
                     required property int index
 
-                    width: chipRow.implicitWidth + 20
-                    height: 26
-                    radius: height / 2
-                    color: chipMouse.containsMouse ? Theme.islandSurfaceHover : Theme.island
-                    border.color: chip.index === 0 ? Theme.accent : Theme.islandBorder
-                    border.width: 1
+                    Layout.fillWidth: true
+                    spacing: 6
 
-                    Behavior on color { ColorAnimation { duration: Theme.durationFast } }
-
-                    Row {
-                        id: chipRow
-
-                        anchors.centerIn: parent
-                        spacing: 7
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: CompositorService.labelForLayout(chip.modelData)
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSizeLabel
-                            color: chip.index === 0 ? Theme.accent : Theme.text
-                        }
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: "󰅖"
-                            font.family: Theme.fontMono
-                            font.pixelSize: 9
-                            color: Theme.textMuted
-                        }
+                    Text {
+                        Layout.fillWidth: true
+                        text: (chip.index + 1) + ". " + CompositorService.labelForLayout(
+                            chip.modelData.id, chip.modelData.variant)
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSizeLabel
+                        color: chip.index === 0 ? Theme.accent : Theme.text
+                        elide: Text.ElideRight
                     }
 
-                    MouseArea {
-                        id: chipMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.toggle(chip.modelData)
+                    PillButton {
+                        visible: root.expanded
+                        text: "↑"
+                        enabled: chip.index > 0
+                        implicitWidth: 32
+                        implicitHeight: 26
+                        onClicked: root.move(chip.index, -1)
+                    }
+
+                    PillButton {
+                        visible: root.expanded
+                        text: "↓"
+                        enabled: chip.index < root.chosen.length - 1
+                        implicitWidth: 32
+                        implicitHeight: 26
+                        onClicked: root.move(chip.index, 1)
+                    }
+
+                    PillButton {
+                        visible: root.expanded
+                        text: "×"
+                        enabled: root.chosen.length > 1
+                        implicitWidth: 32
+                        implicitHeight: 26
+                        onClicked: root.toggle(chip.modelData.id, chip.modelData.variant)
                     }
                 }
             }
@@ -234,7 +256,7 @@ Rectangle {
                 id: row
 
                 required property var modelData
-                readonly property bool taken: root.chosen.indexOf(row.modelData.id) >= 0
+                readonly property bool taken: root.selected(row.modelData.id, row.modelData.variant) >= 0
 
                 width: ListView.view.width
                 height: 28
@@ -267,7 +289,7 @@ Rectangle {
                     }
 
                     Text {
-                        text: row.modelData.id
+                        text: row.modelData.id + (row.modelData.variant ? ":" + row.modelData.variant : "")
                         font.family: Theme.fontMono
                         font.pixelSize: Theme.fontSizeLabel
                         color: Theme.textMuted
@@ -279,7 +301,7 @@ Rectangle {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.toggle(row.modelData.id)
+                    onClicked: root.toggle(row.modelData.id, row.modelData.variant)
                 }
             }
         }

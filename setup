@@ -154,7 +154,7 @@ usage() {
     cat <<'EOF'
 Usage: ./setup <command> [options]
 
-  install     everything, in order: packages, the user folders, oh-my-zsh,
+  install     everything, in order: packages, the user folders,
               home/ into $HOME, system/ into /, the Hyprland plugins, and
               the extras below once each — one that has to wait is tried
               again by the next install or update
@@ -164,16 +164,19 @@ Usage: ./setup <command> [options]
 
   packages    install what packages/pacman.txt and packages/aur.txt list
   sync        copy home/ into $HOME — how a change in the repository lands
-  system      copy system/ into /, and switch the login screen on where no
-              other display manager is (asks for a password)
+  system      copy system/ into /, preserving the current login manager
+              (asks for a password); use login for the explicit SDDM cutover
+  login       explicitly switch Ly/another manager to SDDM next boot;
+              --restore rolls back saved enablement without stopping a session
   plugins     build and enable the two Hyprland plugins with hyprpm
 
   defaults    what opens which file, and dark GTK with the impasto icons
   cursors     fetch the vector cursor and build it in the chosen colour
   spotify     patch Spotify so it takes the palette (needs spicetify)
-  vscodium    install the editor's extensions and merge its settings
-  nautilus    apply the file manager's settings and sidebar
-  vesktop     tick the palette's theme in Vencord
+  strata      select Strata folders and supported FileChooser portal
+  telegram    regenerate native palette/wallpaper theme for explicit import
+  sine        install official Sine/bootloader into the selected Zen profile
+  omp         install verified OMP 18.12.6 binary if absent; keep existing OMP
   face        unlock the lock screen with your face, where there is an
               infrared camera: installs howdy-next and enrols you
   camera      effects and gesture reactions on the webcam, for any call:
@@ -439,6 +442,12 @@ deploy() {
     for rel in "${!BEFORE[@]}"; do
         [[ -z ${AFTER[$rel]:-} ]] || continue
         dst=$target/$rel
+        # A retired login-shell startup file may still be needed by the account.
+        # Stop managing it, but never erase it as part of the Bash cutover.
+        if [[ $tree == home && $rel == .zshrc ]]; then
+            say "left     $shown$rel — retired shell startup; migrate the account separately"; said=1
+            continue
+        fi
         if [[ -f $dst && ! -L $dst ]] && [[ $(digest "$dst") == "${BEFORE[$rel]}" ]]; then
             act $SUDO rm -f "$dst"
             tidy "$target" "$(dirname "$rel")"
@@ -458,23 +467,12 @@ deploy() {
     if (( ! said && ! QUIET )); then say 'nothing to do'; fi
 }
 
-# First-run assets, written only when missing so the shell's own output wins:
-# the greeting scenes (rendered once in a fixed palette) and a minimal
-# `impasto` icon theme, because GTK falls back to hicolor, with no icons, when
-# settings.ini names a theme that does not exist. The stamp marks the
-# directory as the palette push's to replace.
+# First-run icon theme, written only when missing so the palette push wins.
+# GTK falls back to hicolor, with no icons, when settings.ini names a theme
+# that does not exist. The stamp marks the directory as the palette push's
+# to replace.
 seed() {
-    local state=${XDG_STATE_HOME:-$HOME/.local/state}/quickshell
     local icons=${XDG_DATA_HOME:-$HOME/.local/share}/icons/impasto
-    if [[ ! -e $state/greeting.gif || ! -f $state/greeting ]]; then
-        if ! command -v magick >/dev/null && ! command -v convert >/dev/null; then
-            say "skipped  the greeting's scenes — ImageMagick is not installed"
-        elif act python3 "$HOME/.config/quickshell/scripts/greeting.py" seed; then
-            say "seeded   the greeting's scenes"
-        else
-            say "skipped  the greeting's scenes — greeting.py seed failed"
-        fi
-    fi
     if [[ ! -f $icons/index.theme ]]; then
         act mkdir -p "$icons"
         if (( ! DRY )); then
@@ -661,9 +659,61 @@ files_one() {
     AFTER[$rel]=$(digest "$src")
 }
 
+# LazyVim imports every lua/plugins module. Back up the entire previous stack,
+# including edited files, so deployment cannot leave two plugin baselines active.
+migrate_nvim() {
+    applied lazyvim-baseline && return 0
+    [[ ${XDG_CONFIG_HOME:-$HOME/.config} == "$HOME/.config" ]] \
+        || fail 'LazyVim deployment requires XDG_CONFIG_HOME=$HOME/.config; no editor files were moved'
+    local path rel kind config=$HOME/.config/nvim
+    # Detach stow-style config ancestors before migration can move a directory
+    # through them out of the checkout. Dry runs only record the would-be unlink.
+    unstow .config/nvim
+    if gone .config/nvim; then
+        stamp lazyvim-baseline
+        return 0
+    fi
+    if [[ ! -e $config && ! -L $config ]]; then
+        stamp lazyvim-baseline
+        return 0
+    fi
+    say 'LazyVim migration: preserving the previous configuration and nvim-only data/state/cache once.'
+    for kind in config data state cache; do
+        case $kind in
+            config) path=$config ;;
+            data) path=${XDG_DATA_HOME:-$HOME/.local/share}/nvim ;;
+            state) path=${XDG_STATE_HOME:-$HOME/.local/state}/nvim ;;
+            cache) path=${XDG_CACHE_HOME:-$HOME/.cache}/nvim ;;
+        esac
+        [[ -e $path || -L $path ]] || continue
+        case $(readlink -m "$path") in
+            "$REPO"|"$REPO"/*)
+                say "kept $path — points into the checkout; repository sources are never moved"
+                continue ;;
+        esac
+        act mkdir -p "$BACKUPS/lazyvim"
+        act mv -- "$path" "$BACKUPS/lazyvim/$kind"
+        say "backed up $path to $BACKUPS/lazyvim/$kind (retained on uninstall)"
+    done
+    # Real migration removed this tree and its manifest entries. Simulate the
+    # same missing destination for deploy without touching dry-run files.
+    if (( DRY )); then GONE[.config/nvim]=1; fi
+    manifest_lock
+    read_manifest "$STATE/home.manifest"
+    AFTER=()
+    for rel in "${!BEFORE[@]}"; do
+        [[ $rel == .config/nvim/* ]] && continue
+        AFTER[$rel]=${BEFORE[$rel]}
+    done
+    write_manifest "$STATE/home.manifest"
+    manifest_unlock
+    stamp lazyvim-baseline
+}
+
 verb_sync() {
     section home
     SUDO=
+    migrate_nvim
     deploy home "$HOME" "$STATE/home.manifest" '~/'
     reload_shell
     seed
@@ -722,22 +772,41 @@ i2c_dev() {
     fi
 }
 
-# The login screen needs a display manager to run it. sddm is enabled once,
-# and only where none is: one somebody chose keeps the machine. Enabled, not
-# started; the next boot brings it up.
+# Installation preserves login-manager choice. Only the explicit login command
+# inspects and changes systemd enablement, without touching active processes.
 display_manager() {
-    applied display-manager && return 0
     command -v sddm >/dev/null || return 0
     local link=$ROOT/etc/systemd/system/display-manager.service
     if [[ -e $link || -L $link ]]; then
         say "kept     $(basename "$(readlink "$link")"), the display manager already enabled"
-    elif act $SUDO systemctl ${ROOT:+--root="$ROOT"} enable sddm.service >/dev/null 2>&1; then
-        say 'enabled  sddm, from the next boot'
+        say 'run ./setup login explicitly to select SDDM for the next boot'
     else
-        say 'skipped  sddm could not be enabled'
-        return 0
+        say 'login manager unchanged — run ./setup login to inspect and enable SDDM explicitly'
     fi
-    stamp display-manager
+}
+
+# Explicitly requested migration, never part of install/system. Deploy the
+# greeter before enabling SDDM; leave the current display-manager process alone.
+verb_login() {
+    section login
+    [[ -z $ROOT ]] || fail 'login migration must run on the actual target, not an alternate root'
+    local -a options=()
+    (( DRY )) && options+=(--dry-run)
+    (( NOCONFIRM )) && options+=(--yes)
+    if (( RESTORE )); then
+        options+=(--restore)
+    else
+        command -v sddm >/dev/null || fail 'sddm is not installed; run ./setup packages on the target first'
+        SUDO=sudo
+        [[ -w /etc ]] && SUDO=
+        deploy system "$ROOT" "$STATE/system.manifest" '/'
+        act $SUDO install -d -m 755 /var/lib/impasto/faces
+        if (( ! DRY )) && [[ ! -f /usr/share/sddm/themes/impasto/Main.qml ]]; then
+            fail 'SDDM theme was not deployed; review setup files/system conflicts before login cutover'
+        fi
+        SUDO=
+    fi
+    python3 "$REPO/home/.config/quickshell/scripts/login_manager.py" "${options[@]}"
 }
 
 # Uses yay or paru if installed; otherwise offers to build one from the AUR.
@@ -806,25 +875,6 @@ folders() {
     fi
 }
 
-# Cloned rather than installed with oh-my-zsh's script, which replaces
-# ~/.zshrc with its own template.
-omz() {
-    section oh-my-zsh
-    local omz=$HOME/.oh-my-zsh
-    local plugins=$omz/custom/plugins
-    if [[ ! -d $omz ]]; then
-        act git clone -q --depth=1 https://github.com/ohmyzsh/ohmyzsh.git "$omz"
-        say 'cloned oh-my-zsh'
-    fi
-    local name
-    for name in zsh-autosuggestions zsh-syntax-highlighting; do
-        if [[ ! -d $plugins/$name ]]; then
-            act git clone -q --depth=1 "https://github.com/zsh-users/$name" "$plugins/$name"
-            say "cloned $name"
-        fi
-    done
-    say ok
-}
 
 # hyprpm builds against the running Hyprland and keeps the .so in root's
 # /var/cache: it needs the session up, a terminal and a password. Run outside
@@ -905,7 +955,6 @@ verb_install() {
     note_shell
     if (( ! SKIP_PACKAGES )); then verb_packages; fi
     folders
-    omz
     verb_sync
     if (( ! SKIP_SYSTEM )); then verb_system; fi
     if (( ! SKIP_PLUGINS )); then verb_plugins; fi
@@ -920,13 +969,23 @@ verb_install() {
 
 verb_update() {
     section git
-    local before arg
+    local before arg origin branch remote merge
     before=$(version)
-    if git -C "$REPO" rev-parse --abbrev-ref '@{upstream}' >/dev/null 2>&1; then
-        act git -C "$REPO" pull --autostash --ff-only
-    else
-        say 'no upstream to pull from — installing what is here'
-    fi
+    origin=$(git -C "$REPO" remote get-url origin 2>/dev/null) \
+        || fail 'update requires origin pointing to Arsalan-Namvar/eclipse'
+    case ${origin%.git} in
+        https://github.com/Arsalan-Namvar/eclipse|git@github.com:Arsalan-Namvar/eclipse|ssh://git@github.com/Arsalan-Namvar/eclipse) ;;
+        *) fail "refusing update from origin $origin — expected Arsalan-Namvar/eclipse; inspect git remote -v before correcting it" ;;
+    esac
+    branch=$(git -C "$REPO" symbolic-ref --quiet --short HEAD) \
+        || fail 'update requires a checked-out branch, not detached HEAD'
+    remote=$(git -C "$REPO" config --get "branch.$branch.remote") \
+        || fail "branch $branch has no tracking remote; configure its intended origin branch first"
+    merge=$(git -C "$REPO" config --get "branch.$branch.merge") \
+        || fail "branch $branch has no tracking branch"
+    [[ $remote == origin && $merge == refs/heads/* ]] \
+        || fail "refusing update: $branch tracks $remote/$merge, not an origin branch of Arsalan-Namvar/eclipse"
+    act git -C "$REPO" pull --autostash --ff-only origin "${merge#refs/heads/}"
     # A pull that could not put your edits back leaves the conflict in the
     # tree and still exits 0, and installing that copies the markers onto the
     # desk. The edits are safe in the stash: resolve, `git stash drop`, and
@@ -1013,7 +1072,7 @@ verb_uninstall() {
     fi
     # The boot splash: its files went with system/, but the theme stays chosen
     # and the initramfs and grub.cfg already built still carry it.
-    if command -v plymouth-set-default-theme >/dev/null && [[ $(plymouth-set-default-theme) == impasto ]]; then
+    if command -v plymouth-set-default-theme >/dev/null && [[ $(plymouth-set-default-theme) == eclipse || $(plymouth-set-default-theme) == impasto ]]; then
         act sudo plymouth-set-default-theme --reset
         act sudo mkinitcpio -P >/dev/null || say 'the initramfs did not rebuild: sudo mkinitcpio -P'
         if [[ -f /boot/grub/grub.cfg ]] && command -v grub-mkconfig >/dev/null; then
@@ -1030,7 +1089,7 @@ verb_uninstall() {
 # ── EXTRAS ──────────────────────────────────────────────────────────────────
 #
 # What a copied file cannot hold: what opens which file, dark GTK, the cursor,
-# Nautilus, VSCodium, Vesktop, Spotify, face unlock, the camera effects and the
+# Strata's portal, Sine's bootloader, Spotify, face unlock, camera effects and the
 # boot splash.
 # `install` sets each up once per machine, and one that cannot run yet is
 # skipped with the reason and tried again by the next install or update.
@@ -1058,14 +1117,16 @@ stamp()   { if (( ! DRY )); then mkdir -p "$APPLIED"; touch "$APPLIED/$1"; fi; }
 # Spotify is patched again whenever an update of the player has put the
 # unpatched xpui.spa back.
 extras() {
-    applied defaults || soft defaults verb_defaults
+    applied app-defaults-v2 || soft defaults verb_defaults
     if [[ ! -d $CURSOR_SEED ]]; then soft cursors verb_cursors; fi
-    applied nautilus || soft nautilus verb_nautilus
-    applied vscodium || soft vscodium verb_vscodium
-    applied vesktop || soft vesktop verb_vesktop
+    applied strata || soft strata verb_strata
+    applied sine || soft sine verb_sine
+    if ! command -v omp >/dev/null 2>&1 && [[ ! -e $HOME/.local/bin/omp && ! -L $HOME/.local/bin/omp ]]; then
+        soft omp verb_omp
+    fi
     applied face || soft face verb_face
     applied camera || soft camera verb_camera
-    applied splash || soft splash verb_splash
+    applied eclipse-splash || soft splash verb_splash
     if ! applied spotify || [[ -f /opt/spotify/Apps/xpui.spa ]]; then soft spotify verb_spotify; fi
 }
 
@@ -1075,9 +1136,10 @@ extras() {
 # somebody chose stays chosen and is not split with ours.
 DEFAULT_APPS=(
     'imv.desktop image/jpeg image/png image/gif image/webp image/svg+xml'
-    'nvim.desktop text/plain application/json'
-    'org.gnome.Nautilus.desktop inode/directory'
+    'eclipse-nvim.desktop text/plain application/json'
+    'io.github.lgse.Strata.desktop inode/directory'
     'zen.desktop text/html application/pdf x-scheme-handler/http x-scheme-handler/https'
+    'org.telegram.desktop.desktop x-scheme-handler/tg x-scheme-handler/tonsite x-scheme-handler/ton'
 )
 
 # Whether mimeapps.list names a default for a type. `xdg-mime query` cannot
@@ -1111,6 +1173,10 @@ verb_defaults() {
         if ! has_entry "${words[0]}"; then say "skipped  ${words[0]} — not installed"; continue; fi
         taken=
         for type in "${words[@]:1}"; do
+            if [[ ${words[0]} == eclipse-nvim.desktop ]] && \
+               [[ $(xdg-mime query default "$type" 2>/dev/null) == nvim.desktop ]]; then
+                continue
+            fi
             if chosen "$type"; then taken=$type; break; fi
         done
         if [[ -n $taken ]]; then say "kept     what opens $taken, and the rest of its line"; continue; fi
@@ -1127,6 +1193,7 @@ verb_defaults() {
     fi
     say 'dark GTK, impasto icons'
     stamp defaults
+    stamp app-defaults-v2
 }
 
 # Shake-to-find magnifies the pointer, so it has to be a vector cursor. Fetches
@@ -1183,61 +1250,54 @@ verb_spotify() {
     say ok
 }
 
-# The palette push writes the colour theme and keeps the font and palette keys
-# current; this merges the rest of settings.json. Only the extensions the look
-# is made of, from Open VSX; --force makes a re-run upgrade them.
-VSCODIUM_EXTENSIONS=(
-    pkief.material-icon-theme
-    miguelsolorio.fluent-icons
-    usernamehw.errorlens
-    oderwat.indent-rainbow
-)
+# Strata's supported installer preserves unrelated portal routes, notably
+# Hyprland ScreenCast/Screenshot. It restarts the frontend: close dialogs first.
+verb_strata() {
+    section strata
+    command -v strata >/dev/null || refuse 'strata is not installed (package: strata-bin)' || return
+    command -v xdg-mime >/dev/null || refuse 'xdg-utils is not installed' || return
+    act strata --install-portal || refuse 'Strata portal setup failed; run inside the Hyprland session' || return
+    act xdg-mime default io.github.lgse.Strata.desktop inode/directory || refuse 'folder association failed' || return
+    act python3 "$REPO/home/.config/quickshell/scripts/app_integrations.py" file-manager \
+        || refuse 'Strata file-location service setup failed' || return
+    stamp strata
+    say 'Strata folders and FileChooser configured; screen-sharing routes retained'
+}
 
-verb_vscodium() {
-    section vscodium
-    command -v codium >/dev/null || refuse 'vscodium is not installed' || return
-    local e missed=0
-    for e in "${VSCODIUM_EXTENSIONS[@]}"; do
-        if act codium --install-extension "$e" --force >/dev/null 2>&1; then
-            say "$e"
-        else
-            say "$e FAILED — not on Open VSX, or no network"
-            missed=1
+# Local import is supported; Telegram has no documented local live-theme API.
+# Never upload/send a theme or touch Telegram account storage to fake sync.
+verb_telegram() {
+    section telegram
+    command -v telegram-desktop >/dev/null || refuse 'telegram-desktop is not installed' || return
+    act python3 "$THEME_MANAGER" prepare-telegram || refuse 'theme generation failed' || return
+}
+
+# Supported prebuilt release; never execute a downloaded installer or configure
+# accounts. Existing package-manager/user installations are intentionally kept.
+verb_omp() {
+    section omp
+    local -a options=()
+    if (( DRY )); then options+=(--dry-run); fi
+    python3 "$REPO/home/.config/quickshell/scripts/install_omp.py" "${options[@]}" \
+        || refuse 'OMP setup failed; no provider account configuration was changed' || return
+}
+
+# Follow upstream's manual installation with verified release archives. Paths
+# come from about:support; no profile, bookmarks, mods or account data is reset.
+verb_sine() {
+    section sine
+    local profile=${SINE_PROFILE:-} program=${SINE_PROGRAM:-}
+    if [[ -z $profile || -z $program ]]; then
+        if [[ ! -t 0 ]] || (( NOCONFIRM )); then
+            refuse 'open Zen about:support, note Profile Directory and installation directory; close Zen, then run SINE_PROFILE=/path SINE_PROGRAM=/path ./setup sine' || return
         fi
-    done
-    act python3 "$THEME_MANAGER" apply-vscodium || refuse 'settings.json was not merged' || return
-    say 'settings merged — the theme lands on the next window'
-    # A missed extension leaves it for the next install to try again.
-    if (( ! missed )); then stamp vscodium; fi
-}
-
-# Vencord loads only a theme ticked in its own settings. The palette push
-# writes the sheet; this ticks it, with Vesktop closed.
-verb_vesktop() {
-    section vesktop
-    command -v vesktop >/dev/null || refuse 'vesktop is not installed' || return
-    if pgrep -x vesktop >/dev/null; then
-        refuse 'close Vesktop first: Vencord rewrites its settings while it runs' || return
+        say 'From Zen about:support, note Profile Directory and Application Binary directory. Close Zen before continuing.'
+        read -r -p '  existing Zen profile directory: ' profile
+        read -r -p '  Zen installation directory (contains application.ini): ' program
     fi
-    act python3 "$THEME_MANAGER" apply-vesktop || refuse 'the theme was not ticked' || return
-    stamp vesktop
-    say 'theme ticked'
-}
-
-# Colours come from gtk.css and the right-click menu is a file in home/; the
-# rest is gsettings and the sidebar's bookmarks. A folder still handed to
-# Thunar is handed to Nautilus instead.
-verb_nautilus() {
-    section nautilus
-    command -v nautilus >/dev/null || refuse 'nautilus is not installed' || return
-    command -v gsettings >/dev/null || refuse 'gsettings is not installed (package: glib2)' || return
-    act python3 "$THEME_MANAGER" apply-nautilus || refuse 'not every setting was applied' || return
-    if [[ $(xdg-mime query default inode/directory 2>/dev/null) == thunar.desktop ]]; then
-        act xdg-mime default org.gnome.Nautilus.desktop inode/directory || refuse 'xdg-mime failed' || return
-        say 'folders open in Nautilus'
-    fi
-    stamp nautilus
-    say 'settings and sidebar applied'
+    act python3 "$REPO/home/.config/quickshell/scripts/app_integrations.py" sine "$profile" "$program" \
+        || refuse 'Sine setup failed' || return
+    stamp sine
 }
 
 # The infrared half of a Windows Hello camera: the capture device that offers
@@ -1397,17 +1457,17 @@ verb_splash() {
     [[ -z $ROOT ]] || refuse 'the boot splash is set up on the machine itself, not in a chroot' || return
     command -v plymouth-set-default-theme >/dev/null || refuse 'plymouth is not installed (package: plymouth)' || return
     command -v mkinitcpio >/dev/null || refuse 'the initramfs is not built by mkinitcpio' || return
-    [[ -f /usr/share/plymouth/themes/impasto/impasto.plymouth && -f /etc/mkinitcpio.conf.d/impasto.conf ]] \
+    [[ -f /usr/share/plymouth/themes/eclipse/eclipse.plymouth && -f /etc/mkinitcpio.conf.d/impasto.conf ]] \
         || refuse 'the theme is not installed (./setup system)' || return
     if (( DRY )); then
         say 'would choose the theme, add splash to the kernel command line and rebuild the initramfs'
         return 0
     fi
     sudo -v
-    if [[ $(plymouth-set-default-theme) != impasto ]]; then
-        act sudo plymouth-set-default-theme impasto || refuse 'the theme could not be chosen' || return
+    if [[ $(plymouth-set-default-theme) != eclipse ]]; then
+        act sudo plymouth-set-default-theme eclipse || refuse 'the theme could not be chosen' || return
     fi
-    say 'theme    impasto'
+    say 'theme    eclipse'
     local loader= esp entry root config
     if [[ -f /etc/default/grub ]] && command -v grub-mkconfig >/dev/null; then
         loader=grub
@@ -1440,7 +1500,7 @@ verb_splash() {
         act sudo grub-mkconfig -o /boot/grub/grub.cfg >/dev/null 2>&1 || refuse 'grub-mkconfig failed' || return
         say 'rebuilt  /boot/grub/grub.cfg'
     fi
-    stamp splash
+    stamp eclipse-splash
     say 'ok · from the next boot'
 }
 
@@ -1467,19 +1527,19 @@ verb_check() {
     "$luac" -p "${files[@]}"
     say 'syntax ok'
 
-    # zsh -n takes one script at a time: further arguments become its
-    # positional parameters rather than more files to parse.
-    section zsh
-    local f
-    while IFS= read -r f; do zsh -n "$f"; done < <(find home -name '.zshrc' -o -name '*.zsh')
-    say 'syntax ok'
 
     section bash
+    local f
     bash -n setup
+    while IFS= read -r f; do
+        if [[ $f == *.sh || $f == *.bash || $f == */.bashrc || $f == */.bash_profile \
+                || $f == */bash-completion/completions/* ]] || { [[ $f == home/.local/bin/* ]] && [[ $(IFS= read -r line < "$f"; printf '%s' "$line") == '#!/usr/bin/env bash' ]]; }; then
+            bash -n "$f"
+        fi
+    done < <(find home -type f)
     say 'syntax ok'
 
-    # Plain JSON only (the one .jsonc file is fastfetch's). A typo in the
-    # palette board description would otherwise fail silently.
+    # Plain JSON settings and palette board descriptions.
     section json
     mapfile -t files < <(find home -name '*.json')
     python3 -c 'import json, sys; [json.load(open(f, encoding="utf-8")) for f in sys.argv[1:]]' "${files[@]}"
@@ -1634,7 +1694,7 @@ parts() {
                 packages) note="$pacman from the repositories, $aur from the AUR" ;;
                 system)   note='sddm, unless this machine already has one' ;;
                 plugins)  note='shake to find · glass on the windows' ;;
-                extras)   note='Nautilus, VSCodium, Vesktop, Spotify, GTK, your face, the camera, the boot splash' ;;
+                extras)   note='OMP, Strata portal, Sine, Spotify, GTK, your face, the camera, the boot splash' ;;
             esac
             if (( on[i] )); then box="$ACCENT◉$OFF"; else box="$FAINT○$OFF"; fi
             if (( i == at )); then
@@ -1755,13 +1815,15 @@ main() {
         packages)  verb_packages ;;
         sync)      if (( WATCH )); then verb_watch; else verb_sync; fi ;;
         system)    verb_system ;;
+        login)     verb_login ;;
         plugins)   verb_plugins ;;
         defaults)  verb_defaults ;;
         cursors)   verb_cursors ;;
         spotify)   verb_spotify ;;
-        vscodium)  verb_vscodium ;;
-        nautilus)  verb_nautilus ;;
-        vesktop)   verb_vesktop ;;
+        strata)    verb_strata ;;
+        telegram)  verb_telegram ;;
+        sine)      verb_sine ;;
+        omp)       verb_omp ;;
         face)      verb_face ;;
         camera)    verb_camera ;;
         splash)    verb_splash ;;

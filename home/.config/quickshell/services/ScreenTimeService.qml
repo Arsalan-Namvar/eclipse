@@ -192,7 +192,7 @@ Singleton {
 
     // Clients whose desktop entry names too broad a category.
     readonly property var categoryOverrides: ({
-        "vesktop.desktop": "social"
+        "org.telegram.desktop.desktop": "social"
     })
 
     readonly property var categoryNames: ({
@@ -229,17 +229,16 @@ Singleton {
         return "other"
     }
 
-    // A window class as the dock would name it: the entry's name and icon,
-    // and the group it is counted in.
+    // Resolve each window class to its desktop entry and time category.
     function appOf(windowClass: string, names: var): var {
         // The shell's own window is the settings.
         if (windowClass === "org.quickshell")
             return { key: windowClass, name: Tr.t("Settings"), icon: "preferences-system", category: "utilities" }
-        const id = DockService.idFor(windowClass)
-        const entry = id !== "" ? DockService.entryOf(id) : null
+        const id = LauncherService.idFor(windowClass)
+        const entry = id !== "" ? LauncherService.entryOf(id) : null
         // A Steam game has no entry of its own; it wears Steam's icon.
         const steam = !entry && windowClass.startsWith("steam_app_")
-            ? DockService.entryOf(DockService.idFor("steam")) : null
+            ? LauncherService.entryOf(LauncherService.idFor("steam")) : null
         return {
             key: windowClass,
             name: entry ? entry.name : (names[windowClass] ?? windowClass),

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+profile_file="${XDG_STATE_HOME:-$HOME/.local/state}/quickshell/zen-profile"
+if [[ -r $profile_file ]]; then
+    IFS= read -r profile < "$profile_file" || [[ -n ${profile:-} ]]
+    if [[ ${profile:-} == /* && -d $profile ]]; then
+        exec zen-browser --profile "$profile" "$@"
+    fi
+    printf 'Eclipse: saved Zen profile is unavailable; choose it again with setup sine.\n' >&2
+    exit 1
+fi
+exec zen-browser "$@"

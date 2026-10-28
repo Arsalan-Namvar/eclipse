@@ -43,7 +43,7 @@ Singleton {
 
     readonly property int count: root.decks.reduce((sum, deck) => sum + deck.notes.length, 0)
 
-    // Hidden under a fullscreen window, as the dock is, and with
+    // Hidden under a fullscreen window, and with
     // `deckOnEmpty` also on any workspace that has windows. Both are asked of
     // the workspace the screen is showing, not of the focused one: the edges
     // on one screen have no opinion about what is open on the other.
@@ -204,9 +204,8 @@ Singleton {
     // starts so the surface can widen its input region (see `Deck`).
     property string held: ""
 
-    // Edge that would receive the widget or tray tile currently being dragged
-    // from the desktop, or "", and the screen that edge is on. Set by the
-    // desktop, drawn by the deck.
+    // Edge receiving an audio spectrum currently being dragged, or "", and
+    // the screen it belongs to. The desktop resolves it; the deck draws it.
     property string receiving: ""
     property string receivingScreen: ""
 

@@ -43,10 +43,7 @@ Item {
         weather: weatherBlock,
         calendar: calendarBlock,
         notifications: notificationsBlock,
-        impasto: impastoBlock,
-        pet: petBlock,
         clock: clockBlock,
-        games: gamesBlock,
         notes: notesBlock,
         tasks: tasksBlock,
         session: sessionBlock,
@@ -157,29 +154,6 @@ Item {
         NotificationList {}
     }
 
-    Component {
-        id: impastoBlock
-        ImpastoBlock {
-            cols: root.shape.cols
-            rows: root.shape.rows
-        }
-    }
-
-    Component {
-        id: petBlock
-        PetBlock {
-            rows: root.shape.rows
-            onPanelRequested: panel => root.panelRequested(panel)
-        }
-    }
-
-    Component {
-        id: gamesBlock
-        GamesBlock {
-            rows: root.shape.rows
-            onPanelRequested: panel => root.panelRequested(panel)
-        }
-    }
 
     Component {
         id: clockBlock

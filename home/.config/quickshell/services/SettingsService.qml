@@ -43,33 +43,16 @@ Singleton {
     readonly property alias islandActivities: config.islandActivities
     readonly property alias chipShape: config.chipShape
     readonly property alias chipFigure: config.chipFigure
-    readonly property alias desktopWidgets: config.desktopWidgets
-    readonly property alias desktopTheme: config.desktopTheme
-    readonly property alias desktopOpacity: config.desktopOpacity
-    readonly property alias desktopHidden: config.desktopHidden
+    readonly property alias desktopEdges: config.desktopEdges
     readonly property alias centreButtons: config.centreButtons
     readonly property alias centreTop: config.centreTop
     readonly property alias centreBlocks: config.centreBlocks
     readonly property alias centreColumns: config.centreColumns
     readonly property alias centreRows: config.centreRows
     readonly property alias centreToggles: config.centreToggles
-    readonly property alias dockEnabled: config.dockEnabled
-    readonly property alias dockPinned: config.dockPinned
-    readonly property alias dockEdge: config.dockEdge
-    readonly property alias dockAlignment: config.dockAlignment
-    readonly property alias dockIconSize: config.dockIconSize
-    readonly property alias dockMagnify: config.dockMagnify
-    readonly property alias dockOpacity: config.dockOpacity
-    readonly property alias dockGround: config.dockGround
     readonly property alias terminalGround: config.terminalGround
-    readonly property alias dockRunning: config.dockRunning
-    readonly property alias dockEverywhere: config.dockEverywhere
-    readonly property alias dockAutohide: config.dockAutohide
-    readonly property alias dockLauncher: config.dockLauncher
     readonly property alias weatherPlace: config.weatherPlace
     readonly property alias githubUser: config.githubUser
-    readonly property alias markets: config.markets
-    readonly property alias petStyle: config.petStyle
     readonly property alias launcherResults: config.launcherResults
     readonly property alias launcherOrder: config.launcherOrder
     readonly property alias launcherFits: config.launcherFits
@@ -103,14 +86,10 @@ Singleton {
     readonly property alias animationPreset: config.animationPreset
     readonly property alias windowShadow: config.windowShadow
     readonly property alias barShadow: config.barShadow
-    readonly property alias dockShadow: config.dockShadow
-    readonly property alias widgetShadow: config.widgetShadow
     readonly property alias windowGlass: config.windowGlass
     readonly property alias surfaceStyle: config.surfaceStyle
-    readonly property alias desktopGround: config.desktopGround
     readonly property alias barSides: config.barSides
     readonly property alias wallpaperTransition: config.wallpaperTransition
-    readonly property alias greeting: config.greeting
     readonly property alias fontFamily: config.fontFamily
     readonly property alias fontMono: config.fontMono
     readonly property alias notificationTimeout: config.notificationTimeout
@@ -118,6 +97,7 @@ Singleton {
     readonly property alias keyboard: config.keyboard
     readonly property alias displays: config.displays
     readonly property alias keys: config.keys
+    readonly property alias keymapVersion: config.keymapVersion
     readonly property alias launcherPrefixes: config.launcherPrefixes
     readonly property alias cursorColor: config.cursorColor
     readonly property alias cursorSize: config.cursorSize
@@ -340,9 +320,9 @@ Singleton {
     // Reset. The recorder and capture entries are last-used state.
     readonly property var machineKeys: [
         "displays", "lidPolicy", "workspaceMode",
-        "userName", "userAvatar", "language", "keyboard", "weatherPlace", "githubUser", "markets",
+        "userName", "userAvatar", "language", "keyboard", "weatherPlace", "githubUser",
         "emojiTone",
-        "doNotDisturb", "nightLight", "nightTemperature", "barHidden", "desktopHidden",
+        "doNotDisturb", "nightLight", "nightTemperature", "barHidden",
         "gameMode",
         "cameraEnabled", "cameraEffect", "cameraReactions",
         "recorderAudio", "captureShape", "captureKind"
@@ -391,6 +371,75 @@ Singleton {
         return value === undefined ? null : JSON.parse(JSON.stringify(value))
     }
 
+    // One shared map for the shell and Lua, including inherited defaults to
+    // retire. Loading is synchronous so no profile can migrate against an
+    // incomplete map during startup.
+    readonly property FileView keymapFile: FileView {
+        path: Quickshell.shellPath("../hypr/keymap.tsv")
+        blockLoading: true
+        printErrors: true
+    }
+
+    readonly property int currentKeymapVersion: 1
+    readonly property var keymap: {
+        const rows = []
+        for (const line of root.keymapFile.text().split("\n")) {
+            if (line === "" || line.startsWith("#"))
+                continue
+            const fields = line.split("\t")
+            if (fields.length >= 2)
+                rows.push({ description: fields[0], combination: fields[1],
+                    legacy: (fields[2] || "").split("|").filter(value => value !== "") })
+        }
+        return rows
+    }
+
+    // Modifier order and spelling case do not make a binding a customization.
+    function keyChord(combination: string): string {
+        const parts = combination.toUpperCase().split(/\s*\+\s*/)
+        const key = parts.pop().trim()
+        return parts.map(part => part.trim().replace(/^CONTROL$/, "CTRL")
+            .replace(/^(MOD4|META)$/, "SUPER")).sort().concat([key]).join("+")
+    }
+
+    function migrateKeys(values: var, version: int): var {
+        const next = ({})
+        for (const description in (values ?? ({})))
+            if (typeof values[description] === "string")
+                next[description] = values[description]
+        for (const row of root.keymap)
+            if (row.combination === "@removed")
+                delete next[row.description]
+        if (version >= root.currentKeymapVersion || root.keymap.length === 0)
+            return next
+        for (const row of root.keymap) {
+            const kept = next[row.description]
+            if (row.combination === "@removed"
+                    || (typeof kept === "string" && kept !== ""
+                        && row.legacy.some(old => root.keyChord(old) === root.keyChord(kept))))
+                delete next[row.description]
+        }
+        // A real custom binding wins over a newly assigned default. Keep the
+        // custom chord and explicitly unbind only the colliding default, so
+        // neither action fires unexpectedly and no user choice is lost.
+        const custom = ({})
+        for (const description of Object.keys(next).sort())
+            if (next[description] !== "")
+                custom[root.keyChord(next[description])] = description
+        for (const row of root.keymap) {
+            if (row.combination === "" || row.combination === "@removed"
+                    || Object.prototype.hasOwnProperty.call(next, row.description))
+                continue
+            const winner = custom[root.keyChord(row.combination)]
+            if (winner) {
+                next[row.description] = ""
+                console.warn("Keyboard map migration: kept custom", winner,
+                    "on", row.combination, "; left", row.description, "unbound")
+            }
+        }
+        return next
+    }
+
     // Every profile key, from `values` where valid and from the defaults
     // otherwise, so a switch never inherits the previous profile's values.
     function complete(values: var): var {
@@ -401,6 +450,15 @@ Singleton {
                 && root.accepts(key, given[key])
             out[key] = root.copy(taken ? given[key] : root.pristine[key])
         }
+        out.desktopEdges = root.edgeRecords(given.desktopEdges ?? given.desktopWidgets ?? [])
+        for (const key of ["barLeft", "barRight", "centreButtons", "centreTop", "centreBlocks", "centreToggles"])
+            out[key] = root.retainedEntries(out[key])
+        // Old exported profiles kept keyboard options in `compositor`.
+        // Keyboard settings are machine-wide now, never profile overrides.
+        out.compositor = root.withoutKeyboard(out.compositor)
+        out.keys = root.migrateKeys(out.keys, Number(given.keymapVersion) || 0)
+        out.keymapVersion = root.keymap.length > 0 ? root.currentKeymapVersion
+            : Number(given.keymapVersion) || 0
         return out
     }
 
@@ -431,26 +489,80 @@ Singleton {
         root.adopt({})
     }
 
-    // A new desk types in the machine's layout, the one systemd-localed wrote
-    // for the console and the login screen, rather than in input.lua's `us`.
-    // Read into the first write, so nothing can reload over it.
-    readonly property FileView machineKeyboard: FileView {
-        path: "/etc/X11/xorg.conf.d/00-keyboard.conf"
-        blockLoading: true
-        printErrors: false
+    // Legacy layout rows are accepted only for the two retained edge surfaces.
+    function edgeRecords(list: var): var {
+        if (root.shapeOf(list) !== "list")
+            return []
+        const out = []
+        for (const row of list ?? []) {
+            if (!row || !["notes", "spectrum"].includes(row.id)
+                    || !["left", "right", "bottom"].includes(row.edge))
+                continue
+            const kept = root.copy(row)
+            for (const key of ["col", "row", "family", "theme", "style", "bare", "ink", "note"])
+                delete kept[key]
+            out.push(kept)
+        }
+        return out
     }
 
-    function machineLayout(): var {
-        const text = root.machineKeyboard.text()
-        const layout = /^\s*Option\s+"XkbLayout"\s+"([^"]+)"/m.exec(text)
-        if (!layout)
-            return ({})
-        const found = { "input:kb_layout": layout[1] }
-        const options = /^\s*Option\s+"XkbOptions"\s+"([^"]*)"/m.exec(text)
-        const switches = options ? options[1].split(",").filter(o => o.startsWith("grp:")) : []
-        if (switches.length > 0)
-            found["input:kb_options"] = switches.join(",")
-        return found
+    function retainedEntries(list: var): var {
+        if (!list || typeof list.length !== "number")
+            return list
+        return Array.from(list).filter(entry => !["dock", "widgets", "pet", "games", "markets", "claude", "codex", "impasto"].includes(
+            typeof entry === "string" ? entry : (entry.id ?? entry.kind)))
+    }
+    // Explicit desktop defaults, independent of console/login-screen settings.
+    // In particular, do not import a workstation's Caps-as-Compose option.
+    function defaultKeyboard(): var {
+        return ({ "input:kb_layout": "us,ir", "input:kb_variant": ",winkeys",
+            "input:kb_options": "grp:caps_toggle" })
+    }
+
+    function withoutKeyboard(values: var): var {
+        const next = Object.assign({}, values ?? ({}))
+        for (const key of Object.keys(next))
+            if (key.startsWith("input:kb_"))
+                delete next[key]
+        return next
+    }
+
+    function keyboardOptions(options: string): string {
+        const tokens = options.split(",")
+        if (!tokens.includes("grp:caps_toggle"))
+            return options
+        // These options repurpose the same physical key; unrelated Compose,
+        // LED and third-level options remain untouched.
+        return tokens.filter(option => !option.startsWith("caps:")
+            && !option.startsWith("compose:caps")
+            && !option.startsWith("lv3:caps_") && !option.startsWith("lv5:caps_")
+            && !["ctrl:nocaps", "ctrl:swapcaps", "ctrl:grouptoggle_capscontrol",
+                "ctrl:hyper_capscontrol"].includes(option)).join(",")
+    }
+
+    function migrateKeyboard(saved: var): var {
+        const kept = ({})
+        // Before the machine-wide keyboard store, these lived in profiles.
+        for (const key of Object.keys(saved.compositor ?? ({})))
+            if (key.startsWith("input:kb_"))
+                kept[key] = saved.compositor[key]
+        Object.assign(kept, saved.keyboard ?? ({}))
+        const next = Object.assign(root.defaultKeyboard(), kept)
+        // An existing layout without a variant meant its default variant,
+        // not the positional Persian variant of the new fresh defaults.
+        if (Object.prototype.hasOwnProperty.call(kept, "input:kb_layout")
+                && !Object.prototype.hasOwnProperty.call(kept, "input:kb_variant"))
+            next["input:kb_variant"] = ""
+        const tokens = String(next["input:kb_options"]).split(",")
+        if (tokens.includes("grp:win_space_toggle")) {
+            const supported = tokens.some(option => option === "grp:caps_toggle"
+                || option === "grp:alt_shift_toggle")
+            next["input:kb_options"] = tokens.filter(option => option !== "grp:win_space_toggle")
+                .concat(supported ? [] : ["grp:caps_toggle"]).filter(option => option !== "").join(",")
+            console.warn("Keyboard migration: Super + Space is reserved for the launcher; using a supported layout switch (Caps Lock by default).")
+        }
+        next["input:kb_options"] = root.keyboardOptions(String(next["input:kb_options"]))
+        return next
     }
 
     // ── STORAGE ─────────────────────────────────────────────────────────────
@@ -465,19 +577,24 @@ Singleton {
         // change. Coalescing also means one write per turn (`adopt()`).
         onAdapterUpdated: saver.restart()
         onLoaded: {
+            const saved = JSON.parse(file.text())
+            const keyboard = root.migrateKeyboard(saved)
+            if (JSON.stringify(config.keyboard) !== JSON.stringify(keyboard))
+                config.keyboard = keyboard
+            const compositor = root.withoutKeyboard(config.compositor)
+            if (JSON.stringify(config.compositor) !== JSON.stringify(compositor))
+                config.compositor = compositor
+            if (config.keymapVersion < root.currentKeymapVersion && root.keymap.length > 0) {
+                config.keys = root.migrateKeys(config.keys, config.keymapVersion)
+                config.keymapVersion = root.currentKeymapVersion
+            }
             root.arrived = true
             root.welcomeActivities()
-            // A ground named "frosted" is read as glass, and an empty one,
-            // which followed the bar's, takes the bar's.
-            for (const key of ["surfaceStyle", "desktopGround", "dockGround"])
-                if (config[key] === "frosted")
-                    config[key] = "glass"
-            for (const key of ["desktopGround", "dockGround"])
-                if (config[key] === "")
-                    config[key] = config.surfaceStyle
-            // The dock shared the bar's shadow before it had its own.
-            if (!/"dockShadow"/.test(file.text()))
-                config.dockShadow = config.barShadow
+            config.desktopEdges = root.edgeRecords(saved.desktopEdges ?? saved.desktopWidgets ?? [])
+            for (const key of ["barLeft", "barRight", "centreButtons", "centreTop", "centreBlocks", "centreToggles"])
+                config[key] = root.retainedEntries(config[key])
+            if (config.surfaceStyle === "frosted")
+                config.surfaceStyle = "glass"
             // One island spanning the screen is the bezel now.
             if (/"barFullWidth":\s*true/.test(file.text()) && config.barStyle === "island")
                 config.barStyle = "bezel"
@@ -486,7 +603,7 @@ Singleton {
         onLoadFailed: error => {
             if (error === FileViewError.FileNotFound) {
                 root.fresh = true
-                config.keyboard = root.machineLayout()
+                config.keymapVersion = root.currentKeymapVersion
                 root.arrived = true
                 writeAdapter()
             }
@@ -536,12 +653,9 @@ Singleton {
         // over whatever the rest of the settings say.
         property bool gameMode: false
 
-        // Four shadows, one per layer: Hyprland's under the windows, the
-        // shell's under the bar, the dock and the desk's widgets.
+        // Window and bar shadows; edge note paper retains its own rendering.
         property bool windowShadow: false
         property bool barShadow: false
-        property bool dockShadow: false
-        property bool widgetShadow: false
 
         // hyprglass. Dimmed in the settings when the plugin is not built;
         // `CompositorService` pushes it at login and after every reload.
@@ -552,9 +666,6 @@ Singleton {
         // "liquid", a clear frost over it (`Theme.islandGround`).
         property string surfaceStyle: "classic"
 
-        // The desktop widgets' ground, as above.
-        property string desktopGround: "classic"
-
         // The bar's sides: "capsule", each group in a capsule, or "bare",
         // the icons on the wallpaper. The one-capsule style has its band.
         property string barSides: "capsule"
@@ -563,9 +674,6 @@ Singleton {
         // each change.
         property string wallpaperTransition: "wipe"
 
-        // Row id from `ThemeService.greetings`; `random` is picked by `fa` on
-        // each run.
-        property string greeting: "random"
 
         // One of `barStyles`.
         property string barStyle: "grouped"
@@ -676,7 +784,7 @@ Singleton {
         property int workspaceMax: 10
         // `shared`: every screen shares the same workspaces. `screen`: each
         // has ten of its own, the main screen 1–10 and the rest after it.
-        property string workspaceMode: "shared"
+        property string workspaceMode: "screen"
         // How the strip draws each workspace: a shape (`dots`, `bars`, `rings`)
         // or its number written out (`numbers`, `roman`, `kanji`, `greek`).
         property string workspaceStyle: "dots"
@@ -706,7 +814,7 @@ Singleton {
 
         // The keyboard's own options (`input:kb_*`), kept apart from
         // `compositor` because the keyboard is the machine's, not the desk's.
-        property var keyboard: ({})
+        property var keyboard: root.defaultKeyboard()
 
         // ── DISPLAYS ────────────────────────────────────────────────────
         //
@@ -727,56 +835,20 @@ Singleton {
 
         // ── KEYS ────────────────────────────────────────────────────────
         //
-        // A combination per bind in `hypr/keybinds.lua`, keyed by its
-        // description; "" leaves it unbound. Empty until the first change,
-        // then complete. `ShortcutService` writes it to keys.tsv, which the
-        // Lua config reads.
+        // Sparse description -> combination overrides; "" is explicitly
+        // unbound. keymap.tsv supplies defaults shared with Lua. The version
+        // prevents a later custom choice from being mistaken for an old default.
         property var keys: ({})
+        property int keymapVersion: 0
 
         // Launcher sigil overrides, keyed by mode id; absent means the
         // default in `launcherPrefixDefaults`.
         property var launcherPrefixes: ({})
 
-        // ── DESKTOP ─────────────────────────────────────────────────────
-        //
-        // Desktop widgets in placement order; a module may appear more than
-        // once:
-        //
-        //   key      this widget — "clock-1"; a row without one is keyed
-        //            by its module on the way in
-        //   id       the module, the same id the catalogue uses
-        //   screen   the monitor's description; absent means the main screen
-        //   col, row the square its top left corner is on
-        //   family   "2x2", "4x2", "4x4" or "8x2" — which face it wears
-        //   theme    "modern", "analogue" or "sticker"; absent means the
-        //            desktop's
-        //   style    how its capsule is drawn; absent means the desktop's
-        //   opacity  how solid it is; absent means the desktop's
-        //   note     for a notes widget, which note; absent means the
-        //            front of the deck
-        //
-        // Or a deck of notes on a screen edge:
-        //
-        //   key      "notes-2"
-        //   id       "notes"
-        //   screen   as above
-        //   edge     "left", "right" or "bottom"
-        //   notes    the note keys on it, in order along the edge
-        //   along    where on the edge, 0 to 1 from its first corner
-        //   takesNew true on the one deck new notes land on
-        property var desktopWidgets: []
-
-        // The theme for widgets without their own, from
-        // `DesktopService.themes`. Colours always come from the palette, and
-        // the capsule's ground is the island's (`surfaceStyle`).
-        property string desktopTheme: "modern"
-
-        // Capsule opacity in percent; below 100 the desktop layer's blur
-        // rule (`windowrules.lua`) shows through. Widgets may override it.
-        property int desktopOpacity: 100
-
-        // Every widget off the picture for a while; arranging shows them.
-        property bool desktopHidden: false
+        // Notes and audio spectrum on left/right/bottom screen edges only.
+        // Existing notes, order, position, appearance and monitor descriptions
+        // are retained when migrating the former mixed desktop layout.
+        property var desktopEdges: []
 
         // ── CONTROL CENTRE ──────────────────────────────────────────────
         //
@@ -809,61 +881,17 @@ Singleton {
         // overflow becomes a second page.
         property var centreToggles: null
 
-        // ── DOCK ────────────────────────────────────────────────────────
-        //
-        // An empty dock is not drawn, so enabling it by default costs
-        // nothing on a fresh install.
-        property bool dockEnabled: true
-
-        // Pinned desktop entry ids, in order. Name, icon and command are
-        // read from the entry.
-        property var dockPinned: []
-
-        // Any edge but the top, which is the bar's.
-        property string dockEdge: "bottom"
-
-        property string dockAlignment: "center"
-
-        // Every other dock metric derives from the icon size.
-        property int dockIconSize: 44
-
-        // The icons swell under the pointer and the neighbours make room.
-        property bool dockMagnify: true
-
-        // Percent; the compositor blurs behind the layer.
-        property int dockOpacity: 100
-
-        // The capsule's ground, as `surfaceStyle`.
-        property string dockGround: "classic"
-
         // kitty's ground, as `surfaceStyle`.
         property string terminalGround: "glass"
 
-        // Also show running applications that aren't pinned.
-        property bool dockRunning: true
-
-        // A dock on every screen, or only on the one being worked on.
-        property bool dockEverywhere: true
-
-        property bool dockAutohide: false
-
-        // Launcher button at the start of the row.
-        property bool dockLauncher: true
 
         // Anything wttr.in accepts: a city, postcode or airport code. Empty
         // lets wttr.in geolocate by IP, which can be tens of kilometres off.
         property string weatherPlace: ""
 
-        // GitHub user for the contributions widget; empty draws nothing.
+        // GitHub account used by the retained contribution service.
         property string githubUser: ""
 
-        // The markets widget's pairs, BASE/QUOTE or a coin alone (in US
-        // dollars), separated by commas.
-        property string markets: "BTC, ETH, EUR/USD"
-
-        // One of `PetService.styles`: how the pet is drawn, everywhere it is
-        // drawn.
-        property string petStyle: "creature"
 
         // Idle timeouts in minutes, 0 = never; all off by default.
         // `IdleService` runs one monitor per value.

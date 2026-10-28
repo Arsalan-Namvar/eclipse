@@ -37,7 +37,7 @@ SettingsSection {
         visible: root.tab === "results"
         title: Tr.t("The list")
         note: Tr.t("What the launcher lists with nothing typed, and how tall it gets.")
-        hint: Tr.t("By use ranks applications by launches, with older launches counting for less; those kept on the dock come first until something else is used more. As tall as the answer sizes the island to the results, up to the limit above; off, the box is fixed and the list scrolls.")
+        hint: Tr.t("By use ranks applications by launches, with older launches counting for less. As tall as the answer sizes the island to the results, up to the limit above; off, the box is fixed and the list scrolls.")
 
         SettingRow {
             label: Tr.t("Order")

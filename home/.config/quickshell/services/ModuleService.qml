@@ -29,40 +29,25 @@ import "../theme"
 Singleton {
     id: root
 
-    //   bar      whether it can go on the bar (board, deck and arcade live on
-    //            the desktop and behind their panels instead)
-    //   desk     false for the one module with no desktop face
-    //   width    detail size; none for the spectrum, which has no detail and
-    //   height   lives only on the desktop, on the grid or along an edge, nor
-    //            for the lyrics, whose detail is the player's
-    //
-    // The chip look is global (`SettingsService.chipShape`, `chipFigure`);
-    // desktop faces are listed per theme in `DesktopService.faces`.
+    // Bar modules declare their detail size before the island builds it.
+    // Notes/tasks also supply retained panel cards.
     readonly property var catalogue: [
         { id: "media",         name: "Media",         bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(1, Theme.cardRowGap + 34) },
         { id: "timer",         name: "Timer",         bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(2, 0) },
-        { id: "claude",        name: "Claude",        bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(3, 0) },
-        { id: "codex",         name: "Codex",         bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(2, 0) },
+        { id: "omp",           name: "OMP",           bar: true,  width: 560, height: 620 },
         { id: "battery",       name: "Battery",       bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(3, 0) },
         { id: "volume",        name: "Volume",        bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(2, 0) },
         { id: "brightness",    name: "Brightness",    bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(1, 0) },
         { id: "network",       name: "Network",       bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(2, 0) },
         { id: "bluetooth",     name: "Bluetooth",     bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(3, 0) },
-        { id: "notifications", name: "Notifications", bar: true,  desk: false, width: Theme.cardWidth, height: Theme.cardHeight(7, 0) },
+        { id: "notifications", name: "Notifications", bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(7, 0) },
         { id: "weather",       name: "Weather",       bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(0, 50) },
-        { id: "markets",       name: "Markets",       bar: true,  width: Theme.cardWidth, height: MarketsService.cardHeight },
         { id: "screentime",    name: "Screen time",   bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(4, Theme.cardRowGap + 44) },
-        { id: "github",        name: "GitHub",        bar: false, width: Theme.cardWidth, height: Theme.cardHeight(0, GithubService.cardGrid) },
         { id: "stats",         name: "System",        bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(2, Theme.cardRowGap + 36) },
         { id: "updates",       name: "Updates",       bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(4, 0) },
-        { id: "pet",           name: "Pet",           bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(2, Theme.cardRowGap + 32) },
-        { id: "games",         name: "Games",         bar: false, width: Theme.cardWidth, height: Theme.cardHeight(4, 0) },
         { id: "calendar",      name: "Calendar",      bar: true,  width: 340, height: 330 },
         { id: "notes",         name: "Notes",         bar: false, width: Theme.cardWidth, height: Theme.cardHeight(4, 0) },
         { id: "tasks",         name: "Tasks",         bar: false, width: Theme.cardWidth, height: Theme.cardHeight(4, 0) },
-        { id: "photo",         name: "Photo",         bar: false, width: 356, height: 150 },
-        { id: "spectrum",      name: "Spectrum",      bar: false, width: 0,   height: 0 },
-        { id: "lyrics",        name: "Lyrics",        bar: false, width: 0,   height: 0 },
         { id: "clock",         name: "Clock",         bar: false,
           width: SettingsService.clockShowsDate ? 240 : 150, height: Theme.capsuleHeight }
     ]
@@ -75,17 +60,13 @@ Singleton {
     //
     // Every door of the control centre can go on the bar, under its name and
     // glyph, and so can the control centre itself and the capture surface.
-    // Not the statistics or the pet: on the bar those are modules, and a
-    // button beside them would be the same piece without its figure. Alone in
-    // a capsule, a button is drawn as a circle.
-    //
-    // On the bar an id is a button before it is a module; notes and games are
-    // modules only on the desktop.
+    // Statistics is a module on the bar; a second button would duplicate it.
+    // Alone in a capsule, a button is drawn as a circle.
     //
     // Capture is what the capture key does: the photo is taken at once, so
     // whatever the island has open is in it.
     readonly property var buttonIds: ["launcher", "overview", "controls", "capture",
-        "appearance", "notes", "board", "games", "keys", "packages", "settings", "session"]
+        "appearance", "notes", "board", "github", "keys", "packages", "settings", "session"]
 
     readonly property var buttons: {
         const out = {}
@@ -121,29 +102,18 @@ Singleton {
             || root.catalogue.some(item => item.id === id && item.bar)
     }
 
-    // A reading that polls keeps polling while a piece on the bar or a widget
-    // on the desk shows it.
+    // Keep polling while a visible module needs a reading.
     function watch(id: string, on: bool): void {
-        if (id === "claude") {
+        if (id === "omp") {
             if (on)
-                ClaudeService.subscribe()
+                OmpService.subscribe()
             else
-                ClaudeService.release()
-        } else if (id === "codex") {
-            if (on)
-                CodexService.subscribe()
-            else
-                CodexService.release()
+                OmpService.release()
         } else if (id === "weather") {
             if (on)
                 WeatherService.subscribe()
             else
                 WeatherService.release()
-        } else if (id === "markets") {
-            if (on)
-                MarketsService.subscribe()
-            else
-                MarketsService.release()
         } else if (id === "screentime") {
             if (on)
                 ScreenTimeService.follow()
@@ -176,8 +146,8 @@ Singleton {
     // Modules with a ring face: those whose reading fills from empty to full.
     // A state or a count (the network, the bell, the date, the pending
     // updates) has nothing to fill, so it keeps its symbol in either shape.
-    readonly property var ringed: ["media", "timer", "claude", "codex", "battery", "volume",
-        "brightness", "stats", "pet"]
+    readonly property var ringed: ["media", "timer", "battery", "volume",
+        "brightness", "stats"]
 
     // A piece's own shape when it has one, the bar's when it does not.
     function shapeOf(id: string, own: var): string {
@@ -191,9 +161,7 @@ Singleton {
 
     // ── GLYPH AND FIGURE ────────────────────────────────────────────────────
     //
-    // One table for every place a module's symbol and figure appear (bar,
-    // glance, settings), in either chip shape. Claude and the pet draw their
-    // own mark instead of a glyph (`ChipFace`).
+    // One table for each module's symbol and figure (bar, glance, settings).
     function glyphOf(id: string): string {
         switch (id) {
         case "network":
@@ -208,8 +176,8 @@ Singleton {
             return BatteryService.icon
         case "weather":
             return WeatherService.glyph || "󰖐"
-        case "markets":
-            return MarketsService.glyph(MarketsService.lead)
+        case "omp":
+            return "󰚩"
         case "screentime":
             return "󰔛"
         case "updates":
@@ -218,16 +186,14 @@ Singleton {
             return NotificationService.doNotDisturb ? "󰂛" : "󰂚"
         case "media":
             return "󰎇"
-        case "lyrics":
-            return "󰍰"
         case "timer":
             return "󰔛"
         case "stats":
             return "󰍛"
         case "calendar":
             return "󰃭"
-        case "codex":
-            return "\uf489"
+        case "github":
+            return "󰊤"
         }
         return ""
     }
@@ -244,9 +210,6 @@ Singleton {
             return `${BatteryService.percent}%`
         case "weather":
             return WeatherService.available ? `${WeatherService.temperature}°` : "--°"
-        case "markets":
-            return MarketsService.lead
-                ? `${MarketsService.short(MarketsService.lead)} ${MarketsService.change(MarketsService.lead)}` : "—"
         case "screentime":
             return ScreenTimeService.short(ScreenTimeService.todayTotal)
         case "updates":
@@ -258,16 +221,10 @@ Singleton {
                 ? (MediaService.title || MediaService.identity || "Playing") : "Nothing playing"
         case "timer":
             return TimerService.running ? TimerService.display : "0:00"
-        case "claude":
-            if (ClaudeService.measured)
-                return `${Math.round(ClaudeService.sessionFraction * 100)}%`
-            return ClaudeService.blockTokens > 0 ? ClaudeService.compact(ClaudeService.blockTokens) : "0%"
-        case "codex":
-            return CodexService.measured ? `${Math.round(CodexService.gauge * 100)}%` : "—"
+        case "omp":
+            return OmpService.figure
         case "stats":
             return `${StatsService.cpu.toFixed(0)}%`
-        case "pet":
-            return PetService.hatched ? `Lv ${PetService.level}` : "Egg"
         case "network":
             return NetworkService.connectionName
         case "bluetooth":
@@ -316,12 +273,8 @@ Singleton {
             break
         case "timer":
             return TimerService.running ? TimerService.tint : Theme.text
-        case "claude":
-            return ClaudeService.measured ? ClaudeService.tint : Theme.indicator
-        case "codex":
-            return CodexService.tint
-        case "markets":
-            return MarketsService.tint(MarketsService.lead)
+        case "omp":
+            return Theme.accent
         }
         return Theme.text
     }
@@ -420,11 +373,8 @@ Singleton {
     // strip of chips under it for whatever else is running. With nothing
     // running the weather is the face, and without it the time alone.
     //
-    // The weather only where it is already being asked for, on the bar or
-    // on the desktop: touching the service builds it, and building it makes
-    // a network request.
-    readonly property bool summaryWeather: (SettingsService.onBar("weather")
-            || DesktopService.placed("weather"))
+    // Only poll weather when it is already placed on the bar.
+    readonly property bool summaryWeather: SettingsService.onBar("weather")
         && WeatherService.available
 
     // The widths fit a 24-hour time; a longer format (seconds, AM/PM) widens
@@ -501,20 +451,14 @@ Singleton {
                      height: Theme.cardHeight(Math.min(6, NotificationService.history.length) + 1, 0) }
         if (id === "updates")
             return { width: item.width, height: Theme.cardHeight(Math.min(3, UpdatesService.updates.length) + 1, 0) }
-        if (id === "games")
-            return { width: item.width, height: Theme.cardHeight(Math.min(3, GamesService.ranked.length) + 1, 0) }
         if (id === "notes")
             return { width: item.width, height: Theme.cardHeight(Math.min(3, NotesService.live.length) + 1, 0) }
         if (id === "tasks")
             return { width: item.width, height: Theme.cardHeight(Math.min(3, TasksService.queue.length) + 1, 0) }
-        if (id === "claude")
-            return { width: item.width, height: Theme.cardHeight(ClaudeService.rows, 0) }
         if (id === "battery")
             return { width: item.width, height: Theme.cardHeight(BatteryService.healthKnown ? 3 : 2, 0) }
         if (id === "volume")
             return { width: item.width, height: Theme.cardHeight(AudioService.cardRows, 0) }
-        if (id === "codex")
-            return { width: item.width, height: Theme.cardHeight(Math.max(1, CodexService.limits.length), 0) }
         if (id === "brightness")
             return { width: item.width,
                      height: Theme.cardHeight(Math.max(1, BrightnessService.dimmable.length), 0) }
@@ -542,7 +486,7 @@ Singleton {
         root.activationRequested(id)
     }
 
-    // A module asking for a panel, e.g. the games detail opening the arcade.
+    // A module asking for a standalone island panel.
     signal panelRequested(string panel)
 
     function requestPanel(panel: string): void {
@@ -569,13 +513,8 @@ Singleton {
             return true
         case "media":
             return MediaService.available
-        case "claude":
-            // Reading this constructs the lazy singleton, which runs its
-            // first query; it turns true a moment later.
-            return ClaudeService.available
-        case "codex":
-            // Only where Codex has written a log with its limits.
-            return CodexService.available
+        case "omp":
+            return true
         case "battery":
             return BatteryService.available
         case "volume":
@@ -591,14 +530,6 @@ Singleton {
         case "weather":
             // Builds the service, which runs its first fetch.
             return WeatherService.available
-        case "markets":
-            // Builds the service, which runs its first fetch; false with an
-            // empty list.
-            return MarketsService.available
-        case "github":
-            // False until a name is set and a grid comes back, so nothing
-            // shows on an unconfigured machine.
-            return GithubService.available
         case "stats":
             // The sampler runs from boot (shell.qml touches it).
             return true
@@ -608,22 +539,10 @@ Singleton {
         case "updates":
             // False on a machine with neither checkupdates nor pacman.
             return UpdatesService.available
-        case "pet":
-            // `ready` is constant true; reading it builds the service, and
-            // the service's trickle runs while the pet is on the bar.
-            return PetService.ready
-        case "games":
-            return GamesService.ready
         case "notes":
             return NotesService.ready
         case "tasks":
             return TasksService.ready
-        case "photo":
-            // An empty one asks for a picture.
-            return true
-        case "lyrics":
-            // With nothing playing it says so, as the player does.
-            return true
         }
         return false
     }

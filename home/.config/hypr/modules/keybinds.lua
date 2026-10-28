@@ -15,28 +15,9 @@ local mainMod = "SUPER"
 
 -- ── PROFILE KEYS ────────────────────────────────────────────────────────────
 
--- The shell writes the active profile's bindings to keys.tsv
--- (description<TAB>combination, empty = unbound) and reloads Hyprland when
--- they change. Descriptions are the keys, so renaming one drops its binding
--- from every profile. The combinations below are the fallback.
-local function profile_keys()
-    local state = os.getenv("XDG_STATE_HOME") or (os.getenv("HOME") .. "/.local/state")
-    local keys  = {}
-    local file  = io.open(state .. "/quickshell/keys.tsv")
-    if not file then
-        return keys
-    end
-    for line in file:lines() do
-        local description, combination = line:match("^([^#\t][^\t]*)\t(.*)$")
-        if description then
-            keys[description] = combination
-        end
-    end
-    file:close()
-    return keys
-end
-
-local keys = profile_keys()
+-- Shared defaults and legacy-profile migration are also read by the shell.
+-- This resolves old keys.tsv overrides before its first settings load.
+local keys = require("modules.keymap").load()
 
 -- `hl.bind`, on the profile's combination for this description.
 local function bind(combination, action, options)
@@ -55,6 +36,7 @@ end
 hl.config({
     binds = {
         workspace_back_and_forth = true,
+        hide_special_on_workspace_change = true,
     },
 })
 
@@ -62,8 +44,12 @@ hl.config({
 -- ── APPLICATIONS ────────────────────────────────────────────────────────────
 
 bind(mainMod .. " + Return", hl.dsp.exec_cmd(apps.terminal),     { description = "Applications · Open a terminal" })
-bind(mainMod .. " + E",      hl.dsp.exec_cmd(apps.file_manager), { description = "Applications · Open the file manager" })
-bind(mainMod .. " + B",      hl.dsp.exec_cmd(apps.browser),      { description = "Applications · Open the browser" })
+bind(mainMod .. " + SHIFT + F", hl.dsp.exec_cmd(apps.file_manager), { description = "Applications · Open the file manager" })
+bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd(apps.browser),      { description = "Applications · Open the browser" })
+bind(mainMod .. " + SHIFT + A", hl.dsp.exec_cmd(apps.agent),        { description = "Applications · Open OMP" })
+bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd(apps.editor),       { description = "Applications · Open the editor" })
+bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd(apps.music),        { description = "Applications · Open Spotify" })
+bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd(apps.messenger),     { description = "Applications · Open Telegram" })
 
 
 -- ── WINDOWS ─────────────────────────────────────────────────────────────────
@@ -115,14 +101,14 @@ local function flip_split()
     end
 end
 
-bind(mainMod .. " + Q",           hl.dsp.window.close(), { description = "Windows · Close the focused window" })
-bind(mainMod .. " + SHIFT + Q",   hl.dsp.window.kill(),  { description = "Windows · Kill the focused window" })
+bind(mainMod .. " + W",           hl.dsp.window.close(), { description = "Windows · Close the focused window" })
+bind("",                         hl.dsp.window.kill(),  { description = "Windows · Kill the focused window" })
 bind(mainMod .. " + F",           hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }), { description = "Windows · Full screen" })
 bind(mainMod .. " + ALT + F",     hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" }),  { description = "Windows · Maximise, keeping the bar" })
-bind(mainMod .. " + ALT + Space", float_centred,          { description = "Windows · Float or tile the window" })
+bind(mainMod .. " + T",           float_centred,          { description = "Windows · Float or tile the window" })
 bind(mainMod .. " + P",           hl.dsp.window.pseudo(), { description = "Windows · Toggle pseudo-tiling" })
 bind(mainMod .. " + J",           flip_split,             { description = "Windows · Flip the split direction" })
-bind(mainMod .. " + SHIFT + L",   hl.dsp.global("quickshell:layout"), { description = "Windows · Cycle the layout" })
+bind(mainMod .. " + L",           hl.dsp.global("quickshell:layout"), { description = "Windows · Cycle the layout" })
 
 -- · move focus
 bind(mainMod .. " + left",  hl.dsp.focus({ direction = "l" }), { description = "Windows · Focus the window left" })
@@ -226,7 +212,7 @@ end
 local function move_to_workspace(index)
     return function()
         local monitor = hl.get_active_monitor()
-        hl.dispatch(hl.dsp.window.move({ workspace = screen_base(monitor) + index }))
+        hl.dispatch(hl.dsp.window.move({ workspace = screen_base(monitor) + index, follow = true }))
     end
 end
 
@@ -250,54 +236,44 @@ bind(mainMod .. " + mouse_up",   hl.dsp.focus({ workspace = "m-1" }), { descript
 
 -- ── SCREENS ─────────────────────────────────────────────────────────────────
 
--- · the keyboard, and the workspace under it, across screens. A window
--- · crosses with the window keys above: with nothing that way, they hand it
--- · to the next screen.
-
--- The two screens trade what they are showing, and the keyboard goes with the
--- workspace. Moving it instead buries the other screen's workspace behind
--- this one and leaves a new empty one where you were. The direction is
--- resolved by moving the keyboard first: nothing that way leaves it where it
--- was and changes nothing. With ten workspaces each, the windows trade and
--- the workspaces stay, so every screen keeps its own numbers.
-local function trade_workspace(direction)
+-- Move one window into the destination screen's visible workspace, not the
+-- same local workspace number and never the other screen's whole window set.
+local function move_to_monitor(direction)
     return function()
+        local window = hl.get_active_window()
         local here = hl.get_active_monitor()
-        if not here then
+        if not window or not here then
             return
         end
+        local address = "address:" .. window.address
 
         hl.dispatch(hl.dsp.focus({ monitor = direction }))
-
         local there = hl.get_active_monitor()
         if not there or there.name == here.name then
             return
         end
-
-        if not screen_order() then
-            hl.dispatch(hl.dsp.workspace.swap_monitors({ monitor1 = here.name, monitor2 = there.name }))
-            return
-        end
-
-        local from, to = here.active_workspace, there.active_workspace
-        if not from or not to then
-            return
-        end
-        local leaving  = hl.get_workspace_windows(from.id) or {}
-        local arriving = hl.get_workspace_windows(to.id) or {}
-        for _, window in ipairs(leaving) do
-            hl.dispatch(hl.dsp.window.move({ workspace = to.id, window = "address:" .. window.address, follow = false }))
-        end
-        for _, window in ipairs(arriving) do
-            hl.dispatch(hl.dsp.window.move({ workspace = from.id, window = "address:" .. window.address, follow = false }))
+        local target = there.active_workspace
+        if target then
+            hl.dispatch(hl.dsp.window.move({
+                workspace = target.id,
+                window = address,
+                follow = true,
+            }))
         end
     end
 end
 
 bind(mainMod .. " + ALT + left",          hl.dsp.focus({ monitor = "l" }), { description = "Screens · Focus the screen left" })
 bind(mainMod .. " + ALT + right",         hl.dsp.focus({ monitor = "r" }), { description = "Screens · Focus the screen right" })
-bind(mainMod .. " + ALT + SHIFT + left",  trade_workspace("l"), { description = "Screens · Take the workspace to the screen left" })
-bind(mainMod .. " + ALT + SHIFT + right", trade_workspace("r"), { description = "Screens · Take the workspace to the screen right" })
+bind(mainMod .. " + ALT + up",            hl.dsp.focus({ monitor = "u" }), { description = "Screens · Focus the screen up" })
+bind(mainMod .. " + ALT + down",          hl.dsp.focus({ monitor = "d" }), { description = "Screens · Focus the screen down" })
+bind(mainMod .. " + ALT + SHIFT + left",  move_to_monitor("l"), { description = "Screens · Move the window to the screen left" })
+bind(mainMod .. " + ALT + SHIFT + right", move_to_monitor("r"), { description = "Screens · Move the window to the screen right" })
+bind(mainMod .. " + ALT + SHIFT + up",    move_to_monitor("u"), { description = "Screens · Move the window to the screen up" })
+bind(mainMod .. " + ALT + SHIFT + down",  move_to_monitor("d"), { description = "Screens · Move the window to the screen down" })
+
+bind(mainMod .. " + S", hl.dsp.workspace.toggle_special("scratchpad"), { description = "Workspaces · Toggle the scratchpad" })
+bind(mainMod .. " + SHIFT + S", hl.dsp.window.move({ workspace = "special:scratchpad", follow = false }), { description = "Workspaces · Move the window to the scratchpad" })
 
 
 -- ── MEDIA KEYS ──────────────────────────────────────────────────────────────
@@ -326,11 +302,10 @@ bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = true,
 -- · the power button opens the session menu instead of powering off (logind
 -- · is told to ignore it, see system/etc/systemd/logind.conf.d/). Some
 -- · machines never report a short press, so the menu has keyboard binds too.
-bind(mainMod .. " + X",         hl.dsp.global("quickshell:session"), { description = "Session · Session menu" })
-bind("CTRL + ALT + Delete",     hl.dsp.global("quickshell:session"), { description = "Session · Session menu, from CTRL + ALT + Delete" })
+bind(mainMod .. " + Escape",    hl.dsp.global("quickshell:session"), { description = "Session · Session menu" })
 bind("XF86PowerOff",            hl.dsp.global("quickshell:session"), { description = "Session · Session menu, from the power button" })
-bind(mainMod .. " + L",         hl.dsp.global("quickshell:lock"),    { description = "Session · Lock the screen" })
-bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"), { description = "Session · Exit Hyprland" })
+bind(mainMod .. " + CTRL + L",  hl.dsp.global("quickshell:lock"),    { description = "Session · Lock the screen" })
+bind("", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"), { description = "Session · Exit Hyprland" })
 
 
 -- ── UTILITIES ───────────────────────────────────────────────────────────────
@@ -338,55 +313,75 @@ bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/n
 -- · dpms actually powers the panel off, unlike brightness 0. Only this bind
 -- · wakes it (key/mouse wake is off). The dispatcher toggles; it ignores
 -- · a state argument.
-bind(mainMod .. " + SHIFT + D", hl.dsp.dpms(), { locked = true, description = "Utilities · Turn the screen off or back on" })
-bind(mainMod .. " + CTRL + R",  hl.dsp.exec_cmd("pkill -x quickshell; pkill -x qs; sleep 0.5; qs -d"), { description = "Utilities · Restart the shell" })
+bind(mainMod .. " + CTRL + D", hl.dsp.dpms(), { locked = true, description = "Utilities · Turn the screen off or back on" })
+bind("", hl.dsp.exec_cmd("pkill -x quickshell; pkill -x qs; sleep 0.5; qs -d"), { description = "Utilities · Restart the shell" })
 
 
 -- ── SHELL ───────────────────────────────────────────────────────────────────
 
 -- · global shortcuts registered by the shell
 bind(mainMod .. " + Space",     hl.dsp.global("quickshell:launcher"),   { description = "Shell · Open the launcher" })
-bind(mainMod .. " + A",         hl.dsp.global("quickshell:controls"),   { description = "Shell · Open the control centre" })
+bind(mainMod .. " + CTRL + A",  hl.dsp.global("quickshell:controls"),   { description = "Shell · Open the control centre" })
 bind(mainMod .. " + TAB",       hl.dsp.global("quickshell:overview"),   { description = "Shell · Open the workspace overview" })
-bind(mainMod .. " + comma",     hl.dsp.global("quickshell:settings"),   { description = "Shell · Open settings" })
-bind(mainMod .. " + T",         hl.dsp.global("quickshell:appearance"), { description = "Shell · Open appearance" })
-bind(mainMod .. " + SHIFT + T", hl.dsp.global("quickshell:palette"),    { description = "Shell · Open the palette" })
-bind(mainMod .. " + U",         hl.dsp.global("quickshell:stats"),      { description = "Shell · Open system statistics" })
-bind(mainMod .. " + SHIFT + P", hl.dsp.global("quickshell:pet"),        { description = "Shell · Open the pet" })
-bind(mainMod .. " + G",         hl.dsp.global("quickshell:games"),      { description = "Shell · Open the games" })
-bind(mainMod .. " + S",         hl.dsp.global("quickshell:notes"),      { description = "Shell · Open the notes" })
-bind(mainMod .. " + K",         hl.dsp.global("quickshell:board"),      { description = "Shell · Open the task board" })
+bind(mainMod .. " + CTRL + S",  hl.dsp.global("quickshell:settings"),   { description = "Shell · Open settings" })
+bind(mainMod .. " + CTRL + W",  hl.dsp.global("quickshell:appearance"), { description = "Shell · Open appearance" })
+bind(mainMod .. " + CTRL + T",  hl.dsp.global("quickshell:palette"),    { description = "Shell · Open the palette" })
+bind(mainMod .. " + CTRL + U",  hl.dsp.global("quickshell:stats"),      { description = "Shell · Open system statistics" })
+bind(mainMod .. " + SHIFT + N", hl.dsp.global("quickshell:notes"),      { description = "Shell · Open the notes" })
+bind(mainMod .. " + SHIFT + K", hl.dsp.global("quickshell:board"),      { description = "Shell · Open the task board" })
 
--- · key sheet, read from `hyprctl binds`. H, since / is SHIFT + 7 on a
--- · Spanish layout
-bind(mainMod .. " + H",         hl.dsp.global("quickshell:keys"),       { description = "Shell · Show every key" })
+bind(mainMod .. " + CTRL + K",  hl.dsp.global("quickshell:keys"),       { description = "Shell · Show every key" })
 
--- · zen: the bar away and its band to the windows; and the widgets away
+-- · zen: hide the bar, without affecting the retained edge surfaces
 bind(mainMod .. " + CTRL + B",  hl.dsp.global("quickshell:zen"),        { description = "Shell · Hide or show the bar" })
-bind(mainMod .. " + CTRL + W",  hl.dsp.global("quickshell:widgets"),    { description = "Shell · Hide or show the desktop widgets" })
-bind(mainMod .. " + SHIFT + G", hl.dsp.global("quickshell:game"),       { description = "Shell · Turn game mode on or off" })
+bind(mainMod .. " + CTRL + G",  hl.dsp.global("quickshell:game"),       { description = "Shell · Turn game mode on or off" })
 
 -- · packages panel (pacman + AUR); installs run in a terminal
-bind(mainMod .. " + I",         hl.dsp.global("quickshell:packages"),   { description = "Shell · Open the packages" })
-bind(mainMod .. " + SHIFT + M", hl.dsp.global("quickshell:machines"),   { description = "Shell · Open the virtual machines" })
-bind(mainMod .. " + O",         hl.dsp.global("quickshell:servers"),    { description = "Shell · Open the development servers" })
-bind(mainMod .. " + Y",         hl.dsp.global("quickshell:screentime"), { description = "Shell · Open the screen time" })
+bind(mainMod .. " + CTRL + P",  hl.dsp.global("quickshell:packages"),   { description = "Shell · Open the packages" })
+bind(mainMod .. " + SHIFT + V", hl.dsp.global("quickshell:machines"),   { description = "Shell · Open the virtual machines" })
+bind(mainMod .. " + SHIFT + D", hl.dsp.global("quickshell:servers"),    { description = "Shell · Open the development servers" })
+bind(mainMod .. " + SHIFT + Y", hl.dsp.global("quickshell:screentime"), { description = "Shell · Open the screen time" })
 bind(mainMod .. " + SHIFT + W", hl.dsp.global("quickshell:camera"),     { description = "Shell · Open the camera effects" })
 
 -- · clipboard history is a launcher mode
-bind(mainMod .. " + V",         hl.dsp.global("quickshell:clipboard"),  { description = "Shell · Open the clipboard history" })
+bind(mainMod .. " + CTRL + V",  hl.dsp.global("quickshell:clipboard"),  { description = "Shell · Open the clipboard history" })
+
+-- Terminals use Ctrl+Shift+C/V: Ctrl+C interrupts, and Shift+Insert may paste
+-- the primary selection rather than the clipboard. Cut is deliberately inert.
+-- Explicit key-up avoids leaving a forwarded shortcut held/repeating.
+local function clipboard_shortcut(action)
+    return function()
+        local window = hl.get_active_window()
+        local class = window and window.class or ""
+        local terminal = class == "kitty" or class == "Alacritty" or class == "foot"
+            or class == "com.mitchellh.ghostty" or class:match("^impasto%-") ~= nil
+        if action == "cut" and terminal then
+            return
+        end
+        local mods = terminal and "CTRL SHIFT" or "CTRL"
+        local key = ({ copy = "C", paste = "V", cut = "X" })[action]
+        hl.dispatch(hl.dsp.send_key_state({ mods = mods, key = key, state = "down" }))
+        hl.timer(function()
+            hl.dispatch(hl.dsp.send_key_state({ mods = mods, key = key, state = "up" }))
+        end, { timeout = 50, type = "oneshot" })
+    end
+end
+
+bind(mainMod .. " + C", clipboard_shortcut("copy"), { description = "Clipboard · Copy" })
+bind(mainMod .. " + V", clipboard_shortcut("paste"), { description = "Clipboard · Paste" })
+bind(mainMod .. " + X", clipboard_shortcut("cut"), { description = "Clipboard · Cut" })
 
 -- · emoji, a launcher mode too
-bind(mainMod .. " + period",    hl.dsp.global("quickshell:emoji"),      { description = "Shell · Pick an emoji" })
+bind(mainMod .. " + CTRL + E",  hl.dsp.global("quickshell:emoji"),      { description = "Shell · Pick an emoji" })
 
 -- · colour picker (hyprpicker); the result goes to the clipboard
-bind(mainMod .. " + SHIFT + C", hl.dsp.global("quickshell:picker"),     { description = "Shell · Pick a colour off the screen" })
+bind(mainMod .. " + CTRL + I",  hl.dsp.global("quickshell:picker"),     { description = "Shell · Pick a colour off the screen" })
 
 -- · capture surface. The direct captures below are unbound by default and
 -- · can be assigned in Settings → Keys.
-bind(mainMod .. " + SHIFT + S", hl.dsp.global("quickshell:capture"), { description = "Shell · Open the capture surface" })
+bind(mainMod .. " + CTRL + C",  hl.dsp.global("quickshell:capture"),    { description = "Shell · Open the capture surface" })
 bind("Print",                   hl.dsp.global("quickshell:capture"), { description = "Shell · Open the capture surface, from Print" })
-bind(mainMod .. " + SHIFT + R", hl.dsp.global("quickshell:record"),  { description = "Shell · Start or stop recording the screen" })
+bind(mainMod .. " + CTRL + R",  hl.dsp.global("quickshell:record"),  { description = "Shell · Start or stop recording the screen" })
 bind("", hl.dsp.global("quickshell:captureRegion"), { description = "Shell · Capture a region" })
 bind("", hl.dsp.global("quickshell:captureWindow"), { description = "Shell · Capture a window" })
 bind("", hl.dsp.global("quickshell:captureScreen"), { description = "Shell · Capture the whole screen" })

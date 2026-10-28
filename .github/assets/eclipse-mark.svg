@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <title>Eclipse — conjunction seal</title>
+  <desc>Original Eclipse astral-instrument emblem: an eclipsed disc held between broken meridian rings, a northern diamond and four sparse rays. Copyright 2026 Eclipse contributors; GPL-3.0-or-later.</desc>
+  <g stroke="#cbbb92" stroke-linecap="square">
+    <path d="M218 85 A175 175 0 0 0 85 218 M85 294 A175 175 0 0 0 218 427 M294 427 A175 175 0 0 0 427 294 M427 218 A175 175 0 0 0 294 85" stroke-width="8"/>
+    <path d="M256 52 V92 M256 420 V460 M52 256 H92 M420 256 H460" stroke-width="10"/>
+    <path d="M112 112 L132 132 M380 380 L400 400 M112 400 L132 380 M380 132 L400 112" stroke-width="7"/>
+    <ellipse cx="256" cy="256" rx="168" ry="70" transform="rotate(-42 256 256)" stroke-width="7"/>
+  </g>
+  <circle cx="256" cy="256" r="126" fill="#101119" stroke="#eee4cc" stroke-width="12"/>
+  <path d="M284 139 A121 121 0 0 1 284 373 A99 119 0 0 0 284 139Z" fill="#cbbb92"/>
+  <path d="M256 33 L273 58 L256 83 L239 58Z" fill="#eee4cc"/>
+  <path d="M244 425 L256 413 L268 425 L256 449Z" fill="#eee4cc"/>
+</svg>

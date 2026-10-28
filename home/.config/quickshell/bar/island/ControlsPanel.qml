@@ -17,8 +17,7 @@ import "../../components"
 import "./controls"
 
 // The control centre: a row of small buttons, when any are chosen, over a
-// grid of blocks (`ControlsService.blocks`) that the user arranges like
-// desktop widgets.
+// grid of blocks (`ControlsService.blocks`) that the user arranges directly.
 //
 // Right-click the background to arrange: drag blocks from the tray
 // (`ControlsTray`, hung under the island by the bar) onto a cell, pull a

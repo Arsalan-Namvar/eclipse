@@ -26,7 +26,7 @@ import "../theme"
 //
 // Profiles are keyed by id; the name is only a label. They never carry
 // `SettingsService.machineKeys` (screens, identity, per-session switches) or
-// user data (notes, tasks, clipboard, pet).
+// user data (notes, tasks, clipboard).
 Singleton {
     id: root
 
@@ -55,8 +55,10 @@ Singleton {
     // What a profile holds right now: the live file for the one in use, the
     // snapshot for the rest.
     function settingsOf(id: string): var {
-        if (id === root.active)
+        if (id === root.active) {
+            DesktopService.flush()
             return SettingsService.snapshot()
+        }
         const found = root.entry(id)
         return SettingsService.complete(found ? found.settings : ({}))
     }
@@ -158,6 +160,7 @@ Singleton {
 
     // Saves the active profile's current state into the list.
     function stash(): void {
+        DesktopService.flush()
         root.profiles = root.profiles.map(item => item.id === root.active
             ? Object.assign({}, item, {
                 settings: SettingsService.snapshot(),
@@ -463,7 +466,8 @@ Singleton {
             name: name || Tr.t("Profile"),
             wallpaper: typeof item.wallpaper === "string" ? item.wallpaper : "",
             palette: typeof item.palette === "string" ? item.palette : "",
-            settings: item.settings && typeof item.settings === "object" ? item.settings : ({})
+            settings: SettingsService.complete(item.settings && typeof item.settings === "object"
+                ? item.settings : ({}))
         }
     }
 
@@ -472,10 +476,13 @@ Singleton {
     function arrive(list: var, active: string): void {
         const seen = {}
         const out = []
+        let migrated = false
         for (const item of list) {
             const entry = root.normalise(item)
             if (entry && !seen[entry.id]) {
                 seen[entry.id] = true
+                if (JSON.stringify(entry.settings) !== JSON.stringify(item.settings))
+                    migrated = true
                 out.push(entry)
             }
         }
@@ -492,6 +499,8 @@ Singleton {
             root.placeholder = made.id
             root.save()
         }
+        else if (migrated)
+            root.save()
         root.offerShipped()
     }
 

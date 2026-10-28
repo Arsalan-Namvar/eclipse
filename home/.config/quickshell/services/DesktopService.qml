@@ -1,231 +1,13 @@
-// ╭──────────────────────────────────────────────────────────────────────────╮
-// │                                                                          │
-// │   D   E   S   K   T   O   P       S   E   R   V   I   C   E              │
-// │   desktop widgets and their grid positions                               │
-// │                                                                          │
-// │   github.com/andreumassanet/impasto                                      │
-// │                                                                          │
-// ╰──────────────────────────────────────────────────────────────────────────╯
-
+// Screen-edge notes and audio spectrum. No general desktop widget grid.
 pragma Singleton
-
 import QtQml
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
-
 import "../theme"
-
-// Desktop widgets: which modules are on the wallpaper and where.
-//
-// A widget is a module (the same face and service the bar uses) placed on a
-// grid in one of four families: 2×2, 4×2, 4×4 and 8×2 cells. Each family has
-// its own face, and a module only offers the ones it has faces for. Widgets
-// never overlap: a drop on an occupied cell moves to the nearest free fit, or
-// is cancelled.
-//
-// Rows are keyed by `key`, not module id, so a module can be placed twice.
-// Rows without a key use their module id.
-//
-// Notes can also sit on the left, right or bottom screen edge as a deck: a
-// row with `edge` and a `notes` list instead of a cell. A note is shown in
-// one place at a time. `DeckService` holds the deck geometry.
-//
-// The spectrum is the same: a widget on the grid, or sound bars along the
-// whole of an edge — a row with `edge` and no `notes`, one per edge.
-//
-// Every row carries the screen it is on, and every board has a grid of its
-// own, so a cell means nothing without a screen to go with it: the functions
-// below that take one take it first.
 Singleton {
     id: root
-
-    // ── FAMILIES ────────────────────────────────────────────────────────────
-    //
-    // In cells; `sizeFor` converts to pixels.
-    readonly property var families: [
-        { id: "2x2", cols: 2, rows: 2, label: "Small" },
-        { id: "4x2", cols: 4, rows: 2, label: "Wide" },
-        { id: "4x4", cols: 4, rows: 4, label: "Large" },
-        { id: "8x2", cols: 8, rows: 2, label: "Band" }
-    ]
-
-    function family(id: string): var {
-        return root.families.find(entry => entry.id === id) ?? root.families[1]
-    }
-
-    // The row's family, reduced to one its theme can draw. Defaults to 4×2,
-    // which every module offers.
-    function familyOf(widget: var): string {
-        if (!widget || !widget.family)
-            return "4x2"
-        return root.drawnFamily(widget.id, widget.family, root.themeOf(widget))
-    }
-
-    // In pixels on `name`'s grid, or the primary's when nothing says. The
-    // faces and the settings previews ask without a screen: they want a size
-    // to draw into, not a place on a board.
-    function sizeFor(familyId: string, name = ""): var {
-        const shape = root.family(familyId)
-        const on = name !== "" ? name : MonitorService.effectivePrimaryName
-        return { width: root.span(on, shape.cols), height: root.span(on, shape.rows) }
-    }
-
-    // ── THEMES ──────────────────────────────────────────────────────────────
-    //
-    // Modern (`faces/WidgetFace`) shows figures and labels; Analogue
-    // (`faces/analogue/`) draws dials, gauges and similar objects; Sticker
-    // (`faces/sticker/`) cuts each widget out as coloured stickers that sit
-    // on its squares without filling them. A row's `theme` overrides the
-    // desktop setting.
-    readonly property var themes: [
-        { id: "modern",   label: "Modern" },
-        { id: "analogue", label: "Analogue" },
-        { id: "sticker",  label: "Sticker" }
-    ]
-
-    // The lyrics have one face in every theme, as a note is paper in every
-    // theme: a sentence is not an object to draw.
-    function themeOf(widget: var): string {
-        if (widget && widget.id === "lyrics")
-            return "lyrics"
-        const own = widget ? widget.theme : ""
-        return own && root.themes.some(theme => theme.id === own)
-            ? own : SettingsService.desktopTheme
-    }
-
-    function setTheme(key: string, theme: var): void {
-        root.update(key, { theme: theme || null })
-        root.conform()
-    }
-
-    // Families each theme has a face for, per module. Every module has 4×2.
-    // Adding a face means an entry here and one in the theme's registry.
-    readonly property var faces: ({
-        modern: {
-            media: ["2x2", "4x2", "4x4"],           timer: ["2x2", "4x2"],
-            claude: ["2x2", "4x2", "4x4"],          battery: ["2x2", "4x2"],
-            codex: ["2x2", "4x2", "4x4"],
-            volume: ["2x2", "4x2"],                 brightness: ["2x2", "4x2"],
-            network: ["2x2", "4x2"],                bluetooth: ["2x2", "4x2"],
-            weather: ["2x2", "4x2", "4x4", "8x2"],  stats: ["2x2", "4x2", "4x4"],
-            github: ["2x2", "4x2", "8x2"],          markets: ["2x2", "4x2", "4x4", "8x2"],
-            screentime: ["2x2", "4x2", "4x4", "8x2"],
-            updates: ["2x2", "4x2"],                pet: ["2x2", "4x2"],
-            games: ["2x2", "4x2"],                  calendar: ["2x2", "4x2", "4x4"],
-            notes: ["2x2", "4x2", "4x4", "8x2"],    tasks: ["2x2", "4x2", "4x4"],
-            clock: ["2x2", "4x2", "8x2"],           photo: ["2x2", "4x2", "4x4", "8x2"],
-            spectrum: ["4x2", "8x2", "4x4"]
-        },
-        analogue: {
-            media: ["2x2", "4x2", "4x4"],           timer: ["2x2", "4x2"],
-            claude: ["2x2", "4x2"],                 battery: ["2x2", "4x2"],
-            codex: ["2x2", "4x2"],
-            volume: ["2x2", "4x2"],                 brightness: ["2x2", "4x2"],
-            network: ["2x2", "4x2"],                bluetooth: ["2x2", "4x2"],
-            weather: ["2x2", "4x2", "4x4", "8x2"],  stats: ["2x2", "4x2", "4x4"],
-            github: ["2x2", "4x2", "8x2"],          markets: ["2x2", "4x2"],
-            screentime: ["2x2", "4x2", "4x4"],
-            updates: ["2x2", "4x2"],                pet: ["2x2", "4x2"],
-            games: ["2x2", "4x2"],                  calendar: ["2x2", "4x2", "4x4"],
-            notes: ["2x2", "4x2", "4x4", "8x2"],    tasks: ["2x2", "4x2", "4x4"],
-            clock: ["2x2", "4x2", "4x4", "8x2"],    photo: ["2x2", "4x2", "4x4", "8x2"],
-            spectrum: ["4x2", "8x2", "4x4"]
-        },
-        // Not a theme: the lyrics, which wear one face in every theme
-        // (`themeOf`).
-        lyrics: {
-            lyrics: ["2x2", "4x2", "8x2", "4x4"]
-        },
-        sticker: {
-            media: ["2x2", "4x2", "4x4"],           timer: ["2x2", "4x2"],
-            claude: ["2x2", "4x2"],                 battery: ["2x2", "4x2"],
-            codex: ["2x2", "4x2"],
-            volume: ["2x2", "4x2"],                 brightness: ["2x2", "4x2"],
-            network: ["2x2", "4x2"],                bluetooth: ["2x2", "4x2"],
-            weather: ["2x2", "4x2", "8x2"],         stats: ["2x2", "4x2"],
-            github: ["2x2", "4x2", "8x2"],          markets: ["2x2", "4x2"],
-            screentime: ["2x2", "4x2"],
-            updates: ["2x2", "4x2"],                pet: ["2x2", "4x2"],
-            games: ["2x2", "4x2"],                  calendar: ["2x2", "4x2", "4x4"],
-            notes: ["2x2", "4x2", "4x4", "8x2"],    tasks: ["2x2", "4x2", "4x4"],
-            clock: ["2x2", "4x2", "4x4", "8x2"],    photo: ["2x2", "4x2", "4x4", "8x2"],
-            spectrum: ["4x2", "8x2", "4x4"]
-        }
-    })
-
-    // `theme` defaults to the desktop's.
-    function familiesFor(id: string, theme = ""): var {
-        if (id === "lyrics")
-            return root.faces.lyrics.lyrics
-        const table = root.faces[theme !== "" ? theme : SettingsService.desktopTheme]
-            ?? root.faces.modern
-        return table[id] ?? ["4x2"]
-    }
-
-    function offers(id: string, familyId: string, theme = ""): bool {
-        return root.familiesFor(id, theme).indexOf(familyId) >= 0
-    }
-
-    // Without a face for `familyId`, use the largest offered family that fits
-    // inside it, so a widget never grows into a neighbour.
-    function drawnFamily(id: string, familyId: string, theme: string): string {
-        if (root.offers(id, familyId, theme))
-            return familyId
-        const shape = root.family(familyId)
-        let best = "2x2"
-        let bestArea = 0
-        for (const offered of root.familiesFor(id, theme)) {
-            const candidate = root.family(offered)
-            const area = candidate.cols * candidate.rows
-            if (candidate.cols <= shape.cols && candidate.rows <= shape.rows && area > bestArea) {
-                bestArea = area
-                best = offered
-            }
-        }
-        return best
-    }
-
-    // After a theme change, store each row's family as actually drawn. Only
-    // ever shrinks, so no re-placement is needed.
-    function conform(): void {
-        for (const widget of root.squares) {
-            const kept = widget.family ?? "4x2"
-            const drawn = root.drawnFamily(widget.id, kept, root.themeOf(widget))
-            if (drawn !== kept)
-                root.update(widget.key, { family: drawn })
-        }
-    }
-
-    Connections {
-        target: SettingsService
-        function onDesktopThemeChanged(): void { root.conform() }
-    }
-
-    // ── BOARD ───────────────────────────────────────────────────────────────
-    //
-    // The desktop surface covers the whole screen and ignores exclusive zones
-    // so drags can cross the bar. The board is the surface minus the bar and
-    // dock reservations; the decks share these insets, and the grid is laid
-    // out as if there were no dock (`wholeGrid`).
-    // One answer for every board: the dock's band is kept clear wherever the
-    // dock could be, not where it happens to be painting (`DockService.zone`),
-    // so nothing on a grid moves because a window went fullscreen or a hand
-    // crossed a screen.
-    readonly property var insets: ({
-        top: Theme.barReserve,
-        left: DockService.edge === "left" ? DockService.zone : 0,
-        right: DockService.edge === "right" ? DockService.zone : 0,
-        bottom: DockService.edge === "bottom" ? DockService.zone : 0
-    })
-
-    // ── SCREENS ─────────────────────────────────────────────────────────────
-    //
-    // A row carries its screen as the monitor's description, the name
-    // `displays` uses, so moving a cable keeps it. A row without one — every
-    // row written before there was more than one board — is on the primary,
-    // and so is a row whose screen is not plugged in, which is what stops a
-    // widget disappearing with a monitor.
+    readonly property var insets: ({ top: Theme.barReserve, left: 0, right: 0, bottom: 0 })
     function nameOf(widget: var): string {
         const description = widget && typeof widget.screen === "string" ? widget.screen : ""
         if (description !== "") {
@@ -243,19 +25,9 @@ Singleton {
         return description === "" || name === MonitorService.effectivePrimaryName
             ? null : description
     }
-
-    function widgetsOn(name: string): var {
-        return root.squares.filter(widget => root.nameOf(widget) === name)
-    }
-
     function decksOn(name: string): var {
         return root.decks.filter(deck => root.nameOf(deck) === name)
     }
-
-    // ── BOARDS ──────────────────────────────────────────────────────────────
-    //
-    // One per screen, reported by its surface, because the grid is worked out
-    // from the board's own sides.
     property var boards: ({})
 
     function setBoard(name: string, width: real, height: real): void {
@@ -272,189 +44,43 @@ Singleton {
     function boardOn(name: string): var {
         return root.boards[name] ?? ({ width: 0, height: 0 })
     }
-
-    // The grid on a board: the stride between squares, how many fit each way
-    // and where the first one starts. The margin is the same on all four
-    // sides, which takes a stride that splits the difference between the
-    // board's sides into whole squares: the smallest such square no smaller
-    // than `desktopCell`, and on each side the count whose margin is nearest
-    // one street, never under half of one. A board too nearly square for that
-    // keeps `desktopCell`, centred, with even margins on opposite sides.
-    function gridFor(width: real, height: real): var {
-        const gutter = Theme.desktopGutter
-        if (width <= 0 || height <= 0)
-            return { stride: Theme.desktopStride, columns: 8, rows: 6, originX: gutter, originY: gutter }
-        const shortest = Math.min(width, height)
-        const difference = Math.abs(width - height)
-        const apart = Math.floor(difference / Theme.desktopStride)
-        const even = apart > 0 && difference / apart - gutter <= Theme.desktopCellLargest
-        const stride = even ? difference / apart : Theme.desktopStride
-        let across = Math.max(1, Math.round((shortest - gutter) / stride))
-        if (across > 1 && across * stride > shortest)
-            across -= 1
-        const count = length => even
-            ? across + Math.round((length - shortest) / stride)
-            : Math.max(1, Math.floor(length / stride))
-        const columns = count(width)
-        const rows = count(height)
-        return {
-            stride: stride,
-            columns: columns,
-            rows: rows,
-            originX: (width + gutter - columns * stride) / 2,
-            originY: (height + gutter - rows * stride) / 2
-        }
-    }
-
-    // Laid out over the screen below the bar, dock or no dock, then placed
-    // on the board, which the dock's inset has moved: the dock is drawn over
-    // the widgets, and reserving, hiding or moving it moves none of them.
-    // Zen leaves the grid below the bar too, so hiding the bar moves nothing.
-    function wholeGrid(width: real, height: real): var {
-        const grid = root.gridFor(width + root.insets.left + root.insets.right,
-            height + root.insets.bottom)
-        if (width > 0 && height > 0)
-            grid.originX -= root.insets.left
-        return grid
-    }
-
-    // The screen edge a point on the board is against, measured from the
-    // screen's own edge: the grid runs on under a dock's band, so a square
-    // there is not an edge.
     function edgeAt(x: real, y: real, width: real, height: real): string {
-        return DeckService.edgeAt(x + root.insets.left, y,
-            width + root.insets.left + root.insets.right, height + root.insets.bottom)
+        return DeckService.edgeAt(x, y, width, height)
     }
-
-    // Every widget off the picture (`desktopHidden`), except while arranging.
-    readonly property bool hidden: SettingsService.desktopHidden && !root.editing
-
-    readonly property var grids: {
-        const out = {}
-        for (const name in root.boards)
-            out[name] = root.wholeGrid(root.boards[name].width, root.boards[name].height)
-        return out
-    }
-
-    function gridOn(name: string): var {
-        return root.grids[name] ?? root.gridFor(0, 0)
-    }
-
-    function strideOn(name: string): real {
-        return root.gridOn(name).stride
-    }
-
-    function columnsOn(name: string): int {
-        return root.gridOn(name).columns
-    }
-
-    function rowsOn(name: string): int {
-        return root.gridOn(name).rows
-    }
-
-    // Cell edges fall on whole pixels. The stride can be fractional, so a box
-    // is measured between two rounded edges and may be a pixel off `span`.
-    function offsetX(name: string, col: int): real {
-        const grid = root.gridOn(name)
-        return Math.round(grid.originX + col * grid.stride)
-    }
-
-    function offsetY(name: string, row: int): real {
-        const grid = root.gridOn(name)
-        return Math.round(grid.originY + row * grid.stride)
-    }
-
-    // Length of `count` squares and the streets between them.
-    function span(name: string, count: int): real {
-        return Math.round(count * root.gridOn(name).stride - Theme.desktopGutter)
-    }
-
-    // Nearest cell to a position (rounded, not floored).
-    function cellX(name: string, x: real): int {
-        const grid = root.gridOn(name)
-        return Math.round((x - grid.originX) / grid.stride)
-    }
-
-    function cellY(name: string, y: real): int {
-        const grid = root.gridOn(name)
-        return Math.round((y - grid.originY) / grid.stride)
-    }
-
-    // ── ROWS ────────────────────────────────────────────────────────────────
-    //
-    // Kept locally rather than read back from the settings: a JsonAdapter
-    // returns the previous value when read in the same turn as a write.
-    // Written back on a debounce, so a drag is one write.
-    //
-    //   key      unique widget id, e.g. "clock-2"
-    //   id       module shown
-    //   col/row  top-left cell
-    //   family   one of the four shapes
-    //   theme    optional; defaults to the desktop's
-    //   style    optional; defaults to the desktop's
-    //   opacity  optional; defaults to the desktop's
-    //
-    // `normalise` migrates legacy rows: a missing `key`, and the removed
-    // `bare`, `style` and `ink` fields.
+    // Keep legacy keys/screens/edge configuration, discard grid-only records.
     function normalise(list: var): var {
         const rows = []
-        const length = list && typeof list.length === "number" ? list.length : 0
-        for (let index = 0; index < length; index++) {
-            const kept = list[index]
-            if (!kept || !kept.id)
+        for (const kept of list ?? []) {
+            if (!kept || (kept.id !== "notes" && kept.id !== "spectrum")
+                    || root.edges.indexOf(kept.edge) < 0)
                 continue
             const row = Object.assign({}, kept)
-            if (!row.key)
-                row.key = row.id
-            delete row.bare
-            delete row.style
-            delete row.ink
+            row.key = row.key || row.id
+            for (const field of ["col", "row", "family", "theme", "style", "bare", "ink", "note"])
+                delete row[field]
             rows.push(row)
         }
         return rows
     }
-
-    property var widgets: root.normalise(SettingsService.desktopWidgets)
-
-    // A row on an edge rather than on a cell: a deck of notes, or a spectrum.
-    function isEdge(widget: var): bool {
-        return widget && typeof widget.edge === "string" && widget.edge !== ""
-    }
-
-    function isDeck(widget: var): bool {
-        return root.isEdge(widget) && widget.id !== "spectrum"
-    }
-
-    // A spectrum on an edge; one on the grid is a square like any widget.
-    function isSpectrum(widget: var): bool {
-        return root.isEdge(widget) && widget.id === "spectrum"
-    }
-
-    readonly property var decks: root.widgets.filter(widget => root.isDeck(widget))
-    readonly property var spectra: root.widgets.filter(widget => root.isSpectrum(widget))
-    readonly property var squares: root.widgets.filter(widget => !root.isEdge(widget))
-
-    // Picks up external changes (reset, profile switch, manual edits). Our
-    // own writes echo back with the same value, which is harmless.
+    property var widgets: root.normalise(SettingsService.desktopEdges)
+    function isEdge(row: var): bool { return row && root.edges.indexOf(row.edge) >= 0 }
+    function isDeck(row: var): bool { return root.isEdge(row) && row.id === "notes" }
+    function isSpectrum(row: var): bool { return root.isEdge(row) && row.id === "spectrum" }
+    readonly property var decks: root.widgets.filter(row => root.isDeck(row))
+    readonly property var spectra: root.widgets.filter(row => root.isSpectrum(row))
     Connections {
         target: SettingsService
-
-        function onDesktopWidgetsChanged(): void {
-            if (saver.running)
-                return
-            root.widgets = root.normalise(SettingsService.desktopWidgets)
+        function onDesktopEdgesChanged(): void {
+            // A profile switch is authoritative even with a local save pending.
+            // Otherwise that timer writes the previous profile over the new one.
+            saver.stop()
+            root.widgets = root.normalise(SettingsService.desktopEdges)
         }
     }
-
     readonly property Timer saver: Timer {
         interval: 120
-        onTriggered: SettingsService.set("desktopWidgets", root.widgets)
+        onTriggered: SettingsService.set("desktopEdges", root.widgets)
     }
-
-    // Every widget is always drawn; one with no data shows an empty state
-    // ("Nothing playing") instead of disappearing.
-    readonly property var shown: root.squares
-
     // Non-empty decks, or all of them while arranging.
     readonly property var shownDecks: root.editing
         ? root.decks
@@ -465,14 +91,8 @@ Singleton {
     // rows, since a new array would rebuild every delegate on each move or
     // resize — and a board that has not changed must keep the very array it
     // had, not an equal one.
-    property var keys: ({})
     property var deckKeys: ({})
     property var spectrumKeys: ({})
-
-    function keysOn(name: string): var {
-        return root.keys[name] ?? []
-    }
-
     function deckKeysOn(name: string): var {
         return root.deckKeys[name] ?? []
     }
@@ -480,15 +100,14 @@ Singleton {
     function spectrumKeysOn(name: string): var {
         return root.spectrumKeys[name] ?? []
     }
-
-    onShownChanged: root.syncKeys()
     onShownDecksChanged: root.syncKeys()
     onSpectraChanged: root.syncKeys()
     onBoardsChanged: root.syncKeys()
-    Component.onCompleted: root.syncKeys()
-
-    // A row's screen is resolved through the monitors, so a primary changing
-    // or a cable moving re-sorts them.
+    Component.onCompleted: {
+        root.syncKeys()
+        if (root.widgets.length > 0)
+            HyprlandService.loadClients()
+    }
     readonly property Connections rehomes: Connections {
         target: MonitorService
 
@@ -497,11 +116,9 @@ Singleton {
     }
 
     function syncKeys(): void {
-        root.keys = root.sameOrNew(root.keys, root.sortByScreen(root.shown))
         root.deckKeys = root.sameOrNew(root.deckKeys, root.sortByScreen(root.shownDecks))
         root.spectrumKeys = root.sameOrNew(root.spectrumKeys, root.sortByScreen(root.spectra))
     }
-
     function sortByScreen(list: var): var {
         const out = {}
         for (const name in root.boards)
@@ -531,185 +148,30 @@ Singleton {
         }
         return same ? kept : next
     }
-
-    // Every module not marked `desk: false`, including the clock (which the
-    // bar doesn't offer). Not filtered by `ModuleService.has`.
-    readonly property var offerable: ModuleService.catalogue
-        .filter(entry => entry.desk !== false)
-
     function entryOf(key: string): var {
         return root.widgets.find(widget => widget.key === key) ?? null
     }
-
-    function countOf(id: string): int {
-        return root.widgets.filter(widget => widget.id === id).length
-    }
-
-    function placed(id: string): bool {
-        return root.countOf(id) > 0
-    }
-
-    // ── GEOMETRY ────────────────────────────────────────────────────────────
-    //
-    // Shared by the widget and the surface's input mask. Computed rather than
-    // measured so the mask never lags a frame behind. A square is drawn at its
-    // spot on this board (`spots`).
-    function geometry(widget: var, boardWidth: real, boardHeight: real): var {
-        if (root.isSpectrum(widget))
-            return root.spectrumBox(root.nameOf(widget), widget, boardWidth, boardHeight)
-        if (root.isDeck(widget)) {
-            const count = root.deckNotes(widget).length
-            return DeckService.stripBox(widget.edge, count,
-                DeckService.startOf(widget.edge, count, root.alongOf(widget), boardWidth, boardHeight),
-                boardWidth, boardHeight)
+    function geometry(row: var, width: real, height: real): var {
+        if (root.isSpectrum(row))
+            return root.spectrumBox(root.nameOf(row), row, width, height)
+        if (root.isDeck(row)) {
+            const count = root.deckNotes(row).length
+            return DeckService.stripBox(row.edge, count,
+                DeckService.startOf(row.edge, count, root.alongOf(row), width, height), width, height)
         }
-        const name = root.nameOf(widget)
-        const shape = root.family(root.familyOf(widget))
-        const spot = root.spotOf(widget)
-        const x = root.offsetX(name, spot.col)
-        const y = root.offsetY(name, spot.row)
-        return {
-            x: x,
-            y: y,
-            width: root.offsetX(name, spot.col + shape.cols) - Theme.desktopGutter - x,
-            height: root.offsetY(name, spot.row + shape.rows) - Theme.desktopGutter - y
-        }
+        return { x: 0, y: 0, width: 0, height: 0 }
     }
-
-    // ── COLLISIONS ──────────────────────────────────────────────────────────
-    //
-    // Where each square is on this board: its own cell kept inside the board,
-    // or the nearest free one when another already holds it. The farthest
-    // right and down go first, so on a smaller board those against the edge
-    // keep it and push their neighbours inward, in order. Never written back,
-    // so a layout made on a larger screen stays intact.
-    readonly property var spots: {
-        const reach = widget => {
-            const shape = root.family(root.familyOf(widget))
-            return { right: (widget.col ?? 0) + shape.cols, bottom: (widget.row ?? 0) + shape.rows }
-        }
-        const spots = {}
-        const boards = {}
-        for (const widget of root.squares) {
-            const name = root.nameOf(widget)
-            boards[name] = (boards[name] ?? []).concat([widget])
-        }
-        for (const name in boards) {
-            const grid = root.gridOn(name)
-            const order = boards[name].slice().sort((left, right) =>
-                reach(right).right - reach(left).right || reach(right).bottom - reach(left).bottom)
-            const taken = []
-            for (const widget of order) {
-                const shape = root.family(root.familyOf(widget))
-                const home = root.clamped(widget, shape, name)
-                let spot = home
-                if (root.clashes(taken, home.col, home.row, shape)) {
-                    let nearest = Infinity
-                    for (let col = 0; col + shape.cols <= grid.columns; col++) {
-                        for (let row = 0; row + shape.rows <= grid.rows; row++) {
-                            const distance = (col - home.col) ** 2 + (row - home.row) ** 2
-                            if (distance < nearest && !root.clashes(taken, col, row, shape)) {
-                                nearest = distance
-                                spot = { col: col, row: row }
-                            }
-                        }
-                    }
-                }
-                taken.push({ col: spot.col, row: spot.row, cols: shape.cols, rows: shape.rows })
-                spots[widget.key] = spot
-            }
-        }
-        return spots
-    }
-
-    function spotOf(widget: var): var {
-        return root.spots[widget.key]
-            ?? root.clamped(widget, root.family(root.familyOf(widget)), root.nameOf(widget))
-    }
-
-    function clamped(widget: var, shape: var, name: string): var {
-        const grid = root.gridOn(name)
-        return {
-            col: Math.max(0, Math.min(grid.columns - shape.cols, widget.col ?? 0)),
-            row: Math.max(0, Math.min(grid.rows - shape.rows, widget.row ?? 0))
-        }
-    }
-
-    function clashes(taken: var, col: int, row: int, shape: var): bool {
-        return taken.some(other => col < other.col + other.cols && other.col < col + shape.cols
-            && row < other.row + other.rows && other.row < row + shape.rows)
-    }
-
-    function overlaps(name: string, col: int, row: int, familyId: string, exceptKey: string): bool {
-        const shape = root.family(familyId)
-        for (const other of root.widgetsOn(name)) {
-            if (other.key === exceptKey)
-                continue
-            const theirs = root.family(root.familyOf(other))
-            const spot = root.spotOf(other)
-            if (col < spot.col + theirs.cols && spot.col < col + shape.cols
-                    && row < spot.row + theirs.rows && spot.row < row + shape.rows)
-                return true
-        }
-        return false
-    }
-
-    function onBoard(name: string, col: int, row: int, familyId: string): bool {
-        const shape = root.family(familyId)
-        const grid = root.gridOn(name)
-        return col >= 0 && row >= 0
-            && col + shape.cols <= grid.columns
-            && row + shape.rows <= grid.rows
-    }
-
-    function free(name: string, col: int, row: int, familyId: string, exceptKey: string): bool {
-        return root.onBoard(name, col, row, familyId)
-            && !root.overlaps(name, col, row, familyId, exceptKey)
-    }
-
-    // Nearest free cell by squared distance, scanning the whole board (a few
-    // hundred cells, once per drop). Null if the shape fits nowhere.
-    function nearestFree(name: string, col: int, row: int, familyId: string, exceptKey: string): var {
-        if (root.free(name, col, row, familyId, exceptKey))
-            return { col: col, row: row }
-
-        let best = null
-        let bestDistance = Infinity
-        const grid = root.gridOn(name)
-        for (let c = 0; c < grid.columns; c++) {
-            for (let r = 0; r < grid.rows; r++) {
-                if (!root.free(name, c, r, familyId, exceptKey))
-                    continue
-                const distance = (c - col) * (c - col) + (r - row) * (r - row)
-                if (distance < bestDistance) {
-                    bestDistance = distance
-                    best = { col: c, row: r }
-                }
-            }
-        }
-        return best
-    }
-
-    // First free cell in reading order.
-    function firstFree(name: string, familyId: string, exceptKey: string): var {
-        const grid = root.gridOn(name)
-        for (let r = 0; r < grid.rows; r++) {
-            for (let c = 0; c < grid.columns; c++) {
-                if (root.free(name, c, r, familyId, exceptKey))
-                    return { col: c, row: r }
-            }
-        }
-        return null
-    }
-
-    // ── WRITING ─────────────────────────────────────────────────────────────
-    //
-    // Always assign a new array through `write`: JsonAdapter only notices the
-    // property being set, so in-place mutation is never saved.
-
     function write(next: var): void {
         root.widgets = next
         saver.restart()
+    }
+
+    // Profile snapshots must include edits still waiting for the debounce.
+    function flush(): void {
+        if (!saver.running)
+            return
+        saver.stop()
+        SettingsService.set("desktopEdges", root.widgets)
     }
 
     // A null value removes the field, so the row inherits the desktop default.
@@ -734,55 +196,11 @@ Singleton {
                 return key
         }
     }
-
-    // Adds a widget at its smallest family, at or near the given cell, else
-    // at the first free one. Returns "" if there is no room. `fields` are
-    // extra row fields (e.g. which note), so pinning is a single write.
-    function add(id: string, name: string, col = -1, row = -1, fields = null): string {
-        if (!ModuleService.entry(id))
-            return ""
-        const familyId = root.familiesFor(id)[0] ?? "4x2"
-        const spot = col >= 0
-            ? root.nearestFree(name, col, row, familyId, "")
-            : root.firstFree(name, familyId, "")
-        if (!spot)
-            return ""
-        const key = root.newKey(id)
-        const row_ = Object.assign({}, fields ?? ({}), {
-            key: key,
-            id: id,
-            col: spot.col,
-            row: spot.row,
-            family: familyId
-        })
-        const screen = root.screenField(name)
-        if (screen !== null)
-            row_.screen = screen
-        root.write(root.widgets.concat([row_]))
-        return key
-    }
-
     function remove(key: string): void {
         if (root.selected === key)
             root.selected = ""
         root.write(root.widgets.filter(widget => widget.key !== key))
     }
-
-    // Removes every row whose `field` equals `value` (e.g. an archived note).
-    function removeMatching(field: string, value: var): void {
-        const kept = root.widgets.filter(widget => widget[field] !== value)
-        if (kept.length === root.widgets.length)
-            return
-        if (root.selected !== "" && !kept.some(widget => widget.key === root.selected))
-            root.selected = ""
-        root.write(kept)
-    }
-
-    // ── DECKS ───────────────────────────────────────────────────────────────
-    //
-    // One deck per edge; empty decks are removed. Every move first removes
-    // the note from wherever it was.
-
     readonly property var edges: ["left", "right", "bottom"]
 
     function deckOn(name: string, edge: string): var {
@@ -812,34 +230,23 @@ Singleton {
         if (root.isDeck(root.entryOf(key)))
             root.update(key, { along: Math.max(0, Math.min(1, along)) })
     }
-
-    // Where a note is: "grid", an edge, or "" for nowhere. Which screen it is
-    // on is not part of the answer: a note is in one place, and the panels
-    // that ask only want to know whether it is out on the desk.
     function placementOf(noteKey: string): string {
-        if (root.squares.some(widget => widget.id === "notes" && widget.note === noteKey))
-            return "grid"
         const deck = root.decks.find(deck => root.deckNotes(deck).indexOf(noteKey) >= 0)
         return deck ? deck.edge : ""
     }
-
-    // `list` without any widget or deck entry for this note; decks left
-    // empty are dropped.
     function withoutNote(list: var, noteKey: string): var {
         const kept = []
-        for (const widget of list) {
-            if (!root.isDeck(widget)) {
-                if (!(widget.id === "notes" && widget.note === noteKey))
-                    kept.push(widget)
+        for (const row of list) {
+            if (!root.isDeck(row)) {
+                kept.push(row)
                 continue
             }
-            const notes = root.deckNotes(widget).filter(key => key !== noteKey)
+            const notes = root.deckNotes(row).filter(key => key !== noteKey)
             if (notes.length > 0)
-                kept.push(Object.assign({}, widget, { notes: notes }))
+                kept.push(Object.assign({}, row, { notes: notes }))
         }
         return kept
     }
-
     function removeNote(noteKey: string): void {
         const kept = root.withoutNote(root.widgets, noteKey)
         if (root.selected !== "" && !kept.some(widget => widget.key === root.selected))
@@ -871,39 +278,6 @@ Singleton {
             root.widgets.filter(widget => widget.key !== target.key), noteKey
         ).concat([Object.assign({}, target, { notes: notes })]))
     }
-
-    // Moves a note to the nearest free 2×2. Returns false if there is none.
-    function noteToGrid(noteKey: string, name: string, col: int, row: int): bool {
-        if (!NotesService.entry(noteKey))
-            return false
-        const spot = root.nearestFree(name, col, row, "2x2", "")
-        if (!spot)
-            return false
-        const made = {
-            key: root.newKey("notes"), id: "notes",
-            col: spot.col, row: spot.row, family: "2x2", note: noteKey
-        }
-        const screen = root.screenField(name)
-        if (screen !== null)
-            made.screen = screen
-        root.write(root.withoutNote(root.widgets, noteKey).concat([made]))
-        return true
-    }
-
-    // A notes widget dragged to an edge: its note joins the deck there.
-    function noteToEdge(key: string, name: string, edge: string): void {
-        const widget = root.entryOf(key)
-        if (!widget || widget.id === undefined)
-            return
-        const note = NotesService.noteFor(widget)
-        if (!note)
-            return
-        if (root.selected === key)
-            root.selected = ""
-        root.placeNote(note.key, name, edge)
-    }
-
-    // Tray tile dropped on an edge: puts the newest note there.
     function addDeck(name: string, edge: string): void {
         const note = NotesService.newest
         if (note)
@@ -975,15 +349,6 @@ Singleton {
         }
         root.placeNote(noteKey, root.nameOf(deck), deck.edge)
     }
-
-    // ── SPECTRUM ────────────────────────────────────────────────────────────
-    //
-    // Sound bars along a whole edge, one per edge. The box runs to the
-    // screen's own edge, past the dock's band, so it is measured from the
-    // board out by the insets: the bottom from corner to corner, a side from
-    // the top of the screen, past the bar's band, to the bottom — or to the
-    // top of the bottom's bars, which keep the corner, so the two never cross.
-
     function spectrumBox(name: string, row: var, boardWidth: real, boardHeight: real): var {
         const reach = root.spectrumOf(row).reach
         const left = -root.insets.left
@@ -999,28 +364,6 @@ Singleton {
             height: (bottom !== null ? height - root.spectrumOf(bottom).reach : height) - top
         }
     }
-
-    // ── THE SPECTRUM'S LOOK ─────────────────────────────────────────────────
-    //
-    // Each spectrum's own, on its row, set from its inspector, on the grid and
-    // on an edge alike. A field that is absent or out of range is the
-    // default. A colour is "palette", the accent, which follows the
-    // wallpaper, or one of `Theme.fixedColours`, which does not.
-    //
-    //   look     rounded · square · segments · dots · wave
-    //   fill     fade (solid at the edge, faint at the tip) · solid · blend
-    //            (from `color` at the edge to `color2` at full reach)
-    //   color    the bars', "palette" by default; `color2` the far end of a
-    //            blend, white by default
-    //   reach    how far in from the edge at full level, in px (an edge's; a
-    //            square is as tall as its shape)
-    //   bar      a bar's width; `gap` the space between two
-    //   lows     corners (mirrored along the bottom, from the bottom up a
-    //            side) · along (from the start of the edge to its end)
-    //   peaks    a cap at each band's recent highest, falling slowly
-    //   opacity  0–100 (a square's has no capsule, so this is the bars' there
-    //            too)
-
     readonly property var spectrumLooks: [
         { id: "rounded",  label: "Rounded columns" },
         { id: "square",   label: "Square columns" },
@@ -1077,12 +420,22 @@ Singleton {
             opacity: within("opacity", 100)
         }
     }
-
-    // Gone under a fullscreen window, and with `spectrumOnEmpty` also on any
-    // workspace that has windows — asked of the workspace the screen is
-    // showing, as the edges' deck is. Gone, it does not listen either.
+    readonly property Binding watching: Binding {
+        target: HyprlandService
+        property: "watchClients"
+        value: root.widgets.length > 0
+    }
+    onWidgetsChanged: {
+        if (root.widgets.length > 0)
+            HyprlandService.loadClients()
+    }
+    function coveredOn(name: string): bool {
+        const workspace = HyprlandService.activeOn(name)
+        return workspace > 0 && HyprlandService.clients.some(client =>
+            (client.fullscreen ?? 0) >= 2 && client.workspace && client.workspace.id === workspace)
+    }
     function spectrumAwayOn(name: string): bool {
-        if (DockService.coveredOn(name))
+        if (root.coveredOn(name))
             return true
         if (!SettingsService.spectrumOnEmpty)
             return false
@@ -1131,325 +484,18 @@ Singleton {
             return
         root.update(key, { edge: edge, screen: root.screenField(name) })
     }
-
-    // Between the grid and an edge, as a note goes, keeping the key and the
-    // look. What only one of the two has is dropped: a square's place, shape,
-    // face, style and capsule opacity; an edge's height and bar opacity.
-    function spectrumToEdge(key: string, name: string, edge: string): void {
-        const widget = root.entryOf(key)
-        if (!widget || widget.id !== "spectrum" || root.isEdge(widget)
-                || !root.spectrumTakes(name, edge))
-            return
-        if (root.selected === key)
-            root.selected = ""
-        const next = Object.assign({}, widget, { edge: edge })
-        for (const field of ["col", "row", "family", "theme", "style", "opacity", "screen"])
-            delete next[field]
-        const screen = root.screenField(name)
-        if (screen !== null)
-            next.screen = screen
-        root.write(root.widgets.map(row => row.key === key ? next : row))
-    }
-
-    // At `col`/`row` or the nearest free fit, or the first free one without
-    // a cell. False when the grid has no room.
-    function spectrumToGrid(key: string, name: string, col = -1, row = -1): bool {
-        const widget = root.entryOf(key)
-        if (!root.isSpectrum(widget))
-            return false
-        const familyId = root.familiesFor("spectrum")[0] ?? "4x2"
-        const spot = col >= 0
-            ? root.nearestFree(name, col, row, familyId, "")
-            : root.firstFree(name, familyId, "")
-        if (!spot)
-            return false
-        if (root.selected === key)
-            root.selected = ""
-        const next = Object.assign({}, widget, { col: spot.col, row: spot.row, family: familyId })
-        for (const field of ["edge", "reach", "opacity", "screen"])
-            delete next[field]
-        const screen = root.screenField(name)
-        if (screen !== null)
-            next.screen = screen
-        root.write(root.widgets.map(entry => entry.key === key ? next : entry))
-        return true
-    }
-
-    // Drop: the target cell on the named screen, or the nearest free fit
-    // there; otherwise unchanged.
-    function place(key: string, name: string, col: int, row: int): void {
-        const widget = root.entryOf(key)
-        if (!widget)
-            return
-        const except = root.nameOf(widget) === name ? key : ""
-        const spot = root.nearestFree(name, col, row, root.familyOf(widget), except)
-        if (!spot)
-            return
-        root.update(key, { col: spot.col, row: spot.row, screen: root.screenField(name) })
-    }
-
-    // Re-places from the current cell so a resized widget moves as little as
-    // possible.
-    function setFamily(key: string, familyId: string): void {
-        const widget = root.entryOf(key)
-        if (!widget || !root.offers(widget.id, familyId, root.themeOf(widget)))
-            return
-        if (root.familyOf(widget) === familyId)
-            return
-        const at = root.spotOf(widget)
-        const spot = root.nearestFree(root.nameOf(widget), at.col, at.row, familyId, key)
-        if (!spot)
-            return
-        root.update(key, { family: familyId, col: spot.col, row: spot.row })
-    }
-
-    // Scroll wheel while arranging: next family in `delta`'s direction that
-    // fits.
-    function cycleFamily(key: string, delta: int): void {
-        const widget = root.entryOf(key)
-        if (!widget)
-            return
-        const families = root.familiesFor(widget.id, root.themeOf(widget))
-        const at = families.indexOf(root.familyOf(widget))
-        const spot = root.spotOf(widget)
-        for (let step = 1; step < families.length; step++) {
-            const next = families[(at + delta * step + families.length * step) % families.length]
-            if (root.nearestFree(root.nameOf(widget), spot.col, spot.row, next, key)) {
-                root.setFamily(key, next)
-                return
-            }
-        }
-    }
-
-    // Family selected by the resize handle, given the dragged extent in
-    // cells. The pointer is pulled back by `handleInset` and the smallest
-    // family containing it wins, so growing starts after about a third of a
-    // cell. Beyond every footprint, the nearest corner decides.
-    readonly property real handleInset: 0.35
-
-    function familyNearest(id: string, cols: real, rows: real, theme = ""): string {
-        const offered = root.familiesFor(id, theme)
-        const x = cols - root.handleInset
-        const y = rows - root.handleInset
-        let best = ""
-        let bestArea = Infinity
-        for (const familyId of offered) {
-            const shape = root.family(familyId)
-            if (x <= shape.cols && y <= shape.rows && shape.cols * shape.rows < bestArea) {
-                bestArea = shape.cols * shape.rows
-                best = familyId
-            }
-        }
-        if (best !== "")
-            return best
-        let bestDistance = Infinity
-        for (const familyId of offered) {
-            const shape = root.family(familyId)
-            const distance = (shape.cols - cols) * (shape.cols - cols)
-                + (shape.rows - rows) * (shape.rows - rows)
-            if (distance < bestDistance) {
-                bestDistance = distance
-                best = familyId
-            }
-        }
-        return best
-    }
-
-    // ── APPEARANCE ──────────────────────────────────────────────────────────
-    //
-    // Opacity, like theme, defaults to the desktop setting unless the row
-    // overrides it, and thins either ground. Colours always come from the
-    // active palette.
-
-    // Notes draw their own paper, photos are their picture, the spectrum is
-    // its bars and a sticker is cut out of nothing: no capsule.
-    function bare(widget: var): bool {
-        return !!widget && (widget.id === "notes" || widget.id === "photo" || widget.id === "spectrum"
-            || root.themeOf(widget) === "sticker")
-    }
-
-    function opacityOf(widget: var): int {
-        const own = widget ? widget.opacity : undefined
-        return typeof own === "number" ? own : SettingsService.desktopOpacity
-    }
-
-    function setOpacity(key: string, value: var): void {
-        root.update(key, { opacity: typeof value === "number" ? value : null })
-    }
-
-
-    // Colours for a widget's face, so faces never read `Theme` directly. The
-    // ground is the island black.
-    //
-    //   ground      the capsule
-    //   border      its edge
-    //   text        readings and glyphs
-    //   muted       labels
-    //   accent      rings, sparklines, bars
-    //   accentText  content on the accent
-    //   raised      tracks, placeholders
-    //   dim         a ring's empty track
-    //   red, green, yellow, blue
-    //               the palette's other hues, which a sticker is cut from
-    //   paper       a sticker's die-cut edge
-    //
-    // All values are `color`, not strings, because faces read `.r` etc. Wrap
-    // any literal in `Qt.color()`.
-    function inkFor(widget: var): var {
-        const ink = {
-            ground: Theme.island, border: Theme.veilLineOf(Theme.deskStyle),
-            text: Theme.text, muted: Theme.textMuted,
-            accent: Theme.accent, accentText: Theme.accentText,
-            raised: Theme.veilHoverOf(Theme.deskStyle), dim: Theme.indicatorDim,
-            red: Theme.red, green: Theme.green, yellow: Theme.yellow, blue: Theme.blue,
-            paper: Theme.stickerPaper
-        }
-        return ink
-    }
-
-    // ── PICTURES ────────────────────────────────────────────────────────────
-    //
-    // A photo widget's picture is a path on its row (`picture`), so it
-    // travels with the profile, and an Analogue print writes the row's
-    // `caption` under it. It is chosen on the desk, in the picker that takes
-    // the inspector's place (`Picker.qml`).
-
-    readonly property var pictureTypes: ["png", "jpg", "jpeg", "webp", "bmp"]
-
-    // The key whose picker is open, or "". It closes with the inspector.
-    property string picking: ""
-
-    // Takes a path or a file:// URL. Anything that is not a picture is
-    // refused.
-    function setPicture(key: string, url: var): bool {
-        const text = String(url)
-        const path = text.startsWith("file://") ? decodeURIComponent(text.slice(7)) : text
-        const dot = path.lastIndexOf(".")
-        if (dot < 0 || root.pictureTypes.indexOf(path.slice(dot + 1).toLowerCase()) < 0)
-            return false
-        root.update(key, { picture: path })
-        return true
-    }
-
-    // A path as a URL an Image or a folder listing loads, each segment
-    // escaped.
-    function urlOf(path: string): string {
-        return "file://" + path.split("/").map(encodeURIComponent).join("/")
-    }
-
-    function pictureOf(widget: var): string {
-        const path = widget && typeof widget.picture === "string" ? widget.picture : ""
-        return path === "" ? "" : root.urlOf(path)
-    }
-
-    // A row's picture in imv, the viewer yazi hands pictures to. A plain
-    // path: imv refuses a file:// URI without a word.
-    function openPicture(widget: var): void {
-        const path = widget && typeof widget.picture === "string" ? widget.picture : ""
-        if (path !== "")
-            Quickshell.execDetached(["imv", path])
-    }
-
-    // ── EDITING ─────────────────────────────────────────────────────────────
-    //
-    // Deliberately not persisted across sessions.
-
     property bool editing: false
-
-    // True while the inspector's caption field is typed in. The surface holds
-    // the keyboard for that long and no longer (`Desktop.qml`).
-    property bool typing: false
-
-    onSelectedChanged: {
-        root.typing = false
-        if (root.selected !== root.picking)
-            root.picking = ""
-    }
-
-    // Key of the widget being dragged (drawn on top), or "".
     property string dragging: ""
-
-    // Key of the widget whose inspector is open, or "".
     property string selected: ""
-
-    // Drop preview for the widget or tray tile being dragged: the screen, the
-    // cell and the family. Null when nothing is dragged. The screen is in it
-    // because the mark is drawn by whichever board the pointer is over, which
-    // is not always the one the drag started on.
-    property var landing: null
-
-    // Whether a gesture has hold of the pointer: a widget dragged or resized,
-    // a face pulled off the card, the card moved or stretched. Written by
-    // each of them as a `Binding`, so nothing has to remember to clear it and
-    // only one is ever active at a time.
-    //
-    // The board the card is on does not change hands while it is true. The
-    // pointer itself cannot be held at the seam — Hyprland has no edge
-    // barrier to ask for, only the remote-capture protocol's — so crossing is
-    // made to mean nothing instead.
     property bool inHand: false
-
-
-    // ── CONTEXT MENU ────────────────────────────────────────────────────────
-    //
-    // Right-click menu drawn by the desktop surface at the click position.
-    // Arranging mode is only entered from this menu, never by a bare click.
-    property var menu: null
-
-    function openMenu(key: string, name: string, x: real, y: real): void {
-        root.menu = { key: key, screen: name, x: x, y: y }
-    }
-
-    function closeMenu(): void {
-        root.menu = null
-    }
-
-    // Handled in `shell.qml`, which owns the settings window.
-    signal settingsRequested()
-
-    // The tray card's rectangle on the board; a widget dropped on it is
-    // removed.
+    property string editingScreen: ""
+    property string galleryScreen: ""
     property var trayBox: null
-
-    // Where the card was moved to, until arranging ends: one place per screen,
-    // because the boards are not the same size and a corner of one is nowhere
-    // in particular on the other. Its size, for the rest of the session, is
-    // one answer for all of them, since it is counted in columns and rows.
-    property var galleryAt: ({})
-
-    function galleryAtOn(name: string): var {
-        return root.galleryAt[name] ?? null
-    }
-
-    function setGalleryAt(name: string, x: real, y: real): void {
-        const next = Object.assign({}, root.galleryAt)
-        next[name] = { x: x, y: y }
-        root.galleryAt = next
-    }
-    property var gallerySize: null
-
     function overTray(name: string, x: real, y: real): bool {
         const box = root.trayBox
         return box !== null && name === root.galleryScreen
-            && x >= box.x && x <= box.x + box.width
-            && y >= box.y && y <= box.y + box.height
+            && x >= box.x && x <= box.x + box.width && y >= box.y && y <= box.y + box.height
     }
-
-    // Every board is arranged at once, but one of them holds the mode: the
-    // screen it was entered from, which keeps the single focus grab and the keyboard for as
-    // long as it lasts. It never changes hands, because handing a grab over is
-    // a grab clearing, and a grab clearing is what ends the mode.
-    property string editingScreen: ""
-
-    // Where the card is: the screen the pointer is on, which `Desktop.qml`
-    // claims as it crosses. The inspector and the picker follow the widget
-    // they are about, so neither has a screen of its own to remember.
-    property string galleryScreen: ""
-
-    // The desk surfaces, one per screen, so the focus grab can name every
-    // one of them. ONE grab, held by the screen the card is on: two grabs at
-    // once and the second clears the first, which ends the mode the moment it
-    // starts.
     property var surfaces: ({})
 
     function publish(name: string, window: var): void {
@@ -1467,30 +513,20 @@ Singleton {
             out.push(root.surfaces[name])
         return out
     }
-
     function edit(on: bool, name = ""): void {
         root.editing = on
-        root.menu = null
-        root.typing = false
-        root.picking = ""
-        if (on && name !== "") {
-            root.editingScreen = name
-            root.galleryScreen = name
-        }
-        if (!on) {
+        if (on) {
+            const screen = name || MonitorService.effectivePrimaryName
+            root.editingScreen = screen
+            root.galleryScreen = screen
+        } else {
             root.dragging = ""
             root.selected = ""
-            root.landing = null
-            root.galleryAt = ({})
             root.editingScreen = ""
             root.galleryScreen = ""
+            root.trayBox = null
         }
     }
-
-    // Arranging lasts while the screen stays as it was. Another workspace, a
-    // special one shown or a window opening would be drawn under a surface
-    // that covers it and takes its clicks, and a fullscreen window covers the
-    // surface itself.
     readonly property Connections compositor: Connections {
         target: Hyprland
 

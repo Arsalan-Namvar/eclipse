@@ -13,7 +13,7 @@
 
 Sets the wallpaper, extracts a palette from it, and writes that palette into
 the other themed programs: kitty, btop, cava, yazi, neovim, imv, GTK, Qt and
-KDE, the Papirus folder icons, Vesktop, Spotify, VSCodium and Zen. Generated
+KDE, the Papirus folder icons, Telegram, Spotify and Zen. Generated
 files live in the XDG state directory unless a program only reads its theme
 from its own config directory.
 """
@@ -29,10 +29,9 @@ import shutil
 import subprocess
 import sys
 import textwrap
-from urllib.parse import quote
+import zipfile
+import omp_theme
 
-# Sibling module with the greeting's pixel-art scenes.
-import greeting
 
 XDG_CONFIG_HOME = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
 XDG_DATA_HOME = os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share")
@@ -171,35 +170,10 @@ ICON_HUE_WEIGHT = 6.0
 ICON_GREY_BELOW = 0.15
 
 
-# Vesktop: Discord draws from CSS custom properties and Vencord loads user
-# themes after Discord's own stylesheet, so redefining the properties is
-# enough. No class names, which Discord hashes per build.
-VESKTOP_DIR = os.path.join(XDG_CONFIG_HOME, "vesktop")
-VESKTOP_THEMES_DIR = os.path.join(VESKTOP_DIR, "themes")
-VESKTOP_THEME_FILE = os.path.join(VESKTOP_THEMES_DIR, "impasto.css")
-
-# Vencord's own settings, where a theme is ticked. Only `./setup vesktop`
-# writes it, once, with Vesktop closed; the push never does.
-VESKTOP_SETTINGS_FILE = os.path.join(VESKTOP_DIR, "settings", "settings.json")
-
-# Discord uses three background levels and the palette has two. The third
-# (server rail, search field) is the ground darkened towards black, as in
-# Discord's own themes.
-VESKTOP_DEEP = 0.35
-
-# A lower floor for muted text than for normal text, so the two stay distinct
-# after lift().
-VESKTOP_MUTED_CONTRAST = 3.0
-
-# Discord's accent is a ramp from --brand-100 (light) to --brand-900 (dark),
-# and hover/press use the neighbouring rungs. The accent sits at 500 and the
-# ends move VESKTOP_RAMP towards white and black.
-VESKTOP_RAMP = 0.60
-
-# The rungs Discord defines (irregular, so not a range).
-VESKTOP_STEPS = (100, 130, 160, 200, 230, 260, 300, 330, 360, 400, 430, 460,
-                 500, 530, 560, 600, 630, 660, 700, 730, 760, 800, 830, 860,
-                 900)
+# Telegram imports native theme archives explicitly; palette pushes regenerate
+# the local file but never edit Telegram's account data or claim live apply.
+TELEGRAM_THEME_FILE = os.path.join(STATE_DIR, "eclipse.tdesktop-theme")
+APP_PALETTE_FILE = os.path.join(STATE_DIR, "app-palette.json")
 
 # spicetify compiles the colours into the Spotify client. `./setup spotify`
 # patches it once; after that the push refreshes the stylesheets inside it,
@@ -218,50 +192,6 @@ SPICETIFY_SHADOW = 0.45
 # ground, since the palette has no colour for either.
 SPICETIFY_DISABLED = 0.45
 
-# VSCodium colour themes are extensions. The push writes a manifest and the
-# theme JSON into ~/.vscode-oss/extensions/ (VSCodium's dataFolderName), which
-# the editor loads on its next window without anything being installed.
-VSCODIUM_EXTENSION_DIR = os.path.expanduser("~/.vscode-oss/extensions/impasto")
-VSCODIUM_MANIFEST_FILE = os.path.join(VSCODIUM_EXTENSION_DIR, "package.json")
-VSCODIUM_THEME_FILE = os.path.join(VSCODIUM_EXTENSION_DIR, "themes",
-                                   "impasto-color-theme.json")
-
-# The theme's name in the picker and in `workbench.colorTheme`. The push never
-# selects it, so a theme picked by hand stays picked.
-VSCODIUM_LABEL = "Impasto"
-
-# Merged whole by `./setup vscodium`. The pushes only rewrite, in place, the
-# values that follow the palette and the font, and only where they are set.
-VSCODIUM_SETTINGS_FILE = os.path.join(XDG_CONFIG_HOME, "VSCodium", "User",
-                                      "settings.json")
-
-# Read for the monospace family, so the editor uses the same font as kitty.
-SHELL_SETTINGS_FILE = os.path.join(STATE_DIR, "settings.json")
-DEFAULT_MONO = "JetBrainsMono Nerd Font Mono, monospace"
-
-# Alpha for the 1px indent-rainbow guides; full-strength colours are too loud
-# at that width.
-VSCODIUM_GUIDE = "40"
-
-# The editor is the ground; the side bar, tabs, panel and status bar are
-# darkened below it, as in VS Code's Dark Modern. Lighter than Vesktop's 0.35,
-# since here the chrome frames all four sides of the window.
-VSCODIUM_CHROME = 0.18
-
-# Error Lens draws its band over the code, so it is a light wash rather than a
-# fill. 0.18 is the largest value that keeps code on the band at 4.5:1 in every
-# bundled palette (Catppuccin Latte's red is the tightest).
-VSCODIUM_LENS_WASH = 0.18
-
-# kitty's ANSI slots under VS Code's names. Magenta and bright black are absent
-# from TERMINAL_NORMAL/BRIGHT, so VS Code's defaults fill them.
-VSCODIUM_ANSI = {
-    "color1": "ansiRed", "color2": "ansiGreen", "color3": "ansiYellow",
-    "color4": "ansiBlue", "color6": "ansiCyan", "color7": "ansiWhite",
-    "color9": "ansiBrightRed", "color10": "ansiBrightGreen",
-    "color11": "ansiBrightYellow", "color12": "ansiBrightBlue",
-    "color14": "ansiBrightCyan", "color15": "ansiBrightWhite",
-}
 
 # Qt applications take their QPalette from the platform theme, here qt6ct
 # (QT_QPA_PLATFORMTHEME=qt6ct in env.lua). qt6ct refers to its colour scheme
@@ -336,9 +266,8 @@ TERMINAL_LINE = 0.45
 TERMINAL_RAISE = 0.14
 TERMINAL_STATE_FILL = 0.40
 
-# TextMate scopes shared by yazi's tmTheme and VSCodium's tokenColors, so a
-# file looks the same in both. The accent goes on keywords. `comment` is not a
-# palette key: each caller dims the muted colour by its own amount.
+# TextMate scopes for yazi previews and the generated Neovim palette.
+# The accent goes on keywords; each caller dims comments against its ground.
 SYNTAX_SCOPES = (
     ("Comment", "comment", "comment", "italic"),
     ("String", "string", "green", None),
@@ -379,8 +308,8 @@ YAZI_CAP_CLOSE = "\ue0b4"
 NVIM_DIR = os.path.join(STATE_DIR, "nvim")
 NVIM_COLORS_FILE = os.path.join(NVIM_DIR, "colors", "impasto.lua")
 
-# neovim's default server socket: $XDG_RUNTIME_DIR/nvim.<pid>.0.
-NVIM_SOCKETS = os.path.join(XDG_RUNTIME_DIR, "nvim.*.0")
+# Eclipse-owned Neovim server sockets, started in config/options.lua.
+NVIM_SOCKETS = os.path.join(XDG_RUNTIME_DIR, "nvim-impasto-*.sock")
 
 # Comments are dimmed further than anything else.
 NVIM_COMMENT_DIM = 0.35
@@ -792,17 +721,6 @@ def push_terminal_ground(style):
             capture_output=True, text=True)
 
 
-def write_greetings(colors):
-    """Render the greeting's scenes in this palette.
-
-    Uses the terminal's colours, lifted as in build_terminal_palette. greeting.py
-    renders in the background, since all four scenes take about five seconds.
-    """
-    ground = terminal_background(colors)
-    paint = {key: lift(colors[key], MIN_CONTRAST, ground)
-             for key in ("accent", "green", "yellow", "red", "blue")}
-    paint.update(ground=ground, text=colors["text"], muted=colors["textMuted"])
-    greeting.push(paint)
 
 
 def build_btop_theme(colors):
@@ -1973,307 +1891,13 @@ def write_qt_theme(colors):
     write_kde_colors(colors)
 
 
-def build_vesktop_css(colors):
-    """Discord's CSS custom properties, set from the palette.
-
-    Vencord loads this after Discord's stylesheet. Only custom properties are
-    set, never classes, since Discord's class names are hashed per build.
-
-    Two generations of names are written: the classic ones
-    (`--background-secondary`...) and the visual refresh's
-    (`--background-base-lower`...); a build reads one set or the other.
-    `!important` is required because Discord declares its tokens on compound
-    selectors. The grounds match GTK's.
-    """
-    accent = colors.get("accent", "#0a84ff")
-    ground = gtk_ground(colors.get("background", "#1e1e1e"), accent)
-    surface = colors.get("surface", colors.get("background", "#1e1e1e"))
-    raised = gtk_ground(surface, accent)
-    hover = gtk_ground(colors.get("surfaceHover", surface), accent)
-    deep = mix(ground, "#000000", VESKTOP_DEEP)
-    border = gtk_ground(colors.get("border", raised), accent)
-
-    text = lift(colors.get("text", "#ffffff"), GTK_MIN_CONTRAST, ground)
-    muted = lift(colors.get("textMuted", text), VESKTOP_MUTED_CONTRAST, ground)
-    on_accent = colors.get("accentText", "#ffffff")
-    hovered = colors.get("accentHover", accent)
-
-    red = colors.get("red", "#ff453a")
-    green = colors.get("green", "#32d74b")
-    yellow = colors.get("yellow", "#ffd60a")
-    blue = colors.get("blue", accent)
-
-    # Status colours stay as-is where Discord fills with them and are lifted
-    # where it writes text in them.
-    def typed(value):
-        return lift(value, GTK_MIN_CONTRAST, ground)
-
-    # One rung of the brand ramp: lighter below 500, darker above.
-    def rung(value):
-        distance = (value - 500) / 400
-        if distance < 0:
-            return mix(accent, "#ffffff", -distance * VESKTOP_RAMP)
-        return mix(accent, "#000000", distance * VESKTOP_RAMP)
-
-    # The same rung as an "H S% L%" triplet. Most of Discord's translucent
-    # accents are `hsl(var(--brand-500-hsl) / a)` and never read --brand-500.
-    def parts(value):
-        hue, lightness, sat = colorsys.rgb_to_hls(*(c / 255 for c in hex_to_rgb(value)))
-        return f"{hue * 360:.1f} {sat * 100:.1f}% {lightness * 100:.1f}%"
-
-    grounds = [
-        # Darkest at the window edge, lightest in the chat, as in Discord.
-        ("background-tertiary", deep),
-        ("background-secondary", ground),
-        ("background-secondary-alt", ground),
-        ("background-primary", raised),
-        ("background-accent", accent),
-        ("background-floating", deep),
-        ("background-nested-floating", raised),
-        ("background-mobile-primary", raised),
-        ("background-mobile-secondary", ground),
-        ("background-modifier-hover", hover),
-        ("background-modifier-active", hover),
-        ("background-modifier-selected", hover),
-        ("background-modifier-accent", border),
-        ("channeltextarea-background", ground),
-        ("activity-card-background", raised),
-        ("deprecated-card-bg", raised),
-        ("deprecated-card-editable-bg", raised),
-        ("modal-background", raised),
-        ("modal-footer-background", ground),
-        ("input-background", ground),
-        ("popover-background", raised),
-        ("chat-background", raised),
-        ("home-background", raised),
-    ]
-
-    type_ = [
-        ("text-normal", text),
-        ("text-muted", muted),
-        ("text-link", typed(blue)),
-        ("text-link-low-saturation", typed(blue)),
-        ("text-positive", typed(green)),
-        ("text-danger", typed(red)),
-        ("text-warning", typed(yellow)),
-        ("header-primary", text),
-        ("header-secondary", muted),
-        ("interactive-normal", muted),
-        ("interactive-hover", text),
-        ("interactive-active", text),
-        ("interactive-muted", border),
-        ("channels-default", muted),
-        ("channel-icon", muted),
-    ]
-
-    brand = [("brand-experiment", accent),
-             ("brand-new", accent),
-             ("button-outline-brand-text", typed(accent)),
-             ("button-outline-brand-border", accent),
-             ("button-filled-brand-background", accent),
-             ("button-filled-brand-background-hover", hovered),
-             ("button-filled-brand-text", on_accent),
-             ("control-brand-foreground", accent),
-             ("control-brand-foreground-new", accent),
-             ("mention-foreground", on_accent),
-             ("mention-background", accent)]
-    for value in VESKTOP_STEPS:
-        brand.append((f"brand-{value}", rung(value)))
-        brand.append((f"brand-experiment-{value}", rung(value)))
-        brand.append((f"brand-{value}-hsl", parts(rung(value))))
-    # The two aliases outside the ramp.
-    brand.append(("blurple-50-hsl", parts(accent)))
-    brand.append(("illo-blue-40-hsl", parts(accent)))
-
-    # --opacity-blurple-N is separate from the ramp: each carries its own
-    # triplet. N is 1, then every 4 up to 96.
-    for value in (1,) + tuple(range(4, 100, 4)):
-        brand.append((f"opacity-blurple-{value}",
-                      f"hsl({parts(accent)} / {value / 100:.2f})"))
-        brand.append((f"opacity-blurple-{value}-hsl", parts(accent)))
-
-    # The remaining named purples. --premium-tier-* (Nitro branding) is left
-    # alone.
-    veil = lambda amount: f"hsl({parts(accent)} / {amount:.2f})"
-    brand += [
-        ("message-highlight-background-default", veil(0.10)),
-        ("message-highlight-background-hover", veil(0.16)),
-        ("reaction-background-reacted-default", veil(0.12)),
-        ("reaction-background-reacted-hover", veil(0.20)),
-        ("datepicker-range-background-default", veil(0.16)),
-        ("datepicker-range-background-hover", veil(0.24)),
-        ("togglebutton-background-selected", accent),
-        ("togglebutton-background-selected-hover", hovered),
-        ("togglebutton-background-selected-active", hovered),
-        ("togglebutton-border-active", accent),
-        # Code blocks are recessed towards the border colour, which also works
-        # on light palettes.
-        ("background-code", mix(ground, border, 0.35)),
-    ]
-
-    status = [
-        ("status-positive-background", green),
-        ("status-positive-text", on_accent),
-        ("status-danger-background", red),
-        ("status-danger-text", on_accent),
-        ("status-warning-background", yellow),
-        ("status-warning-text", on_accent),
-        ("info-positive-foreground", typed(green)),
-        ("info-positive-background", mix(ground, green, 0.14)),
-        ("info-danger-foreground", typed(red)),
-        ("info-danger-background", mix(ground, red, 0.14)),
-        ("info-warning-foreground", typed(yellow)),
-        ("info-warning-background", mix(ground, yellow, 0.14)),
-        ("info-help-foreground", typed(blue)),
-        ("info-help-background", mix(ground, blue, 0.14)),
-        ("green-360", green),
-        ("red-400", red),
-        ("yellow-300", yellow),
-    ]
-
-    # Transparent track, border-coloured thumb.
-    scrollbars = [
-        ("scrollbar-thin-thumb", border),
-        ("scrollbar-thin-track", "transparent"),
-        ("scrollbar-auto-thumb", border),
-        ("scrollbar-auto-track", ground),
-        ("scrollbar-auto-scrollbar-color-thumb", border),
-        ("scrollbar-auto-scrollbar-color-track", ground),
-    ]
-
-    # The visual refresh's names. A build reads only one of the two sets, so
-    # both are written.
-    refreshed = [
-        # Darkest at the frame. theme-midnight sets all three to black unless
-        # they are overridden.
-        ("background-base-lowest", deep),
-        ("background-base-lower", ground),
-        ("background-base-low", ground),
-        ("background-surface-high", raised),
-        ("background-surface-higher", raised),
-        ("background-surface-highest", hover),
-
-        # The accent where the refresh names it rather than the ramp.
-        ("background-brand", accent),
-        ("badge-background-brand", accent),
-        ("control-primary-background-default", accent),
-        ("checkbox-background-selected-default", accent),
-        ("interactive-accent-background-hover", accent),
-        ("interactive-accent-background-selected", accent),
-        ("interactive-accent-background-active", hovered),
-        ("border-focus", accent),
-        ("input-border-active", accent),
-
-        # Channel names and icons in the refresh.
-        ("interactive-text-default", muted),
-        ("interactive-text-hover", text),
-        ("interactive-text-active", text),
-        ("interactive-icon-default", muted),
-        ("interactive-icon-hover", text),
-        ("interactive-icon-active", text),
-
-        ("text-default", text),
-        ("text-secondary", muted),
-        ("text-tertiary", muted),
-        ("text-brand", typed(accent)),
-        ("text-feedback-critical", typed(red)),
-        ("text-feedback-positive", typed(green)),
-        ("text-feedback-warning", typed(yellow)),
-        ("text-feedback-info", typed(blue)),
-
-        ("border-subtle", border),
-        ("border-faint", mix(ground, border, 0.5)),
-        ("border-strong", border),
-        ("border-feedback-critical", red),
-        ("border-feedback-positive", green),
-        ("border-feedback-warning", yellow),
-        ("border-feedback-info", blue),
-    ]
-
-    # Vencord reads this header to list the theme.
-    lines = [
-        "/**",
-        " * @name impasto",
-        " * @description The desk's palette, written by theme_manager.py on",
-        " *   every palette push. Edits here are lost at the next switch.",
-        " * @author impasto",
-        " */",
-        "",
-        # Also on the theme classes: Discord sets .theme-dark on a wrapper div,
-        # which overrides values defined only on :root.
-        ":root,",
-        ".theme-dark,",
-        ".theme-light,",
-        ".theme-darker,",
-        ".theme-midnight,",
-        ".visual-refresh {",
-    ]
-    for group in (grounds, type_, brand, status, scrollbars, refreshed):
-        lines.append("")
-        lines += [f"  --{name}: {value} !important;" for name, value in group]
-    lines += ["}", ""]
-    return "\n".join(lines)
 
 
-def tick_vesktop_theme():
-    """Add the theme to Vencord's enabled themes, keeping everything else.
-
-    Returns success. A settings file that cannot be read is left alone.
-    Written with four-space indentation, as Vencord writes it.
-    """
-    if not shutil.which("vesktop"):
-        sys.stderr.write("vesktop is not installed\n")
-        return False
-    settings = {}
-    if os.path.exists(VESKTOP_SETTINGS_FILE):
-        try:
-            with open(VESKTOP_SETTINGS_FILE, encoding="utf-8") as handle:
-                raw = handle.read()
-            settings = json.loads(raw) if raw.strip() else {}
-        except (OSError, ValueError) as error:
-            sys.stderr.write(f"Cannot read Vencord's settings, so they are "
-                             f"left alone: {error}\n")
-            return False
-        if not isinstance(settings, dict):
-            sys.stderr.write("Vencord's settings are not an object, so they "
-                             "are left alone\n")
-            return False
-
-    themes = settings.get("enabledThemes")
-    if not isinstance(themes, list):
-        themes = []
-    name = os.path.basename(VESKTOP_THEME_FILE)
-    if name in themes:
-        return True
-    settings["enabledThemes"] = themes + [name]
-    temporary = VESKTOP_SETTINGS_FILE + ".impasto"
-    try:
-        os.makedirs(os.path.dirname(VESKTOP_SETTINGS_FILE), exist_ok=True)
-        with open(temporary, "w", encoding="utf-8") as handle:
-            json.dump(settings, handle, indent=4, ensure_ascii=False)
-        os.replace(temporary, VESKTOP_SETTINGS_FILE)
-    except OSError as error:
-        sys.stderr.write(f"Cannot write Vencord's settings: {error}\n")
-        return False
-    return True
 
 
-def write_vesktop_css(colors):
-    """Write the theme into Vesktop's themes directory.
 
-    Not quickCss.css, which is for the user's own rules. The theme has to be
-    enabled once in Vesktop's settings; after that Vencord watches the file
-    and repaints live. The push never edits Vencord's settings.json, which
-    Vencord rewrites itself.
-    """
-    if not shutil.which("vesktop"):
-        return
-    try:
-        os.makedirs(VESKTOP_THEMES_DIR, exist_ok=True)
-        with open(VESKTOP_THEME_FILE, "w", encoding="utf-8") as handle:
-            handle.write(build_vesktop_css(colors))
-    except OSError as error:
-        sys.stderr.write(f"Cannot write Vesktop's theme: {error}\n")
+
+
 
 
 def build_spicetify_colors(colors):
@@ -2291,7 +1915,7 @@ def build_spicetify_colors(colors):
     border = gtk_ground(colors.get("border", raised), accent)
 
     text = lift(colors.get("text", "#ffffff"), GTK_MIN_CONTRAST, ground)
-    muted = lift(colors.get("textMuted", text), VESKTOP_MUTED_CONTRAST, ground)
+    muted = lift(colors.get("textMuted", text), 3.0, ground)
     hovered = colors.get("accentHover", accent)
     red = colors.get("red", "#ff453a")
 
@@ -2426,7 +2050,7 @@ def write_imv_config(colors):
 def build_nvim_colorscheme(colors):
     """A Lua colourscheme for neovim.
 
-    Syntax colours follow SYNTAX_SCOPES, as in yazi and VSCodium; treesitter
+    Syntax colours follow SYNTAX_SCOPES, as in yazi; treesitter
     captures and LSP semantic tokens are linked to those groups rather than
     given colours of their own. `Normal` has no background, so kitty's
     translucent ground shows through; only shapes (cursor line, selection,
@@ -2712,7 +2336,7 @@ def build_nvim_colorscheme(colors):
 
     lines = [
         "-- GENERATED by scripts/theme_manager.py on every palette change.",
-        "-- Loaded by name off the runtimepath `lua/modules/theme.lua` adds;",
+        "-- Loaded through LazyVim's config/options.lua runtimepath;",
         "-- edits here are lost at the next theme switch.",
         "",
         'vim.cmd("highlight clear")',
@@ -2765,881 +2389,128 @@ def push_nvim_colorscheme(colors):
                              f"{result.stderr.strip()}\n")
 
 
-def build_vscodium_manifest(colors):
-    """The extension's package.json.
+def write_telegram_theme(colors):
+    """Generate a local native archive; importing it is an explicit UI action.
 
-    `uiTheme` picks which built-in defaults fill the colours the theme leaves
-    unset, so it is recomputed on every push (one palette is light). The theme
-    leaves translucent colours (minimap slider, scrims) to those defaults.
+    Telegram's native loader accepts colors.tdesktop-theme + background.jpg.
+    It has a 5 MiB theme-file limit. Motion uses the desktop's still poster.
     """
-    ground = gtk_ground(colors.get("background", "#1e1e1e"),
-                        colors.get("accent", "#0a84ff"))
-    lit = luminance(*hex_to_rgb(ground)) > GTK_LIGHT_ABOVE
-    manifest = {
-        "name": "impasto",
-        "displayName": VSCODIUM_LABEL,
-        "description": "The wallpaper's palette. Generated; edits are lost.",
-        "version": "1.0.0",
-        "publisher": "impasto",
-        "engines": {"vscode": "^1.0.0"},
-        "categories": ["Themes"],
-        "contributes": {
-            "themes": [{
-                "label": VSCODIUM_LABEL,
-                "uiTheme": "vs" if lit else "vs-dark",
-                "path": "./themes/" + os.path.basename(VSCODIUM_THEME_FILE),
-            }],
-        },
-    }
-    # No "generated" comment: VSCodium rejects a package.json with comments.
-    # The theme file is parsed as JSONC and does carry one.
-    return json.dumps(manifest, indent=2) + "\n"
-
-
-def build_vscodium_theme(colors):
-    """VSCodium's workbench and token colours.
-
-    The ground is GTK's (gtk_ground), not the terminal's: VSCodium draws its
-    own window, so it matches the other GTK windows and Vesktop. Syntax colours
-    are SYNTAX_SCOPES, as in yazi, with finer scopes mapped onto the same
-    colours.
-    """
-    accent = colors.get("accent", "#0a84ff")
-    ground = gtk_ground(colors.get("background", "#1e1e1e"), accent)
-    panel = gtk_ground(colors.get("surface", colors.get("background", "#1e1e1e")),
-                       accent)
-    chrome = mix(ground, "#000000", VSCODIUM_CHROME)
-    on_accent = colors.get("accentText", "#ffffff")
-
-    def on(key, fill=None):
-        return lift(colors[key], MIN_CONTRAST, fill or ground)
-
-    text, muted = on("text"), on("textMuted")
-    accent_text = on("accent")
-    red, green, yellow, blue = on("red"), on("green"), on("yellow"), on("blue")
-    types = on("accentHover")
-
-    # Comments use the editor dimming, as in neovim, not the preview pane's.
-    comment = mix(muted, ground, NVIM_COMMENT_DIM)
-    # Line numbers: the comment colour lifted back to the contrast floor.
-    gutter = lift(comment, MIN_CONTRAST, ground)
-
-    hairline = mix(colors.get("border", panel), ground, TERMINAL_LINE)
-    # Two fills, built from the ground rather than the palette's surfaces: a
-    # wash for hover and the current line, the accent tint for selection.
-    wash = mix(ground, text, TERMINAL_RAISE)
-    fill = mix(ground, accent, TERMINAL_STATE_FILL)
-    on_fill = lift(colors["text"], MIN_CONTRAST, fill)
-
-    colours = {
-        # ── the window ──
-        "foreground": text,
-        "disabledForeground": comment,
-        "descriptionForeground": muted,
-        "errorForeground": red,
-        "focusBorder": accent,
-        "selection.background": fill,
-        "icon.foreground": muted,
-        "widget.border": hairline,
-        "sash.hoverBorder": accent,
-        "textLink.foreground": accent_text,
-        "textLink.activeForeground": types,
-        "textSeparator.foreground": hairline,
-        "textBlockQuote.background": panel,
-        "textCodeBlock.background": panel,
-        "textPreformat.foreground": types,
-
-        # ── window chrome ──
-        "titleBar.activeBackground": chrome,
-        "titleBar.activeForeground": text,
-        "titleBar.inactiveBackground": chrome,
-        "titleBar.inactiveForeground": muted,
-        "titleBar.border": hairline,
-        "activityBar.background": chrome,
-        "activityBar.foreground": accent_text,
-        "activityBar.inactiveForeground": muted,
-        "activityBar.activeBorder": accent,
-        "activityBar.border": hairline,
-        "activityBarBadge.background": accent,
-        "activityBarBadge.foreground": on_accent,
-        "sideBar.background": chrome,
-        "sideBar.foreground": text,
-        "sideBar.border": hairline,
-        "sideBarTitle.foreground": muted,
-        "sideBarSectionHeader.background": chrome,
-        "sideBarSectionHeader.foreground": text,
-        "sideBarSectionHeader.border": hairline,
-        "statusBar.background": chrome,
-        "statusBar.foreground": muted,
-        "statusBar.border": hairline,
-        "statusBar.noFolderBackground": chrome,
-        "statusBar.debuggingBackground": accent,
-        "statusBar.debuggingForeground": on_accent,
-        "statusBarItem.hoverBackground": wash,
-        "statusBarItem.prominentBackground": fill,
-        "statusBarItem.prominentForeground": on_fill,
-        "statusBarItem.remoteBackground": accent,
-        "statusBarItem.remoteForeground": on_accent,
-        "statusBarItem.errorBackground": colors.get("red", red),
-        "statusBarItem.errorForeground": on_accent,
-        "statusBarItem.warningBackground": colors.get("yellow", yellow),
-        "statusBarItem.warningForeground": on_accent,
-
-        # ── tabs ──
-        "editorGroupHeader.tabsBackground": chrome,
-        "editorGroupHeader.noTabsBackground": chrome,
-        "editorGroupHeader.border": hairline,
-        "editorGroup.border": hairline,
-        "editorGroup.dropBackground": fill,
-        "tab.activeBackground": ground,
-        "tab.activeForeground": text,
-        "tab.activeBorderTop": accent,
-        "tab.activeBorder": ground,
-        "tab.inactiveBackground": chrome,
-        "tab.inactiveForeground": muted,
-        "tab.hoverBackground": ground,
-        "tab.unfocusedActiveBackground": chrome,
-        "tab.unfocusedActiveForeground": muted,
-        "tab.border": hairline,
-        "breadcrumb.background": ground,
-        "breadcrumb.foreground": muted,
-        "breadcrumb.focusForeground": text,
-        "breadcrumb.activeSelectionForeground": accent_text,
-        "breadcrumbPicker.background": panel,
-        "editorStickyScroll.background": ground,
-        "editorStickyScrollHover.background": wash,
-
-        # The notification banner (workspace trust, updates); otherwise it
-        # stays VS Code's blue.
-        "banner.background": panel,
-        "banner.foreground": text,
-        "banner.iconForeground": accent_text,
-        "commandCenter.background": panel,
-        "commandCenter.foreground": muted,
-        "commandCenter.border": hairline,
-        "commandCenter.activeBackground": wash,
-        "commandCenter.activeForeground": text,
-        "commandCenter.activeBorder": accent,
-        "commandCenter.inactiveForeground": muted,
-        "commandCenter.inactiveBorder": hairline,
-        "debugToolBar.background": panel,
-        "debugToolBar.border": hairline,
-
-        # ── the editor ──
-        "editor.background": ground,
-        "editor.foreground": text,
-        "editorLineNumber.foreground": gutter,
-        "editorLineNumber.activeForeground": accent_text,
-        "editorCursor.foreground": accent,
-        "editor.lineHighlightBackground": wash,
-        "editor.selectionBackground": fill,
-        "editor.inactiveSelectionBackground": wash,
-        "editor.selectionHighlightBackground": wash,
-        "editor.wordHighlightBackground": wash,
-        "editor.wordHighlightStrongBackground": fill,
-        "editor.findMatchBackground": mix(ground, accent, TERMINAL_STATE_FILL * 1.6),
-        "editor.findMatchHighlightBackground": fill,
-        "editor.findRangeHighlightBackground": wash,
-        "editor.hoverHighlightBackground": wash,
-        "editor.rangeHighlightBackground": wash,
-        "editorWhitespace.foreground": mix(comment, ground, TERMINAL_DIM),
-        "editorIndentGuide.background1": hairline,
-        "editorIndentGuide.activeBackground1": muted,
-        "editorRuler.foreground": hairline,
-        "editorCodeLens.foreground": comment,
-        "editorInlayHint.background": wash,
-        "editorInlayHint.foreground": comment,
-        "editorBracketMatch.background": fill,
-        "editorBracketMatch.border": accent,
-        "editorLink.activeForeground": accent_text,
-        "editorGutter.background": ground,
-        "editorGutter.addedBackground": green,
-        "editorGutter.modifiedBackground": blue,
-        "editorGutter.deletedBackground": red,
-        "editorError.foreground": red,
-        "editorWarning.foreground": yellow,
-        "editorInfo.foreground": blue,
-        "editorHint.foreground": accent_text,
-        "minimap.background": ground,
-        "minimap.findMatchHighlight": accent,
-        "minimap.selectionHighlight": accent,
-        "editorOverviewRuler.border": hairline,
-        "editorOverviewRuler.findMatchForeground": accent,
-        "editorOverviewRuler.errorForeground": red,
-        "editorOverviewRuler.warningForeground": yellow,
-        "editorOverviewRuler.infoForeground": blue,
-        "editorOverviewRuler.addedForeground": green,
-        "editorOverviewRuler.modifiedForeground": blue,
-        "editorOverviewRuler.deletedForeground": red,
-
-        # Bracket-pair colours: six rungs from five hues, accentHover and muted.
-        "editorBracketHighlight.foreground1": accent_text,
-        "editorBracketHighlight.foreground2": yellow,
-        "editorBracketHighlight.foreground3": blue,
-        "editorBracketHighlight.foreground4": green,
-        "editorBracketHighlight.foreground5": types,
-        "editorBracketHighlight.foreground6": muted,
-        "editorBracketHighlight.unexpectedBracket.foreground": red,
-
-        # ── floating widgets ──
-        "editorWidget.background": panel,
-        "editorWidget.foreground": text,
-        "editorWidget.border": hairline,
-        "editorHoverWidget.background": panel,
-        "editorHoverWidget.foreground": text,
-        "editorHoverWidget.border": hairline,
-        "editorSuggestWidget.background": panel,
-        "editorSuggestWidget.foreground": text,
-        "editorSuggestWidget.border": hairline,
-        "editorSuggestWidget.selectedBackground": fill,
-        "editorSuggestWidget.selectedForeground": on_fill,
-        "editorSuggestWidget.highlightForeground": accent_text,
-        "quickInput.background": panel,
-        "quickInput.foreground": text,
-        "quickInputTitle.background": panel,
-        "quickInputList.focusBackground": fill,
-        "quickInputList.focusForeground": on_fill,
-        "pickerGroup.foreground": muted,
-        "pickerGroup.border": hairline,
-        "menu.background": panel,
-        "menu.foreground": text,
-        "menu.border": hairline,
-        "menu.separatorBackground": hairline,
-        "menu.selectionBackground": fill,
-        "menu.selectionForeground": on_fill,
-        "menubar.selectionBackground": wash,
-        "menubar.selectionForeground": text,
-        "notifications.background": panel,
-        "notifications.foreground": text,
-        "notifications.border": hairline,
-        "notificationCenterHeader.background": panel,
-        "notificationCenterHeader.foreground": muted,
-        "notificationLink.foreground": accent_text,
-        "notificationsErrorIcon.foreground": red,
-        "notificationsWarningIcon.foreground": yellow,
-        "notificationsInfoIcon.foreground": blue,
-        "peekView.border": accent,
-        "peekViewEditor.background": panel,
-        "peekViewEditor.matchHighlightBackground": fill,
-        "peekViewResult.background": panel,
-        "peekViewResult.selectionBackground": fill,
-        "peekViewResult.lineForeground": text,
-        "peekViewResult.fileForeground": muted,
-        "peekViewResult.matchHighlightBackground": fill,
-        "peekViewTitle.background": panel,
-        "peekViewTitleLabel.foreground": text,
-        "peekViewTitleDescription.foreground": muted,
-
-        # ── inputs, buttons ──
-        "input.background": panel,
-        "input.foreground": text,
-        "input.border": hairline,
-        "input.placeholderForeground": comment,
-        "inputOption.activeBackground": fill,
-        "inputOption.activeBorder": accent,
-        "inputOption.activeForeground": on_fill,
-        "inputValidation.errorBackground": panel,
-        "inputValidation.errorBorder": colors.get("red", red),
-        "inputValidation.warningBackground": panel,
-        "inputValidation.warningBorder": colors.get("yellow", yellow),
-        "inputValidation.infoBackground": panel,
-        "inputValidation.infoBorder": colors.get("blue", blue),
-        "dropdown.background": panel,
-        "dropdown.listBackground": panel,
-        "dropdown.foreground": text,
-        "dropdown.border": hairline,
-        "button.background": accent,
-        "button.foreground": on_accent,
-        "button.hoverBackground": colors.get("accentHover", accent),
-        "button.secondaryBackground": panel,
-        "button.secondaryForeground": text,
-        "button.secondaryHoverBackground": wash,
-        "checkbox.background": panel,
-        "checkbox.foreground": text,
-        "checkbox.border": hairline,
-        "badge.background": accent,
-        "badge.foreground": on_accent,
-        "progressBar.background": accent,
-        "keybindingLabel.background": panel,
-        "keybindingLabel.foreground": text,
-        "keybindingLabel.border": hairline,
-        "keybindingLabel.bottomBorder": hairline,
-        "settings.headerForeground": text,
-        "settings.modifiedItemIndicator": accent,
-
-        # ── lists and trees ──
-        "list.activeSelectionBackground": fill,
-        "list.activeSelectionForeground": on_fill,
-        "list.inactiveSelectionBackground": wash,
-        "list.inactiveSelectionForeground": text,
-        "list.focusBackground": fill,
-        "list.focusForeground": on_fill,
-        "list.hoverBackground": wash,
-        "list.hoverForeground": text,
-        "list.highlightForeground": accent_text,
-        "list.dropBackground": fill,
-        "list.errorForeground": red,
-        "list.warningForeground": yellow,
-        "tree.indentGuidesStroke": hairline,
-        "gitDecoration.addedResourceForeground": green,
-        "gitDecoration.untrackedResourceForeground": green,
-        "gitDecoration.modifiedResourceForeground": blue,
-        "gitDecoration.stageModifiedResourceForeground": blue,
-        "gitDecoration.deletedResourceForeground": red,
-        "gitDecoration.stageDeletedResourceForeground": red,
-        "gitDecoration.conflictingResourceForeground": yellow,
-        "gitDecoration.ignoredResourceForeground": comment,
-
-        # ── diff ──
-        "diffEditor.border": hairline,
-        "diffEditor.insertedTextBackground": mix(ground, colors.get("green", green),
-                                                 TERMINAL_STATE_FILL * 0.5),
-        "diffEditor.removedTextBackground": mix(ground, colors.get("red", red),
-                                                TERMINAL_STATE_FILL * 0.5),
-        "merge.currentHeaderBackground": mix(ground, colors.get("green", green),
-                                             TERMINAL_STATE_FILL),
-        "merge.incomingHeaderBackground": mix(ground, colors.get("blue", blue),
-                                              TERMINAL_STATE_FILL),
-
-        # ── terminal ──
-        # On the chrome: the panel is one of the window's sides.
-        "panel.background": chrome,
-        "panel.border": hairline,
-        "panelTitle.activeForeground": text,
-        "panelTitle.activeBorder": accent,
-        "panelTitle.inactiveForeground": muted,
-        "panelSection.border": hairline,
-        "terminal.background": chrome,
-        "terminal.foreground": lift(colors["text"], MIN_CONTRAST, chrome),
-        "terminal.ansiBlack": chrome,
-        "terminalCursor.foreground": accent,
-        "terminal.selectionBackground": mix(chrome, accent, TERMINAL_STATE_FILL),
-    }
-
-
-    # Error Lens is themed here rather than in settings.json so it follows the
-    # palette. The band is a light wash (VSCODIUM_LENS_WASH) because Error Lens
-    # draws over the code, and the message is lifted against the band. The
-    # *Light variants get the same values, computed against this palette's
-    # ground.
-    for state, key in (("error", "red"), ("warning", "yellow"),
-                       ("info", "blue"), ("hint", "accent")):
-        band = mix(ground, colors.get(key, accent), VSCODIUM_LENS_WASH)
-        message = lift(colors.get(key, accent), MIN_CONTRAST, band)
-        colours[f"errorLens.{state}Background"] = band
-        colours[f"errorLens.{state}BackgroundLight"] = band
-        colours[f"errorLens.{state}MessageBackground"] = band
-        colours[f"errorLens.{state}RangeBackground"] = band
-        colours[f"errorLens.{state}Foreground"] = message
-        colours[f"errorLens.{state}ForegroundLight"] = message
-        colours[f"errorLens.statusBar{state.capitalize()}Foreground"] = on(key)
-    for state, key in (("Error", "red"), ("Warning", "yellow")):
-        colours[f"errorLens.statusBarIcon{state}Foreground"] = on(key)
-
-    for slot, key in TERMINAL_NORMAL:
-        colours[f"terminal.{VSCODIUM_ANSI[slot]}"] = lift(colors[key], MIN_CONTRAST,
-                                                          chrome)
-    for slot, key in TERMINAL_BRIGHT:
-        colours[f"terminal.{VSCODIUM_ANSI[slot]}"] = brighten(colors[key], chrome)
-
-    # Base scopes, then finer scopes mapped onto the same colours.
-    token_colors = [
-        {"name": name, "scope": scope,
-         "settings": {"foreground": comment if key == "comment" else on(key),
-                      **({"fontStyle": style} if style else {})}}
-        for name, scope, key, style in SYNTAX_SCOPES
-    ]
-    extra = [
-        ("Escape and placeholder", "constant.character.escape, "
-                                   "constant.other.placeholder", red, None),
-        ("Preprocessor", "meta.preprocessor, keyword.control.directive", red, None),
-        ("Other constant", "constant.other, support.constant", yellow, None),
-        ("Namespace", "entity.name.namespace, entity.name.scope-resolution",
-         types, None),
-        ("Heading", "markup.heading", accent_text, "bold"),
-        ("Bold", "markup.bold", text, "bold"),
-        ("Italic", "markup.italic", text, "italic"),
-        ("Link", "markup.underline.link", accent_text, "underline"),
-        ("Literal", "markup.inline.raw, markup.raw", green, None),
-        ("Inserted", "markup.inserted", green, None),
-        ("Deleted", "markup.deleted", red, None),
-    ]
-    token_colors += [
-        {"name": name, "scope": scope,
-         "settings": {"foreground": colour,
-                      **({"fontStyle": style} if style else {})}}
-        for name, scope, colour, style in extra
-    ]
-
-    # Semantic tokens from language servers, mapped to the same colours.
-    semantic = {
-        "namespace": types, "class": types, "struct": types, "enum": types,
-        "interface": types, "type": types, "typeParameter": types,
-        "decorator": types,
-        "function": blue, "method": blue,
-        "macro": red,
-        "variable": text, "parameter": text, "property": text,
-        "enumMember": yellow, "number": yellow,
-        "string": green,
-        "keyword": accent_text,
-        "operator": muted,
-        "comment": {"foreground": comment, "italic": True},
-    }
-
-    theme = {
-        "name": VSCODIUM_LABEL,
-        "type": "light" if luminance(*hex_to_rgb(ground)) > GTK_LIGHT_ABOVE
-                else "dark",
-        "semanticHighlighting": True,
-        "colors": colours,
-        "tokenColors": token_colors,
-        "semanticTokenColors": semantic,
-    }
-    # The theme file is parsed as JSONC, so it can carry the header comment.
-    return ("// GENERATED by scripts/theme_manager.py on every palette change.\n"
-            "// Edits here are lost at the next theme switch.\n"
-            + json.dumps(theme, indent=2) + "\n")
-
-
-def write_vscodium_theme(colors):
-    """Write the extension into VSCodium's extensions folder.
-
-    Guarded on `codium`, not `code`: the proprietary build uses a different
-    folder. VSCodium does not watch the theme file, so a palette change needs
-    `Developer: Reload Window` or a new window.
-    """
-    if not shutil.which("codium"):
-        return
-    for path, build in ((VSCODIUM_MANIFEST_FILE, build_vscodium_manifest),
-                        (VSCODIUM_THEME_FILE, build_vscodium_theme)):
-        try:
-            os.makedirs(os.path.dirname(path), exist_ok=True)
-            with open(path, "w", encoding="utf-8") as handle:
-                handle.write(build(colors))
-        except OSError as error:
-            sys.stderr.write(f"Cannot write VSCodium's theme: {error}\n")
-            return
-
-
-def strip_jsonc(text):
-    """Strip comments and trailing commas from JSONC.
-
-    A scanner rather than a regex, so `//` inside strings (URLs, paths) is
-    kept.
-    """
-    out = []
-    index, end = 0, len(text)
-    while index < end:
-        char = text[index]
-        if char == '"':
-            close = index + 1
-            while close < end:
-                if text[close] == "\\":
-                    close += 2
-                    continue
-                if text[close] == '"':
-                    break
-                close += 1
-            out.append(text[index:close + 1])
-            index = close + 1
-        elif text.startswith("//", index):
-            newline = text.find("\n", index)
-            # Keep the newline so line numbers in later errors still match.
-            index = end if newline < 0 else newline
-        elif text.startswith("/*", index):
-            close = text.find("*/", index + 2)
-            index = end if close < 0 else close + 2
-        else:
-            out.append(char)
-            index += 1
-    return re.sub(r",(\s*[}\]])", r"\1", "".join(out))
-
-
-def quoted_families(families):
-    """A CSS-ish font list as VS Code wants it: a name with a space is quoted."""
-    named = [family.strip() for family in families.split(",") if family.strip()]
-    return ", ".join(f"'{name}'" if " " in name else name for name in named)
-
-
-def shell_font():
-    """The shell's monospace family from its settings (what kitty uses)."""
     try:
-        with open(SHELL_SETTINGS_FILE, encoding="utf-8") as handle:
-            font = json.load(handle).get("fontMono")
-    except (OSError, ValueError):
-        font = None
-    return font or DEFAULT_MONO
-
-
-def jsonc_skip(text, index):
-    """The index past any whitespace and comments at `index`."""
-    while index < len(text):
-        if text[index].isspace():
-            index += 1
-        elif text.startswith("//", index):
-            newline = text.find("\n", index)
-            index = len(text) if newline < 0 else newline
-        elif text.startswith("/*", index):
-            close = text.find("*/", index + 2)
-            index = len(text) if close < 0 else close + 2
-        else:
-            break
-    return index
-
-
-def jsonc_string_end(text, index):
-    """The index past the string whose opening quote is at `index`."""
-    index += 1
-    while index < len(text):
-        if text[index] == "\\":
-            index += 2
-            continue
-        if text[index] == '"':
-            return index + 1
-        index += 1
-    return len(text)
-
-
-def jsonc_value_end(text, index):
-    """The index past the value that starts at `index`."""
-    if text[index] == '"':
-        return jsonc_string_end(text, index)
-    if text[index] in "[{":
-        depth = 0
-        while index < len(text):
-            char = text[index]
-            if char == '"':
-                index = jsonc_string_end(text, index)
+        ensure_state_dir()
+        with open(APP_PALETTE_FILE, "w", encoding="utf-8") as handle:
+            json.dump(colors, handle)
+        wallpaper = get_current_wallpaper()
+        if not wallpaper:
+            raise ValueError("select a desktop wallpaper first")
+        converter = shutil.which("magick")
+        if not converter:
+            raise ValueError("ImageMagick is required for Telegram's JPEG background")
+        image = subprocess.run(
+            [converter, wallpaper + "[0]", "-auto-orient", "-resize", "2560x2560>",
+             "-background", colors["background"], "-alpha", "remove", "-quality", "85", "jpg:-"],
+            check=True, capture_output=True, timeout=30).stdout
+        if len(image) > 4 * 1024 * 1024:
+            raise ValueError("Telegram background exceeds the 4 MiB generation limit")
+        ground = gtk_ground(colors["background"], colors["accent"])
+        surface = gtk_ground(colors["surface"], colors["accent"])
+        accent = lift(colors["accent"], 4.5, ground)
+        text = lift(colors["text"], 4.5, ground)
+        muted = lift(colors["textMuted"], 4.5, ground)
+        outgoing = mix(surface, colors["accent"], 0.22)
+        palette = {
+            "windowBg": ground, "windowFg": text, "windowBgOver": surface,
+            "windowBgRipple": surface, "windowFgOver": text,
+            "windowSubTextFg": muted, "windowSubTextFgOver": muted,
+            "windowBoldFg": text, "windowBoldFgOver": text,
+            "windowActiveTextFg": accent, "windowFgActive": lift(text, 4.5, accent),
+            "windowBgActive": accent, "windowShadowFg": "#00000066",
+            "windowShadowFgFallback": colors["border"], "shadowFg": "#00000040",
+            "boxBg": ground, "boxTextFg": text, "boxTitleFg": text,
+            "boxSearchBg": surface, "menuBg": surface, "menuBgOver": ground,
+            "menuIconFg": muted, "menuIconFgOver": text,
+            "scrollBg": colors["border"], "scrollBgOver": accent,
+            "scrollBarBg": muted, "scrollBarBgOver": text,
+            "dialogsBg": ground, "dialogsNameFg": text, "dialogsTextFg": muted,
+            "dialogsDateFg": muted, "dialogsBgOver": surface,
+            "dialogsNameFgOver": text, "dialogsTextFgOver": muted,
+            "dialogsBgActive": accent, "dialogsNameFgActive": lift(text, 4.5, accent),
+            "dialogsTextFgActive": lift(text, 4.5, accent),
+            "dialogsDateFgActive": lift(text, 4.5, accent),
+            "dialogsUnreadBg": accent, "dialogsUnreadFg": lift(text, 4.5, accent),
+            "historyTextInFg": lift(text, 4.5, surface),
+            "historyTextOutFg": lift(text, 4.5, outgoing),
+            "historyLinkInFg": lift(accent, 4.5, surface),
+            "historyLinkOutFg": lift(accent, 4.5, outgoing),
+            "historyComposeAreaBg": ground, "historyComposeAreaFg": text,
+            "historyComposeAreaFgService": muted,
+            "historyIconFg": muted, "historyIconFgOver": text,
+            "historyReplyNameInFg": lift(accent, 4.5, surface),
+            "historyReplyNameOutFg": lift(accent, 4.5, outgoing),
+            "msgInBg": surface, "msgOutBg": outgoing,
+            "msgInBgSelected": mix(surface, accent, 0.2),
+            "msgOutBgSelected": mix(outgoing, accent, 0.2),
+            "msgInServiceFg": lift(muted, 4.5, surface),
+            "msgOutServiceFg": lift(muted, 4.5, outgoing),
+            "historyFileNameInFg": lift(text, 4.5, surface),
+            "historyFileNameOutFg": lift(text, 4.5, outgoing),
+            "historyServiceBg": surface, "historyServiceFg": lift(text, 4.5, surface),
+            "topBarBg": ground, "topBarIconFg": muted, "topBarIconFgOver": text,
+            "profileStatusFg": muted, "profileStatusFgActive": accent,
+            "titleBg": ground, "titleFg": text, "titleBgActive": ground,
+            "titleFgActive": text, "settingsIconFg": muted,
+            "filterInputBorderFg": colors["border"], "filterInputActiveBg": surface,
+        }
+        # Telegram falls back to its light built-in values for omitted keys.
+        # Recolour its complete official dark reference, retaining native aliases,
+        # then override the semantic surfaces/text pairs above for readability.
+        template = os.path.join(os.path.dirname(__file__), "telegram-base.tdesktop-palette")
+        with open(template, encoding="utf-8") as handle:
+            entries = re.findall(r"^([A-Za-z_][A-Za-z_0-9]*):\s*([^;]+);", handle.read(), re.M)
+        complete = {}
+        for name, value in entries:
+            if not value.startswith("#"):
+                complete[name] = value
                 continue
-            if text.startswith(("//", "/*"), index):
-                index = jsonc_skip(text, index)
-                continue
-            if char in "[{":
-                depth += 1
-            elif char in "]}":
-                depth -= 1
-                if depth == 0:
-                    return index + 1
-            index += 1
-        return len(text)
-    end = index
-    while (end < len(text) and text[end] not in ",}\n"
-           and not text.startswith(("//", "/*"), end)):
-        end += 1
-    while end > index and text[end - 1].isspace():
-        end -= 1
-    return end
-
-
-def jsonc_members(text):
-    """{key: (start, end)} for the values of a JSONC object's top-level keys.
-
-    Comments are skipped rather than removed, so a value can be replaced in
-    place and everything around it kept. None when the text is not an
-    object this can read.
-    """
-    index = jsonc_skip(text, 0)
-    if index >= len(text) or text[index] != "{":
-        return None
-    members = {}
-    index += 1
-    while True:
-        index = jsonc_skip(text, index)
-        if index >= len(text):
-            return None
-        if text[index] == "}":
-            return members
-        if text[index] == ",":
-            index += 1
-            continue
-        if text[index] != '"':
-            return None
-        end = jsonc_string_end(text, index)
-        try:
-            key = json.loads(text[index:end])
-        except ValueError:
-            return None
-        index = jsonc_skip(text, end)
-        if index >= len(text) or text[index] != ":":
-            return None
-        index = jsonc_skip(text, index + 1)
-        if index >= len(text):
-            return None
-        end = jsonc_value_end(text, index)
-        members[key] = (index, end)
-        index = end
-
-
-def update_vscodium_settings(values):
-    """Rewrite, in place, the values of those keys already in settings.json.
-
-    Nothing is added and nothing else changes, comments included, so a key
-    removed by hand stays removed. VSCodium does not write the file back as
-    it exits, so the editor may be open.
-    """
-    try:
-        with open(VSCODIUM_SETTINGS_FILE, encoding="utf-8") as handle:
-            text = handle.read()
-    except OSError:
-        return
-    members = jsonc_members(text)
-    if not members:
-        return
-
-    edits = []
-    for key, value in values.items():
-        if key not in members:
-            continue
-        start, end = members[key]
-        try:
-            if json.loads(strip_jsonc(text[start:end])) == value:
-                continue
-        except ValueError:
-            pass
-        edits.append((start, end, json.dumps(value, ensure_ascii=False)))
-    if not edits:
-        return
-
-    for start, end, value in sorted(edits, reverse=True):
-        text = text[:start] + value + text[end:]
-    temporary = VSCODIUM_SETTINGS_FILE + ".impasto"
-    try:
-        with open(temporary, "w", encoding="utf-8") as handle:
-            handle.write(text)
-        os.replace(temporary, VSCODIUM_SETTINGS_FILE)
-    except OSError as error:
-        sys.stderr.write(f"Cannot update VSCodium's settings: {error}\n")
-
-
-def vscodium_font_settings(families):
-    """The settings.json keys that follow the shell's monospace family."""
-    font = quoted_families(families)
-    return {
-        "editor.fontFamily": font,
-        "terminal.integrated.fontFamily": font,
-        "debug.console.fontFamily": font,
-    }
-
-
-def vscodium_palette_settings(colors):
-    """The settings.json keys that follow the palette: extension options
-    with no theme colour to carry them."""
-    accent = colors.get("accent", "#0a84ff")
-    ground = gtk_ground(colors.get("background", "#1e1e1e"), accent)
-
-    def on(key):
-        return lift(colors.get(key, accent), MIN_CONTRAST, ground)
-
-    # Indent guides use the bracket-pair colour order, at VSCODIUM_GUIDE alpha.
-    guides = [on(key) + VSCODIUM_GUIDE
-              for key in ("accent", "yellow", "blue", "green", "accentHover")]
-    return {
-        # Folder icons follow the accent.
-        "material-icon-theme.folders.color": accent,
-        "indentRainbow.colors": guides,
-        "indentRainbow.errorColor": on("red") + VSCODIUM_GUIDE,
-    }
-
-
-def build_vscodium_settings(colors):
-    """The settings.json keys this repository manages.
-
-    Only what cannot go in the theme: fonts, layout and extension options.
-    Merged by `./setup vscodium`; the pushes keep its font and palette keys
-    current after that.
-    """
-    return {
-        # ── theme and icons ──
-        "workbench.colorTheme": VSCODIUM_LABEL,
-        "workbench.iconTheme": "material-icon-theme",
-        "workbench.productIconTheme": "fluent-icons",
-
-        # ── type ──
-        **vscodium_font_settings(shell_font()),
-        "editor.fontLigatures": True,
-        "editor.fontSize": 14,
-        "editor.lineHeight": 1.6,
-        "terminal.integrated.fontSize": 13,
-        "scm.inputFontFamily": "editor",
-
-        # ── window layout ──
-        # Activity bar along the top instead of down the left, which frees a
-        # 48px column.
-        "workbench.activityBar.location": "top",
-        "window.menuBarVisibility": "compact",
-        "window.commandCenter": False,
-        "workbench.layoutControl.enabled": False,
-        "chat.commandCenter.enabled": False,
-        "breadcrumbs.enabled": False,
-        "editor.minimap.enabled": False,
-        "workbench.startupEditor": "none",
-        "explorer.compactFolders": False,
-        "workbench.tree.indent": 14,
-        "editor.padding.top": 16,
-        "editor.padding.bottom": 16,
-
-        # ── rendering ──
-        "editor.cursorBlinking": "smooth",
-        "editor.cursorSmoothCaretAnimation": "on",
-        "editor.smoothScrolling": True,
-        "workbench.list.smoothScrolling": True,
-        "terminal.integrated.smoothScrolling": True,
-        "editor.stickyScroll.enabled": True,
-        "editor.bracketPairColorization.enabled": True,
-        "editor.guides.bracketPairs": "active",
-        # "trailing" rather than "boundary": with 4-space indents, boundary
-        # draws dots before every line, on top of the indent guides.
-        "editor.renderWhitespace": "trailing",
-        "editor.renderLineHighlight": "all",
-        "editor.linkedEditing": True,
-        "editor.overviewRulerBorder": False,
-
-        # ── extensions ──
-        # Error Lens: band behind the message only, not the whole line.
-        "errorLens.messageBackgroundMode": "message",
-        "errorLens.fontStyleItalic": True,
-        "errorLens.gutterIconsEnabled": False,
-        "indentRainbow.indicatorStyle": "light",
-        "indentRainbow.lightIndicatorStyleLineWidth": 1,
-        **vscodium_palette_settings(colors),
-    }
-
-
-def write_vscodium_settings(colors):
-    """Merge those keys into VSCodium's settings.json, keeping the rest.
-
-    Comments in the file are lost, which is why this runs on demand rather
-    than on every push. Written via a temporary file and a rename. A file that
-    cannot be parsed is left untouched.
-    """
-    if not shutil.which("codium"):
-        sys.stderr.write("codium is not installed; its settings are not written\n")
-        return False
-
-    settings = {}
-    if os.path.exists(VSCODIUM_SETTINGS_FILE):
-        try:
-            with open(VSCODIUM_SETTINGS_FILE, encoding="utf-8") as handle:
-                raw = handle.read()
-            settings = json.loads(strip_jsonc(raw)) if raw.strip() else {}
-        except (OSError, ValueError) as error:
-            sys.stderr.write(f"Cannot read VSCodium's settings, so they are "
-                             f"left alone: {error}\n")
-            return False
-        if not isinstance(settings, dict):
-            sys.stderr.write("VSCodium's settings are not an object, so they "
-                             "are left alone\n")
-            return False
-
-    settings.update(build_vscodium_settings(colors))
-    temporary = VSCODIUM_SETTINGS_FILE + ".impasto"
-    try:
-        os.makedirs(os.path.dirname(VSCODIUM_SETTINGS_FILE), exist_ok=True)
-        with open(temporary, "w", encoding="utf-8") as handle:
-            json.dump(settings, handle, indent=4, ensure_ascii=False)
-            handle.write("\n")
-        os.replace(temporary, VSCODIUM_SETTINGS_FILE)
-    except OSError as error:
-        sys.stderr.write(f"Cannot write VSCodium's settings: {error}\n")
-        return False
-    return True
-
-
-# ── FILE MANAGER ────────────────────────────────────────────────────────────
-#
-# Nautilus's colours come from gtk.css and its right-click menu is a
-# nautilus-python extension in home/; this is everything else, applied by
-# `./setup nautilus`. Its preferences live in gsettings, and its sidebar is
-# GTK's bookmarks file, which the user edits from the sidebar itself.
-NAUTILUS_BOOKMARKS_FILE = os.path.join(XDG_CONFIG_HOME, "gtk-3.0", "bookmarks")
-
-# (schema, key, value) for `gsettings set`. Only preferences: what Nautilus
-# remembers (window size, zoom, sort column) is left alone.
-NAUTILUS_SETTINGS = (
-    ("org.gtk.gtk4.Settings.FileChooser", "show-hidden", "false"),
-    ("org.gtk.gtk4.Settings.FileChooser", "sort-directories-first", "true"),
-    ("org.gnome.nautilus.preferences", "show-delete-permanently", "true"),
-    ("org.gnome.nautilus.preferences", "show-create-link", "true"),
-)
-
-# The sidebar's folders, as xdg-user-dir names. One already there is kept
-# where it is; the first goes on top when it is added, the rest at the end.
-NAUTILUS_PLACES = ("DESKTOP", "DOCUMENTS", "PICTURES", "DOWNLOAD")
-
-
-def user_dir(name):
-    """An XDG user directory, or None when it is unset or is $HOME."""
-    try:
-        path = subprocess.run(["xdg-user-dir", name], capture_output=True,
-                              text=True, timeout=10).stdout.strip()
-    except (OSError, subprocess.SubprocessError):
-        return None
-    if not path or os.path.realpath(path) == os.path.realpath(os.path.expanduser("~")):
-        return None
-    return path
-
-
-def write_nautilus_bookmarks():
-    """Add the user folders missing from the sidebar. Returns success."""
-    try:
-        with open(NAUTILUS_BOOKMARKS_FILE, encoding="utf-8") as handle:
-            lines = [line.rstrip("\n") for line in handle if line.strip()]
-    except FileNotFoundError:
-        lines = []
-    except OSError as error:
-        sys.stderr.write(f"Cannot read {NAUTILUS_BOOKMARKS_FILE}: {error}\n")
-        return False
-
-    held = {line.split(" ", 1)[0] for line in lines}
-    added = []
-    for name in NAUTILUS_PLACES:
-        path = user_dir(name)
-        if path and os.path.isdir(path):
-            uri = "file://" + quote(path)
-            if uri not in held:
-                added.append((name, uri))
-    if not added:
+            rgb = hex_to_rgb(value[:7])
+            hue, sat, brightness = colorsys.rgb_to_hsv(*(channel / 255 for channel in rgb))
+            if sat > 0.3 and brightness > 0.45:
+                key = "red" if hue < 0.06 or hue > 0.94 else (
+                    "yellow" if hue < 0.18 else "green" if hue < 0.46 else "accent")
+                mapped = lift(colors[key], 4.5, ground) if "Fg" in name else colors[key]
+            elif "Bg" in name:
+                mapped = ground if brightness < 0.17 else surface
+            elif "Fg" in name:
+                mapped = text if brightness > 0.65 else muted
+            else:
+                mapped = colors["border"]
+            complete[name] = mapped + (value[7:9] if len(value) == 9 else "")
+        complete.update(palette)
+        temporary = TELEGRAM_THEME_FILE + ".tmp"
+        with zipfile.ZipFile(temporary, "w", zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr("colors.tdesktop-theme", "\n".join(
+                f"{name}: {value};" for name, value in complete.items()) + "\n")
+            archive.writestr("background.jpg", image)
+        os.replace(temporary, TELEGRAM_THEME_FILE)
         return True
+    except (OSError, ValueError, KeyError, subprocess.SubprocessError) as error:
+        sys.stderr.write(f"Cannot generate Telegram theme: {error}\n")
+        return False
 
-    first = [uri for name, uri in added if name == NAUTILUS_PLACES[0]]
-    lines = first + lines + [uri for name, uri in added if name != NAUTILUS_PLACES[0]]
+
+def prepare_telegram_theme():
+    """Regenerate from the last selected palette, not a new wallpaper palette."""
     try:
-        os.makedirs(os.path.dirname(NAUTILUS_BOOKMARKS_FILE), exist_ok=True)
-        with open(NAUTILUS_BOOKMARKS_FILE, "w", encoding="utf-8") as handle:
-            handle.write("\n".join(lines) + "\n")
-    except OSError as error:
-        sys.stderr.write(f"Cannot write {NAUTILUS_BOOKMARKS_FILE}: {error}\n")
+        with open(APP_PALETTE_FILE, encoding="utf-8") as handle:
+            colors = json.load(handle)
+    except (OSError, ValueError) as error:
+        sys.stderr.write(f"Select an Eclipse palette first: {error}\n")
         return False
+    if not write_telegram_theme(colors):
+        return False
+    print(TELEGRAM_THEME_FILE)
+    print("Telegram: Settings > Chat Settings > theme menu > Choose from file; "
+          "select this archive, preview, then Keep Changes. Repeat after palette/wallpaper changes.")
     return True
-
-
-def apply_nautilus():
-    """Apply Nautilus's preferences and sidebar. Returns success.
-
-    A key gsettings refuses is reported and skipped, so an older Nautilus
-    still gets the ones it knows.
-    """
-    if not shutil.which("nautilus"):
-        sys.stderr.write("nautilus is not installed\n")
-        return False
-
-    refused = 0
-    for schema, key, value in NAUTILUS_SETTINGS:
-        try:
-            result = subprocess.run(["gsettings", "set", schema, key, value],
-                                    capture_output=True, text=True, timeout=10)
-        except (OSError, subprocess.SubprocessError) as error:
-            sys.stderr.write(f"{schema} {key}: {error}\n")
-            refused += 1
-            continue
-        if result.returncode != 0:
-            sys.stderr.write(f"{schema} {key}: {result.stderr.strip()}\n")
-            refused += 1
-
-    if refused:
-        sys.stderr.write(f"{refused} of {len(NAUTILUS_SETTINGS)} settings were "
-                         f"refused\n")
-    return write_nautilus_bookmarks() and refused == 0
 
 
 # ── BROWSER ─────────────────────────────────────────────────────────────────
@@ -3654,7 +2525,7 @@ ZEN_INSTALLS_FILE = os.path.join(ZEN_PROFILE_ROOT, "installs.ini")
 # Firefox's user stylesheet. Zen's own zen-themes.css in the same directory is
 # left alone.
 ZEN_CHROME_DIR = "chrome"
-ZEN_CHROME_FILE = "userChrome.css"
+ZEN_CHROME_FILE = "eclipse-palette.css"
 
 # Firefox ignores userChrome.css unless this preference is true. It goes in
 # user.js, which is read at startup and never rewritten; the browser
@@ -3662,6 +2533,7 @@ ZEN_CHROME_FILE = "userChrome.css"
 ZEN_PREFS_FILE = "user.js"
 ZEN_PREFS = (
     ("toolkit.legacyUserProfileCustomizations.stylesheets", "true"),
+    ("widget.use-xdg-desktop-portal.file-picker", "1"),
 )
 
 
@@ -3673,6 +2545,11 @@ def zen_profile():
     Profile" next to the real "Default (release)" one, so reading
     profiles.ini alone picks the wrong directory.
     """
+    selected = os.path.join(STATE_DIR, "zen-profile")
+    if os.path.isfile(selected):
+        with open(selected, encoding="utf-8") as handle:
+            profile = handle.read().strip()
+        return profile if os.path.isabs(profile) and os.path.isdir(profile) else None
     if not os.path.isfile(ZEN_PROFILES_FILE):
         return None
 
@@ -3686,18 +2563,24 @@ def zen_profile():
         return parser
 
     installs = read(ZEN_INSTALLS_FILE)
+    defaults = set()
     if installs:
         for section in installs.sections():
             path = installs.get(section, "Default", fallback="")
             candidate = os.path.join(ZEN_PROFILE_ROOT, path)
             if path and os.path.isdir(candidate):
-                return candidate
+                defaults.add(os.path.realpath(candidate))
+    if len(defaults) == 1:
+        return defaults.pop()
+    if len(defaults) > 1:
+        sys.stderr.write("Multiple Zen installation profiles: select one with ./setup sine\n")
+        return None
 
     profiles = read(ZEN_PROFILES_FILE)
     if not profiles:
         return None
 
-    fallback = None
+    candidates, defaults = set(), set()
     for section in profiles.sections():
         path = profiles.get(section, "Path", fallback="")
         if not path:
@@ -3706,11 +2589,16 @@ def zen_profile():
             path = os.path.join(ZEN_PROFILE_ROOT, path)
         if not os.path.isdir(path):
             continue
+        path = os.path.realpath(path)
+        candidates.add(path)
         if profiles.get(section, "Default", fallback="0") == "1":
-            return path
-        if fallback is None:
-            fallback = path
-    return fallback
+            defaults.add(path)
+    if len(defaults) == 1:
+        return defaults.pop()
+    if len(candidates) == 1:
+        return candidates.pop()
+    sys.stderr.write("Select the intended Zen profile with ./setup sine before palette integration\n")
+    return None
 
 
 def build_zen_css(colors):
@@ -3769,23 +2657,11 @@ def build_zen_css(colors):
     ]) + "\n"
 
 
-def build_zen_prefs():
-    """user.js, written whole: Firefox never writes to it."""
-    lines = [
-        "// Written by impasto. github.com/andreumassanet/impasto",
-        "// Read at startup and never written back, which is why it is here",
-        "// and not in prefs.js.",
-        "",
-    ]
-    lines += [f'user_pref("{name}", {value});' for name, value in ZEN_PREFS]
-    return "\n".join(lines) + "\n"
-
-
 def write_zen_css(colors):
-    """Write userChrome.css and user.js into the active Zen profile.
+    """Only own one palette file and a marked import/preference block.
 
-    Zen reads them when a window is created and at startup, so changes apply
-    on the next launch.
+    Sine's bootloader, mods, userContent and existing userChrome stay intact.
+    The import goes first because CSS imports must precede style rules.
     """
     if not shutil.which("zen-browser"):
         return
@@ -3795,12 +2671,32 @@ def write_zen_css(colors):
     try:
         chrome = os.path.join(profile, ZEN_CHROME_DIR)
         os.makedirs(chrome, exist_ok=True)
-        with open(os.path.join(chrome, ZEN_CHROME_FILE), "w",
-                  encoding="utf-8") as handle:
+        with open(os.path.join(chrome, ZEN_CHROME_FILE), "w", encoding="utf-8") as handle:
             handle.write(build_zen_css(colors))
-        with open(os.path.join(profile, ZEN_PREFS_FILE), "w",
-                  encoding="utf-8") as handle:
-            handle.write(build_zen_prefs())
+        path = os.path.join(chrome, "userChrome.css")
+        old = open(path, encoding="utf-8").read() if os.path.exists(path) else ""
+        # Remove only the exact inherited generated stylesheet shape, not
+        # arbitrary owner/Sine rules. Preserve its previous contents in state.
+        normalized = lambda value: re.sub(r"#[0-9a-fA-F]{6}", "#COLOR", value)
+        if old and normalized(old) == normalized(build_zen_css(colors)):
+            backup = os.path.join(STATE_DIR, "app-backups", "zen-userChrome.css")
+            os.makedirs(os.path.dirname(backup), exist_ok=True)
+            if not os.path.exists(backup):
+                with open(backup, "w", encoding="utf-8") as handle:
+                    handle.write(old)
+            old = ""
+        imported = '@import url("eclipse-palette.css"); /* Eclipse palette */\n'
+        if imported not in old:
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write(imported + re.sub(r'^@charset\s+[^;]+;\s*', '', old, count=1))
+        path = os.path.join(profile, ZEN_PREFS_FILE)
+        old = open(path, encoding="utf-8").read() if os.path.exists(path) else ""
+        start, end = "// BEGIN Eclipse palette", "// END Eclipse palette"
+        old = re.sub(re.escape(start) + r".*?" + re.escape(end) + r"\n?", "", old, flags=re.S)
+        block = "\n" + start + "\n" + "\n".join(
+            f'user_pref("{name}", {value});' for name, value in ZEN_PREFS) + "\n" + end + "\n"
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.write(old.rstrip() + block)
     except OSError as error:
         sys.stderr.write(f"Cannot write Zen's chrome: {error}\n")
 
@@ -3823,7 +2719,6 @@ def push_terminal_font(family):
         handle.write("# bar are set in the same face.\n")
         handle.write(f"font_family {first}\n")
 
-    update_vscodium_settings(vscodium_font_settings(family))
 
     kitten = shutil.which("kitten")
     if not kitten:
@@ -3983,6 +2878,11 @@ def set_wallpaper(chosen, transition="wipe"):
     save_state(state)
     link_current_wallpaper(image_path)
     extract_colors(image_path)
+    try:
+        with open(APP_PALETTE_FILE, encoding="utf-8") as handle:
+            write_telegram_theme(json.load(handle))
+    except (OSError, ValueError):
+        pass  # The first palette push generates the theme after first setup.
     return True
 
 
@@ -4048,7 +2948,7 @@ def main():
                "set-wallpaper <path> [transition] | "
                "restore | extract-colors [path] | set-theme <id> | "
                "push-terminal-palette <json> | push-terminal-font <family> | "
-               "apply-vscodium [json] | apply-nautilus | apply-vesktop")
+               "prepare-telegram")
     if len(sys.argv) < 2:
         sys.stderr.write(f"Usage: theme_manager.py {actions}\n")
         sys.exit(1)
@@ -4079,7 +2979,7 @@ def main():
     elif action == "push-terminal-palette" and argument:
         colors = json.loads(argument)
         push_terminal_palette(colors)
-        write_greetings(colors)
+        omp_theme.emit(colors)
         write_btop_theme(colors)
         write_cava_theme(colors)
         write_yazi_flavor(colors)
@@ -4088,24 +2988,16 @@ def main():
         write_gtk_theme(colors)
         write_icon_theme(colors)
         write_qt_theme(colors)
-        write_vesktop_css(colors)
+        write_telegram_theme(colors)
         write_spicetify_colors(colors)
-        write_vscodium_theme(colors)
-        update_vscodium_settings(vscodium_palette_settings(colors))
         write_zen_css(colors)
         refresh_spotify()
     elif action == "push-terminal-font" and argument:
         push_terminal_font(argument)
     elif action == "push-terminal-ground" and argument:
         push_terminal_ground(argument)
-    elif action == "apply-vscodium":
-        colors = json.loads(argument) if argument else (
-            extract_colors(get_current_wallpaper()) or {})
-        sys.exit(0 if write_vscodium_settings(colors) else 1)
-    elif action == "apply-nautilus":
-        sys.exit(0 if apply_nautilus() else 1)
-    elif action == "apply-vesktop":
-        sys.exit(0 if tick_vesktop_theme() else 1)
+    elif action == "prepare-telegram":
+        sys.exit(0 if prepare_telegram_theme() else 1)
     else:
         sys.stderr.write(f"Unknown action: {action}\n")
         sys.exit(1)

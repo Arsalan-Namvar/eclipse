@@ -45,10 +45,10 @@ Singleton {
           detail: "Processor, memory, disks, the network", panel: "stats" },
         { id: "settings",   icon: "󰒓", label: "Settings",
           detail: "The whole desk, in a window",           panel: "" },
-        { id: "pet",        icon: "󰏩", label: "Pet",
-          detail: "The creature living on the bar",        panel: "pet" },
-        { id: "games",      icon: "󰊗", label: "Games",
-          detail: "The arcade",                            panel: "games" },
+        { id: "github",     icon: "󰊤", label: "GitHub",
+          detail: "Contributions, repositories, issues and pull requests", panel: "github" },
+        { id: "omp",        icon: "󰚩", label: "OMP",
+          detail: "Oh My Pi sessions and status",         panel: "omp" },
         { id: "notes",      icon: "󰎞", label: "Notes",
           detail: "The deck of sticky notes",              panel: "notes" },
         { id: "board",      icon: "󰄲", label: "Task board",
@@ -73,7 +73,7 @@ Singleton {
           detail: "Effects and reactions for your calls",  panel: "camera" }
     ]
 
-    readonly property var defaultButtons: ["stats", "settings", "pet", "games", "notes", "board"]
+    readonly property var defaultButtons: ["stats", "settings", "github", "omp", "notes", "board"]
 
     // The grid when nothing is chosen, which the default layout fills.
     readonly property int defaultColumns: 6
@@ -302,20 +302,14 @@ Singleton {
             action: () => AudioService.toggleMute()
         },
         Toggle {
-            key: "dock"; icon: "󱂠"; label: "Dock"
-            detail: SettingsService.dockEnabled ? "Shown" : "Hidden"
-            active: SettingsService.dockEnabled
-            action: () => SettingsService.set("dockEnabled", !SettingsService.dockEnabled)
-        },
-        Toggle {
             key: "notch"; icon: "󰌢"; label: "Notch"
             detail: SettingsService.islandAttached ? "Attached" : "Floating"
             active: SettingsService.islandAttached
             action: () => SettingsService.set("islandAttached", !SettingsService.islandAttached)
         },
         Toggle {
-            // All four at once; the settings set them one by one.
-            readonly property var shadows: ["windowShadow", "barShadow", "dockShadow", "widgetShadow"]
+            // All retained surfaces at once; settings can choose individually.
+            readonly property var shadows: ["windowShadow", "barShadow"]
             readonly property int count: shadows.filter(key => SettingsService[key]).length
 
             key: "shadow"; icon: "󰘷"; label: "Shadows"
@@ -485,10 +479,7 @@ Singleton {
         { id: "weather",       name: "Weather",       icon: "󰖐", sizes: ["2x1", "2x2", "2x3", "4x2"] },
         { id: "calendar",      name: "Calendar",      icon: "󰃭", sizes: ["2x3", "2x4", "3x4"] },
         { id: "notifications", name: "Notifications", icon: "󰂚", sizes: ["3x2", "3x3", "2x4", "3x4", "2x6", "2x8", "3x8"] },
-        { id: "impasto",       name: "impasto",       icon: "󰏘", sizes: ["1x2", "2x2", "2x4"] },
-        { id: "pet",           name: "Pet",           icon: "󰏩", sizes: ["2x2", "2x3"] },
         { id: "clock",         name: "Clock",         icon: "󰥔", sizes: ["1x2", "2x2", "2x4"] },
-        { id: "games",         name: "Games",         icon: "󰊗", sizes: ["2x1", "2x2"] },
         { id: "notes",         name: "Notes",         icon: "󰎞", sizes: ["1x2", "2x2", "2x4"] },
         { id: "tasks",         name: "Tasks",         icon: "󰄲", sizes: ["1x2", "2x2", "2x3", "2x4"] },
         { id: "session",       name: "Session",       icon: "󰐥", sizes: ["1x1", "2x1", "3x1", "1x2", "2x2", "4x1"] },

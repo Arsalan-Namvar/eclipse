@@ -22,7 +22,6 @@ import Quickshell.Io
 import "./bar"
 import "./capture"
 import "./desktop"
-import "./dock"
 import "./lock"
 import "./services"
 import "./settings"
@@ -176,8 +175,7 @@ ShellRoot {
         }
     }
 
-    // Widgets under the windows, on every screen: a row carries the screen it
-    // is on, and every board has a grid of its own.
+    // Edge spectrum below application windows, with edge-only configuration.
     Variants {
         model: Quickshell.screens
 
@@ -188,21 +186,6 @@ ShellRoot {
         }
     }
 
-    // A dock on every screen, each drawn or not by `dockEverywhere` and
-    // which screen is live.
-    Variants {
-        model: Quickshell.screens
-
-        Dock {
-            required property var modelData
-
-            screen: modelData
-            live: modelData.name === root.liveScreenName
-
-            // The dock cannot see the island, so it asks.
-            onLauncherRequested: root.island?.toggle("launcher")
-        }
-    }
 
     // The screens' corners, rounded off only while the setting is on.
     Variants {
@@ -216,8 +199,7 @@ ShellRoot {
         }
     }
 
-    // Notes docked on the screen edges, on every screen, for the desktop's
-    // reason. A deck is a row like a widget and carries its screen too.
+    // Retained screen-edge note decks on every monitor.
     Variants {
         model: Quickshell.screens
 
@@ -246,14 +228,6 @@ ShellRoot {
         }
     }
 
-    Connections {
-        target: DesktopService
-
-        function onSettingsRequested(): void {
-            root.island?.close()
-            settingsWindow.open()
-        }
-    }
 
     // The bar's settings button, which closes the window it opened.
     Connections {
@@ -406,17 +380,6 @@ ShellRoot {
         onPressed: root.island?.toggle("palette")
     }
 
-    GlobalShortcut {
-        name: "pet"
-        description: "Open the pet"
-        onPressed: root.island?.toggle("pet")
-    }
-
-    GlobalShortcut {
-        name: "games"
-        description: "Open the games"
-        onPressed: root.island?.toggle("games")
-    }
 
     GlobalShortcut {
         name: "notes"
@@ -442,11 +405,6 @@ ShellRoot {
         onPressed: SettingsService.set("barHidden", !SettingsService.barHidden)
     }
 
-    GlobalShortcut {
-        name: "widgets"
-        description: "Hide or show the desktop widgets"
-        onPressed: SettingsService.set("desktopHidden", !SettingsService.desktopHidden)
-    }
 
     GlobalShortcut {
         name: "game"

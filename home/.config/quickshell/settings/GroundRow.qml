@@ -17,8 +17,7 @@ import "../components"
 SettingRow {
     id: root
 
-    // The setting that holds it: surfaceStyle, dockGround, desktopGround or
-    // terminalGround.
+    // The setting that holds it: surfaceStyle or terminalGround.
     required property string key
 
     // Empty, from a profile saved when the layer could follow the bar, is

@@ -1,7 +1,7 @@
 // ╭──────────────────────────────────────────────────────────────────────────╮
 // │                                                                          │
 // │   W I D G E T S   S E C T I O N                                          │
-// │   desktop · arranging, the widgets' look, and when they leave            │
+// │   screen edges · note decks, audio spectrum and when they leave           │
 // │                                                                          │
 // │   github.com/andreumassanet/impasto                                      │
 // │                                                                          │
@@ -9,17 +9,13 @@
 
 import QtQuick
 import QtQuick.Layouts
-import Quickshell
 
 import "../theme"
 import "../services"
 import "../components"
-import "../desktop"
 
-// The desktop under the windows: the way into arranging it, the look every
-// widget follows unless it has its own, and what leaves when a window opens.
-// Widgets are placed, resized and styled on the desktop itself; this page
-// only enters that mode.
+// Note decks and the audio spectrum are configured on the screen edges.
+// The editor controls their placement; this page controls when they hide.
 SettingsSection {
     id: root
 
@@ -30,81 +26,20 @@ SettingsSection {
     signal arranging()
 
     SettingGroup {
-        title: Tr.t("The desktop")
-        note: Tr.t("Widgets are arranged directly on the wallpaper.")
-        hint: Tr.t("Arranging brings the widgets in front of the windows, with a card of every module, moved by the space between them. Drag one onto the grid, pull a widget's corner to change its shape, click it for a look of its own, and drop it back on the card to take it off. Escape or the right button ends it, and the right button on any widget opens the same mode from the picture. This window closes meanwhile.")
+        title: Tr.t("Screen edges")
+        note: Tr.t("Note decks and an audio spectrum along the screen edges.")
+        hint: Tr.t("Edit opens the edge controls for adding, moving and configuring note decks and the spectrum. Escape leaves the editor. This window closes meanwhile.")
 
         SettingRow {
-            label: Tr.t("Arrange the desktop")
-            reading: DesktopService.widgets.length > 0
-                ? `${DesktopService.widgets.length} ${Tr.t("on the wallpaper")}`
-                : Tr.t("Nothing on the wallpaper yet")
+            label: Tr.t("Configure the edges")
 
             PillButton {
                 text: Tr.t("Edit")
                 implicitHeight: 30
                 onClicked: {
-                    // The card opens on the screen this window is on.
-                    DesktopService.edit(true, root.QsWindow.window?.screen?.name
-                        || MonitorService.effectivePrimaryName)
+                    DesktopService.edit(true)
                     root.arranging()
                 }
-            }
-        }
-    }
-
-    SettingGroup {
-        title: Tr.t("Look")
-        note: Tr.t("Every widget follows these unless it was given a look of its own.")
-        hint: Tr.t("While arranging, click a widget to override these for it alone. Modern shows a figure with a caption, Analogue draws an object such as a dial or a gauge, and Sticker cuts it out as coloured stickers on the wallpaper; the ground and the background set what the first two are made of and how opaque.")
-
-        SettingTiles {
-            label: Tr.t("Face")
-
-            Repeater {
-                model: DesktopService.themes
-
-                PreviewTile {
-                    id: themeTile
-
-                    required property var modelData
-
-                    stageHeight: 64
-                    caption: Tr.t(themeTile.modelData.label)
-                    selected: SettingsService.desktopTheme === themeTile.modelData.id
-                    onPicked: SettingsService.set("desktopTheme", themeTile.modelData.id)
-
-                    ThemeSwatch {
-                        anchors.centerIn: parent
-                        theme: themeTile.modelData.id
-                        factor: 0.3
-                    }
-                }
-            }
-        }
-
-        GroundRow {
-            key: "desktopGround"
-        }
-
-        SettingSlider {
-            label: Tr.t("Background")
-            value: SettingsService.desktopOpacity
-            from: 0
-            to: 100
-            stepSize: 5
-            unit: "%"
-            onMoved: value => SettingsService.set("desktopOpacity", Math.round(value))
-        }
-
-        SettingRow {
-            label: Tr.t("Shadow")
-            reading: SettingsService.widgetShadow
-                ? Tr.t("Lifted off the wallpaper") : Tr.t("Flat")
-
-            ToggleSwitch {
-                checked: SettingsService.widgetShadow
-                onToggled: checked => SettingsService.set("widgetShadow", checked)
             }
         }
     }

@@ -252,7 +252,7 @@ Scope {
         target: "panel"
 
         readonly property var names: ["launcher", "controls", "overview", "appearance", "palette",
-            "stats", "session", "pet", "games", "notes", "board", "keys", "packages",
+            "stats", "session", "github", "omp", "notes", "board", "keys", "packages",
             "machines", "servers", "screentime", "camera", "wifi", "bluetooth", "sound", "microphone", "brightness", "nightlight"]
 
         function open(name: string): string {
@@ -422,14 +422,6 @@ Scope {
 
         function toggle(): void {
             SettingsService.set("barHidden", !SettingsService.barHidden)
-        }
-    }
-
-    IpcHandler {
-        target: "widgets"
-
-        function toggle(): void {
-            SettingsService.set("desktopHidden", !SettingsService.desktopHidden)
         }
     }
 

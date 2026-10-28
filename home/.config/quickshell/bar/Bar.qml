@@ -227,9 +227,8 @@ PanelWindow {
         ? Math.max(root.bandX + root.bandWidth, root.islandRight) : root.islandRight
     readonly property bool wholeScreen: root.holding && ControlsService.editing
 
-    // No input at all while desktop widgets are being arranged: dragging one
-    // over the bar would move the pointer to this surface, and the desktop
-    // would drop the widget. None either where nothing is painted.
+    // Edge arrangement retains pointer ownership while a surface is dragged.
+    // Also ignore input wherever the bar is not painted.
     readonly property bool inert: DesktopService.editing || !root.painted || root.away
 
     // Zen (`barHidden`): the bar waits above the screen and the island comes

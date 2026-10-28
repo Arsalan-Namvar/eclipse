@@ -18,9 +18,8 @@ import "../theme"
 // Sticky notes: a title, a body and a tint. No state or date; those are tasks
 // (`TasksService`), and the two are independent.
 //
-// Shown by the bar chip, its detail, the notes panel, desktop widgets and edge
-// decks. Placement belongs to `DesktopService`. Notes are only edited in the
-// island, since the desktop never takes the keyboard.
+// Shown by the bar chip, detail, notes panel and retained screen-edge decks.
+// Placement belongs to DesktopService; note content is edited in the island.
 //
 // Stored in `notes.json` in the state directory, written after a short
 // debounce. Archived before deleted.
@@ -230,12 +229,10 @@ Singleton {
     readonly property int panelWidth: 560
     readonly property int panelHeight: 520
 
-    // The open note, or "" for the deck. Kept here because the panel is
-    // destroyed on close, and widgets and edge decks open straight onto a
-    // note.
+    // The open note, or "" for the deck, survives panel destruction on close.
     property string opened: ""
 
-    // Opened from outside the deck (widget, edge tab, detail, menu). Going
+    // Opened from outside the deck (edge tab, detail, menu). Going
     // back then closes the island instead of returning to the deck.
     property bool direct: false
 

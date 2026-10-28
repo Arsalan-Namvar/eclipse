@@ -1,0 +1,193 @@
+# Eclipse conjunction splash — original artwork and alignment motion.
+# Copyright 2026 Eclipse contributors. GPL-3.0-or-later; see repository LICENSE.
+# Dialogue/layout derived from Impasto by Andreu Massanet:
+# https://github.com/andreumassanet/impasto
+# Only Plymouth's script Image/Sprite/Window/Math and documented callbacks are used.
+
+Window.SetBackgroundTopColor(0.025, 0.027, 0.043);
+Window.SetBackgroundBottomColor(0.055, 0.051, 0.075);
+screen.x = Window.GetX();
+screen.y = Window.GetY();
+screen.w = Window.GetWidth();
+screen.h = Window.GetHeight();
+screen.cx = screen.x + screen.w / 2;
+screen.cy = screen.y + screen.h / 2;
+u = Math.Min(screen.w / 1920, screen.h / 1080);
+font = "Sans " + Math.Int(Math.Max(12, 17 * u));
+mode = Plymouth.GetMode();
+leaving = (mode == "shutdown" || mode == "reboot");
+
+fun scaled(name, width, height) {
+    return Image(name).Scale(Math.Max(1, Math.Int(width * u)),
+        Math.Max(1, Math.Int(height * u)));
+}
+
+# Preserve complete prompt/status text; constrain very long lines to the screen.
+fun text_image(text, red, green, blue) {
+    local.image = Image.Text(text, red, green, blue, 1, font, "center");
+    local.available = screen.w - 48 * u;
+    if (local.image.GetWidth() > local.available)
+        local.image = local.image.Scale(Math.Int(local.available),
+            Math.Max(1, Math.Int(local.image.GetHeight() * local.available / local.image.GetWidth())));
+    return local.image;
+}
+
+mark.image = scaled("mark.png", 256, 256);
+mark.sprite = Sprite(mark.image);
+mark.rest = screen.cy - 72 * u;
+mark.raised = screen.cy - 180 * u;
+mark.cy = mark.rest;
+word.image = scaled("wordmark.png", 300, 47);
+word.sprite = Sprite(word.image);
+ring[0].image = scaled("ring-a.png", 360, 360);
+ring[1].image = scaled("ring-b.png", 360, 360);
+for (i = 0; i < 2; i++)
+    ring[i].sprite = Sprite(ring[i].image);
+
+progress = 0;
+aligned = 0;
+if (leaving) {
+    progress = 1;
+    aligned = 1;
+}
+asking = 0;
+asked = 0;
+dots = 0;
+
+# A fixed track remains visible when Plymouth has not yet supplied progress.
+track.image = scaled("progress.png", 320, 2);
+track.sprite = Sprite(track.image);
+track.sprite.SetOpacity(0.18);
+rule.sprite = Sprite();
+rule.pixels = 0;
+
+entry.image = scaled("entry.png", 440, 60);
+entry.sprite = Sprite(entry.image);
+entry.x = screen.cx - entry.image.GetWidth() / 2;
+entry.y = screen.cy + 118 * u;
+entry.sprite.SetPosition(entry.x, entry.y, 20);
+prompt.sprite = Sprite();
+prompt.sprite.SetZ(21);
+bullet.image = scaled("bullet.png", 8, 8);
+bullet.most = 28;
+bullet.step = 13 * u;
+for (i = 0; i < bullet.most; i++) {
+    bullet[i].sprite = Sprite(bullet.image);
+    bullet[i].sprite.SetPosition(entry.x + 44 * u + i * bullet.step,
+        entry.y + entry.image.GetHeight() / 2 - bullet.image.GetHeight() / 2, 21);
+    bullet[i].sprite.SetOpacity(0);
+}
+
+status.sprite = Sprite();
+status.sprite.SetZ(30);
+message.sprite = Sprite();
+message.sprite.SetZ(31);
+farewell.sprite = Sprite();
+if (leaving) {
+    if (mode == "reboot")
+        farewell.image = text_image("Restarting", 0.80, 0.78, 0.74);
+    else
+        farewell.image = text_image("Shutting down", 0.80, 0.78, 0.74);
+    farewell.sprite.SetImage(farewell.image);
+    farewell.sprite.SetPosition(screen.cx - farewell.image.GetWidth() / 2,
+        screen.cy + 205 * u, 5);
+}
+
+fun place_mark() {
+    local.e = asked * asked * (3 - 2 * asked);
+    mark.cy = mark.rest + (mark.raised - mark.rest) * local.e;
+    mark.sprite.SetPosition(screen.cx - mark.image.GetWidth() / 2,
+        mark.cy - mark.image.GetHeight() / 2, 5);
+    word.sprite.SetPosition(screen.cx - word.image.GetWidth() / 2,
+        mark.cy + 178 * u, 5);
+    # The meridians begin displaced and approach conjunction once, not a spinner.
+    local.remaining = 1 - aligned;
+    ring[0].sprite.SetPosition(screen.cx - ring[0].image.GetWidth() / 2 - 44 * u * local.remaining,
+        mark.cy - ring[0].image.GetHeight() / 2 + 18 * u * local.remaining, 0);
+    ring[1].sprite.SetPosition(screen.cx - ring[1].image.GetWidth() / 2 + 44 * u * local.remaining,
+        mark.cy - ring[1].image.GetHeight() / 2 - 18 * u * local.remaining, 1);
+    ring[0].sprite.SetOpacity(0.32 + 0.38 * aligned);
+    ring[1].sprite.SetOpacity(0.32 + 0.38 * aligned);
+    track.sprite.SetPosition(screen.cx - track.image.GetWidth() / 2, mark.cy + 242 * u, 5);
+    rule.sprite.SetPosition(screen.cx - track.image.GetWidth() / 2, mark.cy + 242 * u, 6);
+    entry.sprite.SetOpacity(asked);
+    prompt.sprite.SetOpacity(asked);
+    track.sprite.SetOpacity(0.18 * (1 - asked));
+    rule.sprite.SetOpacity(1 - asked);
+    for (local.i = 0; local.i < bullet.most; local.i++) {
+        if (local.i < dots)
+            bullet[local.i].sprite.SetOpacity(asked);
+        else
+            bullet[local.i].sprite.SetOpacity(0);
+    }
+}
+
+fun password_callback(text, bullets) {
+    global.asking = 1;
+    global.dots = bullets;
+    if (!text)
+        text = "Unlock encrypted disk";
+    prompt.image = text_image(text, 0.93, 0.89, 0.80);
+    prompt.sprite.SetImage(prompt.image);
+    prompt.sprite.SetPosition(screen.cx - prompt.image.GetWidth() / 2,
+        entry.y - 18 * u - prompt.image.GetHeight(), 21);
+    place_mark();
+}
+
+fun normal_callback() {
+    global.asking = 0;
+    global.dots = 0;
+}
+
+fun progress_callback(duration, fraction) {
+    global.progress = Math.Max(progress, Math.Min(1, Math.Max(0, fraction)));
+    local.pixels = Math.Int(track.image.GetWidth() * progress);
+    # Avoid a zero-width image, and only allocate when visible progress changes.
+    if (local.pixels > 0 && local.pixels != rule.pixels) {
+        rule.image = track.image.Scale(local.pixels, track.image.GetHeight());
+        rule.sprite.SetImage(rule.image);
+        rule.pixels = local.pixels;
+    }
+}
+
+fun status_callback(text) {
+    status.image = text_image(text, 0.64, 0.63, 0.69);
+    status.sprite.SetImage(status.image);
+    status.sprite.SetPosition(screen.cx - status.image.GetWidth() / 2,
+        screen.y + screen.h - Math.Max(52 * u, 52) - status.image.GetHeight(), 30);
+}
+
+# Plymouth sends fsck/authentication/error messages through the same callback.
+# Keep them brighter and separate from changing routine status notifications.
+fun message_callback(text) {
+    message.image = text_image(text, 0.93, 0.84, 0.70);
+    message.sprite.SetImage(message.image);
+    message.sprite.SetPosition(screen.cx - message.image.GetWidth() / 2,
+        screen.y + screen.h - Math.Max(24 * u, 20) - message.image.GetHeight(), 31);
+    message.sprite.SetOpacity(1);
+}
+
+fun hide_message_callback(text) {
+    message.sprite.SetOpacity(0);
+}
+
+fun refresh_callback() {
+    # Ease only towards real boot progress; do not imply progress on a timer.
+    global.aligned += (progress - aligned) * 0.045;
+    if (asking > asked)
+        global.asked = Math.Min(asked + 1 / 19, 1);
+    else if (asking < asked)
+        global.asked = Math.Max(asked - 1 / 19, 0);
+    place_mark();
+}
+
+Plymouth.SetDisplayPasswordFunction(password_callback);
+Plymouth.SetDisplayNormalFunction(normal_callback);
+Plymouth.SetBootProgressFunction(progress_callback);
+Plymouth.SetUpdateStatusFunction(status_callback);
+Plymouth.SetDisplayMessageFunction(message_callback);
+Plymouth.SetHideMessageFunction(hide_message_callback);
+Plymouth.SetRefreshFunction(refresh_callback);
+if (leaving)
+    progress_callback(0, 1);
+place_mark();

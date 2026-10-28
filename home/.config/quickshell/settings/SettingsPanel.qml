@@ -29,6 +29,7 @@ Item {
 
     signal closed()
     signal panelRequested(string panel)
+    signal arrangementRequested()
 
     readonly property int gap: 12
 
@@ -49,7 +50,7 @@ Item {
           tabs: [{ id: "style", label: Tr.t("Style") },
                  { id: "layout", label: Tr.t("Layout") },
                  { id: "workspaces", label: Tr.t("Workspaces") }],
-          keywords: "bar style grouped spread one capsule bezel frame rounded corners screen sides capsules wallpaper every screen monitors height margin scale ground glass classic liquid shadow layout left right split drag catalogue chip icon ring figure hover shape modules media claude battery timer volume brightness network wifi bluetooth weather stats cpu updates pet capture record screenshot buttons workspaces strip shown available shared per screen",
+          keywords: "bar style grouped spread one capsule bezel frame rounded corners screen sides capsules wallpaper every screen monitors height margin scale ground glass classic liquid shadow layout left right split drag catalogue chip icon ring figure hover shape modules media battery timer volume brightness network wifi bluetooth weather stats cpu updates capture record screenshot buttons workspaces strip shown available shared per screen",
           page: barPage },
 
         { id: "island", category: "shell", icon: "󰌢", label: Tr.t("Island"),
@@ -62,7 +63,7 @@ Item {
         { id: "controls", category: "shell", icon: "󰕰", label: Tr.t("Control Centre"),
           blurb: Tr.t("What the island opens onto when you click it."),
           tabs: [],
-          keywords: "controls control centre center panel doors buttons row pet games notes board tasks kanban stats blocks grid toggles tiles arrange edit tray wifi bluetooth airplane microphone focus",
+          keywords: "controls control centre center panel doors buttons row notes board tasks kanban stats blocks grid toggles tiles arrange edit tray wifi bluetooth airplane microphone focus",
           page: controlsPage },
 
         { id: "launcher", category: "shell", icon: "󰍉", label: Tr.t("Launcher"),
@@ -73,22 +74,16 @@ Item {
           keywords: "launcher search apps results calculate run window timer note task board prefix sigil order recent frequency clipboard history copy paste images wipe lock",
           page: launcherPage },
 
-        { id: "dock", category: "shell", icon: "󱂩", label: Tr.t("Dock"),
-          blurb: Tr.t("The dock and the applications kept on it."),
+        { id: "widgets", category: "shell", icon: "󰕮", label: Tr.t("Screen edges"),
+          blurb: Tr.t("Note decks and the audio spectrum on the screen edges."),
           tabs: [],
-          keywords: "dock apps applications launcher pinned kept favourite favorite running edge bottom left right align icon size magnify ground glass classic liquid background opacity shadow autohide taskbar menu windows close every screen monitors",
-          page: dockPage },
-
-        { id: "widgets", category: "shell", icon: "󰕮", label: Tr.t("Desktop"),
-          blurb: Tr.t("What sits on the wallpaper, under the windows."),
-          tabs: [],
-          keywords: "widgets desktop wallpaper widget place drag size shape arrange edit tray face theme analogue modern sticker ground glass classic liquid background opacity shadow edges deck notes spectrum empty workspace",
+          keywords: "desktop edges deck notes spectrum audio place arrange edit configure empty workspace hide",
           page: widgetsPage },
 
         { id: "modules", category: "shell", icon: "󰆧", label: Tr.t("Modules"),
-          blurb: Tr.t("What the modules know, on the bar, the desktop and the panels."),
+          blurb: Tr.t("What the modules know, on the bar and the panels."),
           tabs: [],
-          keywords: "modules weather location place city github contributions username markets crypto bitcoin price currency exchange rate pet creature plush paper pixel egg species style lyrics lrclib song music notes note handwriting",
+          keywords: "modules weather location place city github contributions username lyrics lrclib song music notes note handwriting",
           page: modulesPage },
 
         { id: "appearance", category: "desk", icon: "󰏘", label: Tr.t("Appearance"),
@@ -97,7 +92,7 @@ Item {
                  { id: "terminal", label: Tr.t("Terminal") },
                  { id: "type", label: Tr.t("Type") },
                  { id: "motion", label: Tr.t("Motion") }],
-          keywords: "appearance theme colour color palette wallpaper transition fade wipe wave circle random terminal kitty ground glass greeting fastfetch fa scene lava lamp critters koi invaders font family sans mono nerd icons typeface animation speed pace curve easing motion game mode performance",
+          keywords: "appearance theme colour color palette wallpaper transition fade wipe wave circle random terminal kitty ground glass font family sans mono nerd icons typeface animation speed pace curve easing motion game mode performance",
           page: appearancePage },
 
         { id: "windows", category: "desk", icon: "󰖯", label: Tr.t("Windows"),
@@ -136,6 +131,11 @@ Item {
           keywords: "session lock blur password suspend security idle timeout sleep screen off dpms away never lock after avatar picture name account clock stacked inline flip face unlock howdy camera infrared enrol enroll scan faces recognise music song lyrics cover now playing",
           page: sessionPage },
 
+        { id: "vpn", category: "session", icon: "󰌾", label: Tr.t("VPN"),
+          blurb: Tr.t("OpenVPN and WireGuard profiles managed by NetworkManager."),
+          tabs: [], keywords: "vpn openvpn wireguard import manual tunnel network routes dns",
+          page: vpnPage },
+
         { id: "system", category: "session", icon: "󰍛", label: Tr.t("System"),
           blurb: Tr.t("Profiles, updates, language and this machine."),
           tabs: [{ id: "profiles", label: Tr.t("Profiles") },
@@ -159,7 +159,6 @@ Item {
         "widgets": "shell/desktop/#arranging",
         "modules": "shell/desktop/",
         "controls": "shell/control-centre/#arranging",
-        "dock": "shell/dock/#settings",
         "launcher": "shell/launcher/#settings",
         "launcher/sigils": "shell/launcher/#modes",
         "launcher/clipboard": "shell/launcher/#the-clipboard",
@@ -295,32 +294,19 @@ Item {
                 anchors.margins: 8
                 spacing: 8
 
-                // ── SIGNATURE ───────────────────────────────────────────────
-                //
-                // The name in the script face, beside the palette board painted
-                // in the active palette.
+                // Original Eclipse wordmark; internal profile and IPC names stay unchanged.
                 Item {
                     Layout.fillWidth: true
                     Layout.topMargin: 4
                     implicitHeight: 38
 
-                    Row {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: 8
-
-                        PaletteBoard {
-                            anchors.verticalCenter: parent.verticalCenter
-                            size: 34
-                        }
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: "impasto"
-                            font.family: Theme.fontSignature
-                            font.pixelSize: 28
-                            color: Theme.text
-                        }
+                    Image {
+                        anchors.centerIn: parent
+                        width: 180
+                        height: 28
+                        source: "../assets/eclipse-wordmark.svg"
+                        fillMode: Image.PreserveAspectFit
+                        Accessible.name: "Eclipse"
                     }
                 }
 
@@ -574,18 +560,13 @@ Item {
 
     Component { id: barPage;        BarSection {} }
     Component { id: islandPage;     IslandSection {} }
-    // Widgets are arranged on the desktop itself, behind this window.
+    // Edge notes and the spectrum are arranged outside this window.
     Component { id: widgetsPage;    WidgetsSection {
         onArranging: root.closed() } }
     Component { id: modulesPage;    ModulesSection {} }
-    // Open the control centre before closing, while this panel still exists
-    // to emit the request.
+    // The persistent window owns the handoff; this page is unloaded on close.
     Component { id: controlsPage;   ControlsSection {
-        onArranging: {
-            root.panelRequested("controls")
-            root.closed()
-        } } }
-    Component { id: dockPage;       DockSection {} }
+        onArranging: root.arrangementRequested() } }
     Component { id: launcherPage;   LauncherSection {} }
     Component { id: appearancePage; AppearanceSection {
         onPanelRequested: name => root.panelRequested(name) } }
@@ -594,5 +575,6 @@ Item {
     Component { id: monitorsPage;   MonitorsSection {} }
     Component { id: keysPage;       KeysSection {} }
     Component { id: sessionPage;    SessionSection {} }
+    Component { id: vpnPage;        VpnSection {} }
     Component { id: systemPage;     SystemSection {} }
 }

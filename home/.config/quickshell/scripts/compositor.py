@@ -50,6 +50,9 @@ OPTIONS = [
     ("decoration:blur:size", "int"),
     ("decoration:blur:passes", "int"),
     ("input:kb_layout", "str"),
+    ("input:kb_variant", "str"),
+    ("input:kb_model", "str"),
+    ("input:kb_rules", "str"),
     # The layout-switch key; without one a second layout is unreachable.
     ("input:kb_options", "str"),
     ("input:repeat_rate", "int"),
@@ -132,7 +135,7 @@ def get(option, kind):
 
 
 def layouts():
-    """Every keyboard layout xkb knows, as {id, label}, from the rules list."""
+    """Layouts and exact variants from the compositor's installed XKB rules."""
     for path in XKB_RULES:
         try:
             with open(path, encoding="utf-8", errors="replace") as handle:
@@ -141,20 +144,27 @@ def layouts():
             continue
 
         found = []
-        inside = False
+        variants = []
+        section = ""
         for line in lines:
-            # The file is sections introduced by "! <name>"; everything until
-            # the next "!" belongs to the one before it.
             if line.startswith("!"):
-                inside = line.strip() == "! layout"
-                continue
-            if not inside or not line.strip():
+                section = line[1:].strip()
                 continue
             parts = line.strip().split(None, 1)
-            if len(parts) == 2:
-                found.append({"id": parts[0], "label": parts[1]})
+            if len(parts) != 2:
+                continue
+            if section == "layout":
+                found.append({"id": parts[0], "variant": "", "label": parts[1]})
+            elif section == "variant":
+                layout, separator, label = parts[1].partition(":")
+                if separator:
+                    variants.append({"id": layout.strip(), "variant": parts[0],
+                                     "label": label.strip()})
         if found:
-            return found
+            labels = {entry["id"]: entry["label"] for entry in found}
+            for entry in variants:
+                entry["label"] = f'{labels.get(entry["id"], entry["id"])} · {entry["label"]}'
+            return found + variants
     return []
 
 

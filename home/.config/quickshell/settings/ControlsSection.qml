@@ -58,10 +58,7 @@ SettingsSection {
                 PillButton {
                     text: Tr.t("Edit")
                     implicitHeight: 30
-                    onClicked: {
-                        ControlsService.edit(true)
-                        root.arranging()
-                    }
+                    onClicked: root.arranging()
                 }
             }
         }

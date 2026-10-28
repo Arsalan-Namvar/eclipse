@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="none">
+  <title>Eclipse outer meridian</title>
+  <desc>Original Eclipse artwork, Copyright 2026 Eclipse contributors; GPL-3.0-or-later.</desc>
+  <g stroke="#cbbb92" stroke-width="2">
+    <path d="M284 50 A272 272 0 0 0 50 284 M50 356 A272 272 0 0 0 284 590 M356 590 A272 272 0 0 0 590 356 M590 284 A272 272 0 0 0 356 50"/>
+    <path d="M320 36 V58 M320 582 V604 M36 320 H58 M582 320 H604"/>
+  </g>
+</svg>

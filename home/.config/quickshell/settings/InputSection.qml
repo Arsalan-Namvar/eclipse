@@ -36,11 +36,11 @@ SettingsSection {
     ].concat(Theme.fixedColours.map(entry =>
         ({ id: entry.id, label: Tr.t(entry.label), swatch: entry.id })))
 
-    readonly property string switchOption:
-        CompositorService.value("input:kb_options", "")
+    readonly property string switchOption: CompositorService.layoutSwitch(
+        CompositorService.keyboardValue("input:kb_options", "grp:caps_toggle"))
 
     readonly property int layoutCount:
-        CompositorService.value("input:kb_layout", "us")
+        CompositorService.keyboardValue("input:kb_layout", "us,ir")
             .split(",").filter(entry => entry.trim() !== "").length
 
 
@@ -56,8 +56,9 @@ SettingsSection {
             note: Tr.t("Loaded in this order; the first is active at login.")
 
             LayoutPicker {
-                current: CompositorService.value("input:kb_layout", "us")
-                onChanged: value => CompositorService.remember("input:kb_layout", value)
+                current: CompositorService.keyboardValue("input:kb_layout", "us,ir")
+                variants: CompositorService.keyboardValue("input:kb_variant", ",winkeys")
+                onChanged: (layouts, variants) => CompositorService.rememberLayouts(layouts, variants)
             }
 
             // Locked rather than hidden while only one layout is loaded.
@@ -70,7 +71,7 @@ SettingsSection {
                     options: CompositorService.layoutSwitches.map(
                         entry => ({ id: entry.id, label: Tr.t(entry.label) }))
                     current: root.switchOption
-                    onSelected: id => CompositorService.remember("input:kb_options", id)
+                    onSelected: id => CompositorService.rememberLayoutSwitch(id)
                 }
             }
         }

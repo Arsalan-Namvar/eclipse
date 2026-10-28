@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" fill="none">
+  <title>Eclipse inclined meridian</title>
+  <desc>Original Eclipse artwork, Copyright 2026 Eclipse contributors; GPL-3.0-or-later.</desc>
+  <g stroke="#8d899e" stroke-width="2">
+    <ellipse cx="320" cy="320" rx="246" ry="124" transform="rotate(-42 320 320)"/>
+    <path d="M139 126 L151 140 M489 500 L501 514 M126 501 L140 489 M500 151 L514 139"/>
+  </g>
+</svg>

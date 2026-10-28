@@ -522,17 +522,6 @@ ColumnLayout {
                     }
                 }
 
-                // Marks apps kept on the dock, which is why they rank near the
-                // top of an empty query.
-                Text {
-                    Layout.alignment: Qt.AlignVCenter
-                    visible: row.modelData.kind === "app"
-                        && LauncherService.favourites.indexOf(row.modelData.id) >= 0
-                    text: "󱂩"
-                    font.family: Theme.fontMono
-                    font.pixelSize: 12
-                    color: Theme.textMuted
-                }
 
                 // A mode row shows its sigil as a keycap, so it also teaches
                 // the shortcut. The box gives every character the same size

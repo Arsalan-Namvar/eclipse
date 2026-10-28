@@ -12,8 +12,10 @@
 
 return {
     terminal     = "kitty",
-    file_manager = "nautilus --new-window",
-
-    -- The system default browser.
-    browser      = [[gtk-launch "$(xdg-settings get default-web-browser)"]],
+    file_manager = "strata",
+    browser      = [["$HOME/.local/bin/eclipse-browser"]],
+    editor       = "kitty -- nvim",
+    agent        = [[bash "$HOME/.config/quickshell/scripts/omp-launch.sh" --general]],
+    music        = "spotify",
+    messenger    = "telegram-desktop",
 }

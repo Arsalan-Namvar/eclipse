@@ -28,7 +28,7 @@ EditTray {
 
     // Where the card stands, handed in by the bar: centred under the island,
     // or beside it from `homeLeft`, with as many columns as `room` takes and
-    // `tall` high. It is neither moved nor resized: only the desktop's is.
+    // `tall` high. It is neither moved nor resized.
     property real homeTop: 0
     property real homeLeft: -1
     property real room: 0
@@ -47,7 +47,7 @@ EditTray {
         toggles: "controls", volume: "controls", brightness: "controls", media: "controls",
         appearance: "controls", session: "controls", shortcuts: "controls",
         clock: "glance", calendar: "glance", weather: "glance", notifications: "glance",
-        notes: "personal", tasks: "personal", pet: "personal", games: "personal", impasto: "personal"
+        notes: "personal", tasks: "personal", impasto: "personal"
     })
 
     entries: ControlsService.catalogue.map(entry => {
@@ -58,9 +58,7 @@ EditTray {
     unitWidth: Theme.centreCellWidth
     unitHeight: Theme.centreCellHeight
     unitGap: Theme.centreGutter
-    // A block is drawn denser than a desktop widget, so it is shown larger
-    // than the desktop's three quarters: at nine tenths, six across and five
-    // down, the card opens at the desktop card's size.
+    // Show the blocks at nine tenths size, six across and five down.
     readonly property bool beside: root.homeLeft >= 0
     startColumns: root.beside
         ? Math.max(1, Math.floor((root.room - 2 * root.pad + root.street) / root.strideX)) : 6

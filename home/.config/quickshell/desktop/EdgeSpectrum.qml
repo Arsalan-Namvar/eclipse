@@ -18,9 +18,8 @@ import "../services"
 // shows all of it, and beside a window only its foot shows, in the margin the
 // window leaves.
 //
-// At rest it takes no input. While arranging the whole strip is its handle:
-// a click opens its inspector, and dragging it onto another edge moves it
-// there, onto the grid makes it a widget, and onto the card takes it off.
+// While arranging, click to configure, drag to another free edge, or drop
+// onto the configuration card to remove the surface.
 Item {
     id: root
 
@@ -72,10 +71,8 @@ Item {
 
     // ── ARRANGING ───────────────────────────────────────────────────────────
     //
-    // A click selects it; a press that moves carries it. The strip stays where
-    // it is while its card follows the pointer; the edge under the pointer
-    // lights (`DeckService.receiving`) unless it already has a spectrum, and
-    // over the grid the square it would take is marked.
+    // The strip stays put while its handle follows the pointer. Only free
+    // screen edges accept a drop.
 
     TapHandler {
         enabled: root.editing
@@ -99,17 +96,13 @@ Item {
             }
             const pointer = root.pointer()
             const edge = DeckService.receiving
-            const spot = DesktopService.landing
             const removed = DesktopService.overTray(root.screenName, pointer.x, pointer.y)
             DesktopService.dragging = ""
-            DesktopService.landing = null
             DeckService.receiving = ""
             if (removed)
                 DesktopService.remove(root.key)
             else if (edge !== "")
                 DesktopService.setSpectrumEdge(root.key, root.screenName, edge)
-            else if (spot)
-                DesktopService.spectrumToGrid(root.key, spot.screen, spot.col, spot.row)
         }
 
         onCentroidChanged: root.aim()
@@ -138,44 +131,37 @@ Item {
         const edge = over ? "" : DesktopService.edgeAt(pointer.x, pointer.y, root.board.width, root.board.height)
         DeckService.receivingScreen = name
         DeckService.receiving = DesktopService.spectrumTakes(name, edge) ? edge : ""
-        if (over || edge !== "") {
-            DesktopService.landing = null
-            return
-        }
-        const familyId = DesktopService.familiesFor("spectrum")[0] ?? "4x2"
-        const spot = DesktopService.nearestFree(name,
-            DesktopService.cellX(name, hand.x), DesktopService.cellY(name, hand.y), familyId, "")
-        DesktopService.landing = spot
-            ? { screen: name, col: spot.col, row: spot.row, family: familyId } : null
     }
 
-    // The card in the hand, as the tray draws it. Built only while it is
-    // carried: hidden bars still listen and still move.
+    // A silent sample follows the pointer without loading a grid widget face.
     Loader {
         id: hand
-
-        readonly property var size: DesktopService.sizeFor("4x2", root.screenName)
 
         parent: root.board
         z: 10
         active: root.held
-        width: hand.size.width
-        height: hand.size.height
+        width: 180
+        height: 80
         opacity: 0.9
 
         sourceComponent: Rectangle {
-            radius: Theme.desktopRadius
+            radius: Theme.radiusSmall
             color: Theme.island
             border.color: Theme.accent
             border.width: 2
 
-            Face {
+            SpectrumBars {
                 anchors.fill: parent
-                moduleId: "spectrum"
-                family: "4x2"
-                row: root.row
-                ink: DesktopService.inkFor(null)
-                enabled: false
+                anchors.margins: 8
+                sample: true
+                style: root.looks.look
+                fillStyle: root.looks.fill
+                color: root.looks.color
+                color2: root.looks.color2
+                barWidth: root.looks.bar
+                gap: root.looks.gap
+                lowsAt: root.looks.lows
+                peaks: root.looks.peaks
             }
         }
     }

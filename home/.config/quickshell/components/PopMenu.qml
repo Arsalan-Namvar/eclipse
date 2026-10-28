@@ -13,10 +13,8 @@ import Quickshell
 
 import "../theme"
 
-// A small context menu with the dock menu's look (plate, row height, fixed
-// width), so right-click menus on the wallpaper, widgets and dock match.
-//
-// Drawn inside the owning surface, not as a popup (see `DockMenu`). It never
+// A small context menu: plate, fixed width and shared row spacing.
+// Drawn inside its owning surface rather than a popup. It never
 // takes the keyboard: it closes on a click outside, a right click, or a
 // choice.
 //
@@ -29,8 +27,8 @@ Item {
 
     signal chosen(string id)
 
-    implicitWidth: Theme.dockMenuWidth
-    implicitHeight: column.implicitHeight + 2 * Theme.dockMenuPadding
+    implicitWidth: Theme.menuWidth
+    implicitHeight: column.implicitHeight + 2 * Theme.menuPadding
     width: implicitWidth
     height: implicitHeight
 
@@ -46,7 +44,7 @@ Item {
         id: column
 
         anchors.fill: parent
-        anchors.margins: Theme.dockMenuPadding
+        anchors.margins: Theme.menuPadding
         spacing: 0
 
         Repeater {
@@ -60,7 +58,7 @@ Item {
                 required property var modelData
 
                 Layout.fillWidth: true
-                Layout.preferredHeight: Theme.dockMenuRow
+                Layout.preferredHeight: Theme.menuRow
                 radius: Theme.radiusSmall
                 color: rowMouse.containsMouse ? Theme.surfaceHoverIn(QsWindow.window) : Qt.alpha(Theme.surfaceHoverIn(QsWindow.window), 0)
 

@@ -17,7 +17,7 @@ import "../bar/modules"
 
 // The "The bar" part of Bar & Island: how every chip reads (one setting for
 // the whole bar), then the bar layout itself (`LayoutEditor`). Settings that
-// belong to individual modules are on the Desktop page.
+// belong to individual modules are on the Modules page.
 ColumnLayout {
     id: root
 
@@ -48,7 +48,7 @@ ColumnLayout {
                     Sample {
                         anchors.centerIn: parent
                         shape: shapeTile.modelData.id
-                        ids: ["volume", "battery", "claude"]
+                        ids: ["volume", "battery", "omp"]
                         reveal: SettingsService.chipFigure === "on"
                             || (SettingsService.chipFigure === "hover" && shapeTile.hovered) ? 1 : 0
                     }

@@ -118,6 +118,19 @@ Singleton {
         SettingsService.set(key, next)
     }
 
+    // Layout and variant lists are positional: write them together so a
+    // reordered Persian entry cannot inherit another layout's variant.
+    function rememberLayouts(layouts: string, variants: string): void {
+        const next = Object.assign({}, root.keyboard ?? ({}))
+        next["input:kb_layout"] = layouts
+        next["input:kb_variant"] = variants
+        SettingsService.set("keyboard", next)
+    }
+
+    function keyboardValue(option: string, fallback: string): string {
+        return String(root.keyboard?.[option] ?? root.value(option, fallback))
+    }
+
     // Emptying the store doesn't undo what Hyprland already holds, so the
     // config is reloaded to restore its own values.
     function restoreDefaults(): void {
@@ -285,19 +298,31 @@ Singleton {
         }
     }
 
-    function labelForLayout(id: string): string {
-        const found = root.layouts.find(entry => entry.id === id)
-        return found ? found.label : id
+    function labelForLayout(id: string, variant: string): string {
+        const found = root.layouts.find(entry => entry.id === id && entry.variant === variant)
+        return found ? found.label : id + (variant ? " (" + variant + ")" : "")
     }
 
-    // xkb group-switch options, passed through by Hyprland. Without one, a
-    // second layout is loaded but unreachable.
     readonly property var layoutSwitches: [
-        { id: "", label: "None" },
+        { id: "grp:caps_toggle", label: "Caps Lock" },
         { id: "grp:alt_shift_toggle", label: "Alt + Shift" },
-        { id: "grp:win_space_toggle", label: "Super + Space" },
-        { id: "grp:caps_toggle", label: "Caps Lock" }
+        { id: "", label: "None" }
     ]
+
+    function layoutSwitch(options: string): string {
+        const tokens = options.split(",")
+        return root.layoutSwitches.find(entry => entry.id && tokens.includes(entry.id))?.id ?? ""
+    }
+
+    function rememberLayoutSwitch(id: string): void {
+        // Only group toggles belong to this control; keep unrelated options
+        // (Compose, third-level selection, etc.) exactly as configured.
+        const tokens = root.keyboardValue("input:kb_options", "grp:caps_toggle")
+            .split(",").filter(entry => entry && !entry.startsWith("grp:"))
+        if (id)
+            tokens.push(id)
+        root.remember("input:kb_options", SettingsService.keyboardOptions(tokens.join(",")))
+    }
 
     // ── CURSOR ──────────────────────────────────────────────────────────────
     //
@@ -402,29 +427,18 @@ Singleton {
         root.applyShadow()
     }
 
-    // ── THE BAR'S AND THE DOCK'S GROUNDS ────────────────────────────────────
-    //
-    // A blur behind the bar's layer while its ground lets the screen through
-    // (`Theme.islandGround`), and none while it is solid, where it would only
-    // reach the shadow round the island. The dock's the same, and also under
-    // a classic capsule below full opacity. Named, so a push replaces the
-    // last. The alpha floor sits under the thinnest ground and over the empty
-    // surface; the shadow's densest band, just outside a shape, is blurred
-    // with it, as the edge of a pane blurs what is under it.
+    // Blur the retained bar/island only while its ground is translucent.
+    // The alpha floor excludes the empty part of the layer surface.
     function applyGround(): void {
         root.groundSetter.command = ["hyprctl", "eval",
             `hl.layer_rule({ name = "impasto-bar-blur", match = { namespace = "^(impasto-bar)$" }, blur = true, ignore_alpha = 0.12, enabled = ${
-                Theme.solid || SettingsService.gameMode ? "false" : "true"} }) `
-            + `hl.layer_rule({ name = "impasto-dock-blur", match = { namespace = "^(impasto-dock)$" }, blur = true, ignore_alpha = 0.12, enabled = ${
-                root.dockSeeThrough && !SettingsService.gameMode ? "true" : "false"} })`]
+                Theme.solid || SettingsService.gameMode ? "false" : "true"} })`]
         root.groundSetter.running = true
     }
 
     readonly property Process groundSetter: Process {}
 
     readonly property bool solidGround: Theme.solid
-    readonly property bool dockSeeThrough: Theme.dockGlass || SettingsService.dockOpacity < 100
 
     onSolidGroundChanged: root.applyGround()
-    onDockSeeThroughChanged: root.applyGround()
 }

@@ -44,7 +44,7 @@ FocusScope {
     Component.onDestruction: NotesService.leave()
 
     // Escape goes back to the deck when the note was opened there. Opened from
-    // elsewhere (a widget, a tab, the detail, a menu), the event is left to
+    // elsewhere (a tab, the detail, a menu), the event is left to
     // the island, which closes the panel.
     Keys.onEscapePressed: event => {
         if (root.opened === "" || NotesService.direct) {
@@ -239,8 +239,6 @@ FocusScope {
                                 if (slot.card.archived)
                                     return "󰁫"
                                 const place = page.placement(slot.card.key)
-                                if (place === "grid")
-                                    return "󰕰"
                                 return place !== "" ? "󰞘" : ""
                             }
                             font.family: Theme.fontMono

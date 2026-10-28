@@ -109,9 +109,6 @@ QtObject {
             "Control Centre": "Centro de control",
             "What the island opens onto when you click it.":
                 "Lo que abre la isla al hacer clic en ella.",
-            "Dock": "Dock",
-            "The dock and the applications kept on it.":
-                "El dock y las aplicaciones que guardas en él.",
             "Launcher": "Lanzador",
             "Search, sigils and the clipboard history.":
                 "Búsqueda, prefijos e historial del portapapeles.",
@@ -273,9 +270,7 @@ QtObject {
             "Brightness": "Brillo",
             "Network": "Red",
             "Weather": "Tiempo",
-            "Markets": "Mercados",
             "Updates": "Actualizaciones",
-            "Pet": "Mascota",
             "Spectrum": "Espectro",
             "Under the windows": "Debajo de las ventanas",
             "Fill": "Relleno",
@@ -294,7 +289,6 @@ QtObject {
             "Fading to the tip": "Desvanecido hacia la punta",
             "Solid": "Sólido",
             "Two colours": "Dos colores",
-            "Games": "Juegos",
             "Calendar": "Calendario",
             "Notes": "Notas",
             "Tasks": "Tareas",
@@ -329,13 +323,6 @@ QtObject {
             "No such profile — the last grid is still showing":
                 "No existe ese perfil — se sigue mostrando la última cuadrícula",
 
-            "The coins and currencies to follow, separated by commas.":
-                "Las monedas y divisas que sigues, separadas por comas.",
-            "A coin alone is priced in US dollars and BTC/EUR in euros; two currencies, such as EUR/USD, follow the European Central Bank's daily rate. Prices come from CoinGecko and Frankfurter, which see what you follow but need no account. The bar shows the first one.":
-                "Una moneda sola se cotiza en dólares y BTC/EUR en euros; dos divisas, como EUR/USD, siguen el tipo diario del Banco Central Europeo. Los precios vienen de CoinGecko y Frankfurter, que ven lo que sigues pero no piden cuenta. La barra muestra el primero.",
-            "Follow": "Seguir",
-            "Not found:": "No encontrado:",
-
             "A note on the wallpaper is written the same way as one in the panel.":
                 "Una nota en el fondo se escribe igual que una del panel.",
             "Handwriting": "A mano",
@@ -344,49 +331,6 @@ QtObject {
             "Gone while a window is open": "Fuera mientras haya una ventana abierta",
             "Over the windows": "Sobre las ventanas",
 
-            "How the creature is drawn, wherever it is drawn.":
-                "Cómo se dibuja la criatura, en todas partes donde se dibuja.",
-            "The species decides the colour and what the creature is; the style decides how it is drawn. The same drawing is used on the bar, in the pet's panel and on the desktop.":
-                "La especie decide el color y qué criatura es; el estilo decide cómo se dibuja. El mismo dibujo se usa en la barra, en el panel de la mascota y en el escritorio.",
-            "Creature": "Criatura",
-            "A different animal for each species.":
-                "Un animal distinto para cada especie.",
-            "Plush": "Peluche",
-            "One round body, shaded.": "Un solo cuerpo redondo, sombreado.",
-            "Paper": "Papel",
-            "Flat, cut from two tones.": "Plano, recortado en dos tonos.",
-            "Pixel": "Píxel",
-            "A sprite, sixteen cells across.":
-                "Un sprite de dieciséis celdas de ancho.",
-
-            "Unhatched — care for it and see": "Sin eclosionar — cuídalo y verás",
-            "Bring out": "Sacar",
-            "Out": "Fuera",
-            "The next egg": "El próximo huevo",
-            "Levels across the family": "Niveles de la familia",
-            "All five found": "Los cinco encontrados",
-            "Nothing left to find — there is a star waiting at level fifteen for each of them.":
-                "No queda nada por encontrar — a cada una le espera una estrella en el nivel quince.",
-
-            // ── DESKTOP ─────────────────────────────────────────────────────
-            "The desktop": "El escritorio",
-            "Widgets are arranged directly on the wallpaper.":
-                "Los widgets se colocan directamente sobre el fondo.",
-            "Arranging brings the widgets in front of the windows, with a card of every module, moved by the space between them. Drag one onto the grid, pull a widget's corner to change its shape, click it for a look of its own, and drop it back on the card to take it off. Escape or the right button ends it, and the right button on any widget opens the same mode from the picture. This window closes meanwhile.":
-                "Colocar trae los widgets por delante de las ventanas, con una tarjeta de todos los módulos que se mueve por el espacio entre ellos. Arrastra uno a la cuadrícula, tira de la esquina de un widget para cambiarle la forma, haz clic en él para darle un aspecto propio y suéltalo sobre la tarjeta para quitarlo. Esc o el botón derecho lo terminan, y el botón derecho sobre cualquier widget abre el mismo modo desde la imagen. Esta ventana se cierra mientras tanto.",
-            "Arrange the desktop": "Colocar el escritorio",
-            "Arrange widgets": "Colocar widgets",
-            "on the wallpaper": "en el fondo",
-            "Nothing on the wallpaper yet": "Nada en el fondo todavía",
-            "Hide the widgets": "Ocultar los widgets",
-            "Window layout": "Disposición de ventanas",
-            "Look": "Aspecto",
-            "Every widget follows these unless it was given a look of its own.":
-                "Todos los widgets siguen esto salvo que se les haya dado un aspecto propio.",
-
-            "Modern": "Modern",
-            "Analogue": "Analógico",
-            "Sticker": "Pegatina",
             "Small": "Pequeño",
             "Wide": "Ancho",
             "Large": "Grande",
@@ -394,7 +338,6 @@ QtObject {
 
             "Notes on the edge": "Notas en el borde",
             "Where": "Dónde",
-            "Grid": "Cuadrícula",
             "Along the edge": "A lo largo del borde",
             "Which notes": "Qué notas",
             "New notes land here": "Las notas nuevas van aquí",
@@ -576,8 +519,6 @@ QtObject {
             "Game mode on": "Modo juego activado",
             "Game mode off": "Modo juego desactivado",
             "Everything still, for a game or a slow machine.": "Todo quieto, para jugar o en un equipo lento.",
-            "Stops the shell's animations, the spectrum and the pet, makes the island, the dock and the widgets solid without shadows, and turns off Hyprland's animations, blur, shadow and glass. The settings below are kept and come back when it is turned off.":
-                "Para las animaciones del shell, el espectro y la mascota, vuelve sólidos y sin sombra la isla, el dock y los widgets, y apaga las animaciones, el desenfoque, la sombra y el cristal de Hyprland. Los ajustes de abajo se conservan y vuelven al desactivarlo.",
             "Capture": "Capturar",
             "Annotate": "Anotar",
             "Read text": "Leer texto",
@@ -585,40 +526,14 @@ QtObject {
             "Record": "Grabar",
             "Clear clipboard": "Vaciar el portapapeles",
 
-            // ── DOCK ────────────────────────────────────────────────────────
-            "The dock": "El dock",
-            "The dock is off": "El dock está apagado",
-            "Your kept and open applications, on one edge of the screen.":
-                "Tus aplicaciones guardadas y las abiertas, en un borde de la pantalla.",
-            "An empty dock is not drawn. Icons are reordered by dragging them on the dock itself, and the top edge is left to the bar.":
-                "Un dock vacío no se dibuja. Los iconos se reordenan arrastrándolos en el propio dock, y el borde superior queda para la barra.",
-            "Show the dock": "Mostrar el dock",
             "Edge": "Borde",
             "Alignment": "Alineación",
-            "Icon size": "Tamaño de icono",
-            "Magnify on hover": "Ampliar al pasar el ratón",
-            "Behaviour": "Comportamiento",
-            "The launcher button opens the island's launcher, and open applications appear after a divider while they run. Windows and widgets pass under the dock, so moving or hiding it moves nothing else.":
-                "El botón del lanzador abre el lanzador de la isla, y las aplicaciones abiertas aparecen tras un separador mientras están en marcha. Las ventanas y los widgets pasan por debajo del dock, así que moverlo u ocultarlo no mueve nada más.",
-            "Launcher button": "Botón del lanzador",
-            "Open applications": "Aplicaciones abiertas",
             "On every screen": "En todas las pantallas",
             "Zen": "Zen",
             "One on each, all showing the same": "Uno en cada una, todos iguales",
             "Only on the screen you are on": "Solo en la pantalla en la que estás",
             "One on each, and the one you are on is the live one":
                 "Una en cada una, y la de tu pantalla es la que funciona",
-            "Hide until pointed at": "Ocultar hasta apuntarlo",
-            "Kept on it": "Guardadas en él",
-            "These stay whether they are running or not, and they lead the launcher's list too.":
-                "Estas se quedan estén o no en marcha, y también van delante en la lista del lanzador.",
-            "Nothing kept yet.": "Todavía no hay nada guardado.",
-            "This application is no longer installed":
-                "Esta aplicación ya no está instalada",
-            "Add an application": "Añadir una aplicación",
-            "New window": "Ventana nueva",
-            "Keep in the dock": "Guardar en el dock",
-            "Remove from the dock": "Quitar del dock",
             "Close": "Cerrar",
             "Close all windows": "Cerrar todas las ventanas",
 
@@ -626,8 +541,6 @@ QtObject {
             "The list": "La lista",
             "What the launcher lists with nothing typed, and how tall it gets.":
                 "Lo que muestra el lanzador sin escribir nada, y cuánto crece.",
-            "By use ranks applications by launches, with older launches counting for less; those kept on the dock come first until something else is used more. As tall as the answer sizes the island to the results, up to the limit above; off, the box is fixed and the list scrolls.":
-                "Por uso ordena las aplicaciones por aperturas, y las antiguas cuentan menos; las guardadas en el dock van primero hasta que otra se use más. Tan alta como la respuesta ajusta la isla a los resultados, hasta el límite de arriba; apagado, la caja es fija y la lista se desplaza.",
             "Order": "Orden",
             "By use": "Por uso",
             "Alphabetical": "Alfabético",
@@ -700,14 +613,6 @@ QtObject {
             "Outer": "Desde fuera",
             "Random": "Aleatorio",
 
-            "Greeting": "Saludo",
-            "The animation shown beside fastfetch when you run fa.":
-                "La animación que aparece junto a fastfetch cuando ejecutas fa.",
-            "Four pixel-art scenes, redrawn in the current palette whenever it changes. Random picks a new one on every run, and fa with a scene name (fa koi) plays that one.":
-                "Cuatro escenas en pixel art, redibujadas con la paleta actual cada vez que cambia. Aleatorio elige una nueva en cada ejecución, y fa con el nombre de una escena (fa koi) muestra esa.",
-            "Scene": "Escena",
-            "Lava lamp": "Lámpara de lava",
-            "Critters": "Bichos",
 
             "How Hyprland draws every window, this one included.":
                 "Cómo dibuja Hyprland cada ventana, esta incluida.",
@@ -952,8 +857,6 @@ QtObject {
             // ── SYSTEM ──────────────────────────────────────────────────────
             "Changes are saved to the profile in use as you make them.":
                 "Los cambios se guardan en el perfil en uso a medida que los haces.",
-            "A profile holds the bar, widgets, dock, launcher, control centre, look, keys and wallpaper with its palette. Screens, your name and picture, language, weather location, GitHub user, Do not disturb and night light stay with the machine, and notes, tasks and clipboard are shared by every profile.":
-                "Un perfil guarda la barra, los widgets, el dock, el lanzador, el centro de control, el aspecto, las teclas y el fondo con su paleta. Las pantallas, tu nombre y foto, el idioma, la ubicación del tiempo, el usuario de GitHub, No molestar y la luz nocturna se quedan con la máquina, y las notas, las tareas y el portapapeles son comunes a todos los perfiles.",
             "Profile": "Perfil",
             "New profile": "Perfil nuevo",
             "Import…": "Importar…",
@@ -971,13 +874,6 @@ QtObject {
             "Enter to keep the name · Esc to leave it": "Intro para guardar el nombre · Esc para dejarlo",
             "Grouped bar": "Barra agrupada",
             "Spread bar": "Barra repartida",
-            "dock at the bottom": "dock abajo",
-            "dock on the left": "dock a la izquierda",
-            "dock on the right": "dock a la derecha",
-            "no dock": "sin dock",
-            "nothing on the desk": "nada en el escritorio",
-            "widget": "widget",
-            "widgets": "widgets",
 
             "This window": "Esta ventana",
             "The language of this window.":
@@ -1109,14 +1005,10 @@ QtObject {
             "Inactive opacity fades the windows without focus. Blur shows behind anything translucent, such as the terminal. Refraction (a Hyprland plugin, tuned in look.lua) frosts and bends what is behind a window, like wet glass.":
                 "La opacidad inactiva atenúa las ventanas sin foco. El desenfoque se ve detrás de todo lo translúcido, como el terminal. La refracción (un plugin de Hyprland, ajustado en look.lua) esmerila y curva lo que hay detrás de una ventana, como cristal mojado.",
             "Look them up": "Buscarlas",
-            "Looked up on lrclib.net by title and artist, which needs no account. They show in the island's glance and its media card, in the desktop's lyrics widget and on the lock screen when it is set to show them.":
-                "Se buscan en lrclib.net por título y artista, sin necesidad de cuenta. Aparecen en el vistazo de la isla y en su tarjeta de música, en el widget de letras del escritorio y en la pantalla de bloqueo cuando está configurada para mostrarlas.",
             "Notes on the edges": "Notas en los bordes",
             "Position": "Posición",
             "Profiles, updates, language and this machine.":
                 "Perfiles, actualizaciones, idioma y este equipo.",
-            "The icon size everything on the dock scales with, and what the capsule is made of.":
-                "El tamaño de icono con el que escala todo el dock, y de qué está hecha la cápsula.",
             "The island at rest, what runs beside the time, and notifications.":
                 "La isla en reposo, lo que corre junto a la hora, y las notificaciones.",
             "The lyrics follow the Lyrics switch on the Modules page, and are looked up on lrclib.net.":
@@ -1127,12 +1019,8 @@ QtObject {
                 "El estilo mantiene lo que hay en la barra y solo cambia cómo se dibuja: agrupada alrededor de la isla, repartida hacia los dos bordes, todo dentro de una cápsula, o un marco a lo largo del borde superior. Lo que lleva cada lado se coloca en Disposición. Las esquinas redondeadas redondean cada pantalla y se curvan bajo los extremos del marco.",
             "The words of whatever is playing, wherever they are shown.":
                 "La letra de lo que suena, allí donde se muestre.",
-            "Their order is set by dragging them on the dock, and right-clicking a dock icon also keeps or removes it. The launcher puts them first, so the list stays editable with the dock off.":
-                "Su orden se cambia arrastrándolas en el dock, y el clic derecho sobre un icono del dock también la guarda o la quita. El lanzador las pone primero, así que la lista sigue editable con el dock apagado.",
             "Wallpaper, terminal, fonts and the shell's motion.":
                 "Fondo de pantalla, terminal, tipografías y el movimiento del shell.",
-            "What else the dock shows, and when it hides.":
-                "Qué más muestra el dock, y cuándo se oculta.",
             "What kitty's window is made of.": "De qué está hecha la ventana de kitty.",
             "What makes way when a window opens on the workspace.":
                 "Lo que se aparta cuando se abre una ventana en el espacio de trabajo.",
@@ -1144,11 +1032,14 @@ QtObject {
                 "Lo que saben los módulos, en la barra, el escritorio y los paneles.",
             "Where the island meets the top edge, and what opens it.":
                 "Dónde se encuentra la isla con el borde superior, y qué la abre.",
-            "While arranging, click a widget to override these for it alone. Modern shows a figure with a caption, Analogue draws an object such as a dial or a gauge, and Sticker cuts it out as coloured stickers on the wallpaper; the ground and the background set what the first two are made of and how opaque.":
-                "Al colocar, haz clic en un widget para cambiar esto solo para él. Moderno muestra una cifra con un rótulo, Analógico dibuja un objeto como una esfera o un indicador, y Pegatina lo recorta como pegatinas de colores sobre el fondo de pantalla; el material y el fondo deciden de qué están hechos los dos primeros y su opacidad.",
             "With more screens": "Con más pantallas",
             "Your account, the lock screen, face unlock and idle behaviour.":
                 "Tu cuenta, la pantalla de bloqueo, el desbloqueo facial y la inactividad."
+            ,"Screen edges": "Bordes de la pantalla"
+            ,"Choose an edge to add notes or spectrum. Drag a tab to reorder or move it. Drop a surface here to unpin it.": "Elige un borde para añadir notas o espectro. Arrastra una pestaña para ordenar o moverla. Suelta una superficie aquí para quitarla del borde."
+            ,"left": "izquierda"
+            ,"right": "derecha"
+            ,"bottom": "abajo"
         }
     })
 }

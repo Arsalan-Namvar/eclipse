@@ -13,7 +13,7 @@ import "../theme"
 import "../services"
 
 // A sticky note: pastel paper, a title and a handwritten body, used wherever
-// a note appears (deck cards, desktop widget, edge tab, tray). The ink is a
+// a note appears (deck cards, edge tabs and previews). The ink is a
 // fixed dark (`Theme.paper*`), not the palette's text colour.
 Item {
     id: root

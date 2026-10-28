@@ -20,16 +20,9 @@ import "../components"
 // hovering slides the tabs out with their titles, the tab under the pointer
 // peeks the full note beside it, and a click opens the note in the island.
 //
-// While the desktop is being arranged the tabs stay out: drag a tab along its
-// edge to reorder, to another edge to move it, onto the grid to make it a
-// widget, or onto the tray to remove it. Clicking a tab opens the deck's
-// inspector.
-//
-// A full-screen surface with a computed input mask (DeckService), like the
-// dock, so it shares the desktop's origin and grid cells line up. It moves to
-// the overlay layer while arranging: the desktop is raised to `top` then, and
-// its full-screen mask would otherwise take every press meant for a tab. Never
-// takes the keyboard.
+// While arranging, drag tabs along an edge to reorder or to another edge to
+// move them. Drop on the configuration card to unpin without deleting a note.
+// Clicking a tab opens its edge configuration. This surface never takes keys.
 PanelWindow {
     id: root
     CornerGuard {}
@@ -78,8 +71,7 @@ PanelWindow {
     WlrLayershell.layer: root.editing ? WlrLayer.Overlay : WlrLayer.Top
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
-    // Full screen and inset to the same board as the desktop, so grid cells
-    // match.
+    // Share the edge board origin with the spectrum configuration surface.
     exclusionMode: ExclusionMode.Ignore
     exclusiveZone: 0
     color: "transparent"
@@ -156,9 +148,7 @@ PanelWindow {
     readonly property bool whole: DeckService.held !== "" || DeckService.dragging !== ""
         || DeckService.sliding !== "" || root.menu !== null
 
-    // Empty while the desktop is dragging a widget, so a note dragged over a
-    // tab does not hand the pointer to this surface. The desktop resolves the
-    // drop edge itself.
+    // The spectrum surface resolves its own edge drops.
     readonly property bool deaf: DesktopService.dragging !== ""
 
     mask: Region {
@@ -730,43 +720,20 @@ PanelWindow {
         }
     }
 
-    // While dragging: the edge and position under the pointer, or the grid
-    // cell, lit by the desktop's landing mark. All of it on this board: a tab
-    // never leaves the screen it is on.
+    // A tab can only move between retained screen edges, never onto a grid.
     function aim(scene: point): void {
         const point = board.mapFromItem(null, scene.x, scene.y)
         ghost.x = point.x - ghost.width / 2
         ghost.y = point.y - ghost.height / 2
-        if (DesktopService.overTray(root.screenName, point.x, point.y)) {
-            board.dropEdge = ""
-            board.dropIndex = -1
-            DesktopService.landing = null
-            return
-        }
-        const edge = DeckService.edgeAt(point.x, point.y, board.width, board.height)
-        if (edge !== "") {
-            const deck = DeckService.decksOn(root.screenName).find(deck => deck.edge === edge)
-            board.dropEdge = edge
-            board.dropIndex = deck
-                ? DeckService.indexAt(edge, point.x, point.y, deck.notes.length,
-                    root.startOf(deck.edge, deck.notes.length, deck.along))
-                : 0
-            DesktopService.landing = null
-            return
-        }
-        board.dropEdge = ""
-        board.dropIndex = -1
-        const face = DesktopService.sizeFor("2x2", root.screenName)
-        const spot = DesktopService.nearestFree(root.screenName,
-            DesktopService.cellX(root.screenName, point.x - face.width / 2),
-            DesktopService.cellY(root.screenName, point.y - face.height / 2), "2x2", "")
-        DesktopService.landing = spot
-            ? { screen: root.screenName, col: spot.col, row: spot.row, family: "2x2" } : null
+        const edge = DesktopService.overTray(root.screenName, point.x, point.y)
+            ? "" : DeckService.edgeAt(point.x, point.y, board.width, board.height)
+        board.dropEdge = edge
+        const deck = DeckService.decksOn(root.screenName).find(deck => deck.edge === edge)
+        board.dropIndex = edge === "" ? -1 : deck
+            ? DeckService.indexAt(edge, point.x, point.y, deck.notes.length,
+                root.startOf(deck.edge, deck.notes.length, deck.along)) : 0
     }
 
-    // Dropped on an edge, it takes its place there; on the desktop, the nearest
-    // free grid cell; on the tray, it is removed. With no free cell it stays
-    // where it was.
     function drop(key: string, scene: point): void {
         const point = board.mapFromItem(null, scene.x, scene.y)
         const edge = board.dropEdge
@@ -776,19 +743,10 @@ PanelWindow {
         DeckService.held = ""
         board.dropEdge = ""
         board.dropIndex = -1
-        DesktopService.landing = null
-        if (removed) {
+        if (removed)
             DesktopService.removeNote(key)
-            return
-        }
-        if (edge !== "") {
+        else if (edge !== "")
             DesktopService.placeNote(key, root.screenName, edge, index)
-            return
-        }
-        const face = DesktopService.sizeFor("2x2", root.screenName)
-        DesktopService.noteToGrid(key, root.screenName,
-            DesktopService.cellX(root.screenName, point.x - face.width / 2),
-            DesktopService.cellY(root.screenName, point.y - face.height / 2))
     }
 
     function openNote(key: string): void {

@@ -34,17 +34,13 @@ wl-screenrec                 # the recorder's GPU encoder, tried before wf-recor
 
 # ── TERMINAL PROGRAMS ───────────────────────────────────────────────────────
 
-unimatrix-git                # the matrix alias
-cbonsai                      # the bonsai alias
-tty-clock                    # the clock alias
-lavat                        # the lava function
+blesh-git                    # ble.sh 0.4 development line, including contrib fzf integration
 
 
 # ── THEMED APPLICATIONS ─────────────────────────────────────────────────────
 
-vscodium-bin                 # extensions and settings · ./setup vscodium
+strata-bin                  # GTK4 file manager and supported FileChooser portal
 zen-browser-bin
-vesktop-bin
 spotify
 spicetify-cli                # applies the palette to Spotify · ./setup spotify
 

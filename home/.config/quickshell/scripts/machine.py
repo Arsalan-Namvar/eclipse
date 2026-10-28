@@ -9,11 +9,10 @@
 # │                                                                          │
 # ╰──────────────────────────────────────────────────────────────────────────╯
 
-"""Static facts about the machine, for the control centre and the greeting.
+"""Static facts about the machine for the control centre.
 
-Distribution, kernel, compositor, login shell, host and package count, read
-from the same sources fastfetch uses so the two agree. Read on demand rather
-than on a tick; a missing source is null.
+Distribution, kernel, compositor, login shell, host and package count are read
+on demand rather than on a tick; a missing source is null.
 """
 
 import json
@@ -68,7 +67,7 @@ def login_shell(record):
 
 def packages():
     """How many packages pacman has installed: one directory each in its
-    local database, the way fastfetch counts them. No pacman, no number."""
+    local database. No pacman, no number."""
     try:
         with os.scandir(PACMAN_LOCAL) as entries:
             return sum(1 for entry in entries if entry.is_dir())

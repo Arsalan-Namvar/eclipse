@@ -103,12 +103,8 @@ Rectangle {
         servers:    { width: ServersService.panelWidth, height: ServersService.panelHeight },
         screentime: { width: 940,  height: 614 },
         camera:     { width: CameraService.panelWidth, height: CameraService.panelHeight },
-        // A row per creature, plus one for the next egg.
-        pet:        { width: 560,  height: 205 + 62 * PetService.family.length },
-        // The shelf of cards, or the game being played at its own size.
-        games:      GamesService.playing !== ""
-            ? GamesService.panelSize(GamesService.playing)
-            : { width: GamesService.shelfWidth, height: GamesService.shelfHeight },
+        github:     { width: GithubBrowserService.panelWidth, height: GithubBrowserService.panelHeight },
+        omp:        { width: 560, height: 620 },
         // Declared by their services, which the panels read back for layout.
         notes:      { width: NotesService.panelWidth, height: NotesService.panelHeight },
         board:      { width: TasksService.panelWidth, height: TasksService.panelHeight },
@@ -186,8 +182,8 @@ Rectangle {
         servers: serversPanel,
         screentime: screenTimePanel,
         camera: cameraPanel,
-        pet: petPanel,
-        games: gamesPanel,
+        github: githubPanel,
+        omp: ompPanel,
         notes: notesPanel,
         board: boardPanel,
         keys: keysPanel,
@@ -659,13 +655,13 @@ Rectangle {
     }
 
     Component {
-        id: petPanel
-        PetPanel { onClosed: root.close() }
+        id: githubPanel
+        GithubPanel { onClosed: root.close() }
     }
 
     Component {
-        id: gamesPanel
-        GamesPanel { onClosed: root.close() }
+        id: ompPanel
+        OmpPanel {}
     }
 
     Component {
@@ -688,7 +684,7 @@ Rectangle {
         PackagesPanel { onClosed: root.close() }
     }
 
-    // A module asking for a panel: the arcade's detail opening the arcade.
+    // A module can request a standalone island panel.
     Connections {
         target: ModuleService
 

@@ -97,9 +97,6 @@ COMMANDS = {
     "bar": {
         "": ("bar", "toggle", [], [], "hide or show the bar"),
     },
-    "widgets": {
-        "": ("widgets", "toggle", [], [], "hide or show the desktop widgets"),
-    },
     "volume": {
         "set": ("volume", "set", ["percent"], [], "0 to 100"),
         "mute": ("volume", "mute", ["on|off|toggle"], [], "mute the output"),

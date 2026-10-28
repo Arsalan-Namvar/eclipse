@@ -1,0 +1,114 @@
+# eclipse-keymap=1
+# description<TAB>default combination<TAB>inherited combinations separated by |
+# Empty default means unbound; @removed retires an action and its saved overrides.
+Applications · Open a terminal	SUPER + Return	SUPER + Return
+Applications · Open the file manager	SUPER + SHIFT + F	SUPER + E
+Applications · Open the browser	SUPER + SHIFT + B	SUPER + B
+Applications · Open OMP	SUPER + SHIFT + A	
+Applications · Open the editor	SUPER + SHIFT + E	
+Applications · Open Spotify	SUPER + SHIFT + M	
+Applications · Open Telegram	SUPER + SHIFT + T	
+Windows · Close the focused window	SUPER + W	SUPER + Q
+Windows · Kill the focused window		SUPER + SHIFT + Q
+Windows · Full screen	SUPER + F	SUPER + F
+Windows · Maximise, keeping the bar	SUPER + ALT + F	SUPER + ALT + F
+Windows · Float or tile the window	SUPER + T	SUPER + ALT + Space
+Windows · Toggle pseudo-tiling	SUPER + P	SUPER + P
+Windows · Flip the split direction	SUPER + J	SUPER + J
+Windows · Cycle the layout	SUPER + L	SUPER + SHIFT + L
+Windows · Focus the window left	SUPER + left	SUPER + left
+Windows · Focus the window right	SUPER + right	SUPER + right
+Windows · Focus the window up	SUPER + up	SUPER + up
+Windows · Focus the window down	SUPER + down	SUPER + down
+Windows · Next window	ALT + Tab	ALT + Tab
+Windows · Previous window	ALT + SHIFT + Tab	ALT + SHIFT + Tab
+Windows · Move the window left	SUPER + SHIFT + left	SUPER + SHIFT + left
+Windows · Move the window right	SUPER + SHIFT + right	SUPER + SHIFT + right
+Windows · Move the window up	SUPER + SHIFT + up	SUPER + SHIFT + up
+Windows · Move the window down	SUPER + SHIFT + down	SUPER + SHIFT + down
+Windows · Drag the window	SUPER + mouse:272	SUPER + mouse:272
+Windows · Resize the window	SUPER + mouse:273	SUPER + mouse:273
+Workspaces · Go to workspace 1	SUPER + 1	SUPER + 1
+Workspaces · Move the window to workspace 1	SUPER + SHIFT + 1	SUPER + SHIFT + 1
+Workspaces · Go to workspace 2	SUPER + 2	SUPER + 2
+Workspaces · Move the window to workspace 2	SUPER + SHIFT + 2	SUPER + SHIFT + 2
+Workspaces · Go to workspace 3	SUPER + 3	SUPER + 3
+Workspaces · Move the window to workspace 3	SUPER + SHIFT + 3	SUPER + SHIFT + 3
+Workspaces · Go to workspace 4	SUPER + 4	SUPER + 4
+Workspaces · Move the window to workspace 4	SUPER + SHIFT + 4	SUPER + SHIFT + 4
+Workspaces · Go to workspace 5	SUPER + 5	SUPER + 5
+Workspaces · Move the window to workspace 5	SUPER + SHIFT + 5	SUPER + SHIFT + 5
+Workspaces · Go to workspace 6	SUPER + 6	SUPER + 6
+Workspaces · Move the window to workspace 6	SUPER + SHIFT + 6	SUPER + SHIFT + 6
+Workspaces · Go to workspace 7	SUPER + 7	SUPER + 7
+Workspaces · Move the window to workspace 7	SUPER + SHIFT + 7	SUPER + SHIFT + 7
+Workspaces · Go to workspace 8	SUPER + 8	SUPER + 8
+Workspaces · Move the window to workspace 8	SUPER + SHIFT + 8	SUPER + SHIFT + 8
+Workspaces · Go to workspace 9	SUPER + 9	SUPER + 9
+Workspaces · Move the window to workspace 9	SUPER + SHIFT + 9	SUPER + SHIFT + 9
+Workspaces · Go to workspace 10	SUPER + 0	SUPER + 0
+Workspaces · Move the window to workspace 10	SUPER + SHIFT + 0	SUPER + SHIFT + 0
+Workspaces · Next workspace	SUPER + mouse_down	SUPER + mouse_down
+Workspaces · Previous workspace	SUPER + mouse_up	SUPER + mouse_up
+Media · Volume up	XF86AudioRaiseVolume	XF86AudioRaiseVolume
+Media · Volume down	XF86AudioLowerVolume	XF86AudioLowerVolume
+Media · Mute output	XF86AudioMute	XF86AudioMute
+Media · Mute microphone	XF86AudioMicMute	XF86AudioMicMute
+Media · Brightness up	XF86MonBrightnessUp	XF86MonBrightnessUp
+Media · Brightness down	XF86MonBrightnessDown	XF86MonBrightnessDown
+Media · Mute microphone (Acer)	XF86Launch6	XF86Launch6
+Media · Play or pause	XF86AudioPlay	XF86AudioPlay
+Media · Play or pause, from the pause key	XF86AudioPause	XF86AudioPause
+Media · Next track	XF86AudioNext	XF86AudioNext
+Media · Previous track	XF86AudioPrev	XF86AudioPrev
+Session · Session menu	SUPER + Escape	SUPER + X
+Session · Session menu, from CTRL + ALT + Delete		CTRL + ALT + Delete
+Session · Session menu, from the power button	XF86PowerOff	XF86PowerOff
+Session · Lock the screen	SUPER + CTRL + L	SUPER + L
+Session · Exit Hyprland		SUPER + SHIFT + E
+Utilities · Turn the screen off or back on	SUPER + CTRL + D	SUPER + SHIFT + D
+Utilities · Restart the shell		SUPER + CTRL + R
+Shell · Open the launcher	SUPER + Space	SUPER + Space
+Shell · Open the control centre	SUPER + CTRL + A	SUPER + A
+Shell · Open the workspace overview	SUPER + Tab	SUPER + Tab
+Shell · Open settings	SUPER + CTRL + S	SUPER + comma
+Shell · Open appearance	SUPER + CTRL + W	SUPER + T
+Shell · Open the palette	SUPER + CTRL + T	SUPER + SHIFT + T
+Shell · Open system statistics	SUPER + CTRL + U	SUPER + U
+Shell · Open the pet	@removed	
+Shell · Open the games	@removed	
+Shell · Open the notes	SUPER + SHIFT + N	SUPER + S|SUPER + SHIFT + N
+Shell · Open the task board	SUPER + SHIFT + K	SUPER + K
+Shell · Show every key	SUPER + CTRL + K	SUPER + H
+Shell · Hide or show the bar	SUPER + CTRL + B	SUPER + CTRL + B
+Shell · Hide or show the desktop widgets	@removed	
+Shell · Turn game mode on or off	SUPER + CTRL + G	SUPER + SHIFT + G
+Shell · Open the packages	SUPER + CTRL + P	SUPER + I
+Shell · Open the virtual machines	SUPER + SHIFT + V	SUPER + SHIFT + M
+Shell · Open the development servers	SUPER + SHIFT + D	SUPER + O
+Shell · Open the screen time	SUPER + SHIFT + Y	SUPER + Y
+Shell · Open the camera effects	SUPER + SHIFT + W	SUPER + SHIFT + W
+Shell · Open the clipboard history	SUPER + CTRL + V	SUPER + V
+Shell · Pick an emoji	SUPER + CTRL + E	SUPER + period
+Shell · Pick a colour off the screen	SUPER + CTRL + I	SUPER + SHIFT + C
+Shell · Open the capture surface	SUPER + CTRL + C	SUPER + SHIFT + S|SUPER + CTRL + C
+Shell · Open the capture surface, from Print	Print	Print
+Shell · Start or stop recording the screen	SUPER + CTRL + R	SUPER + SHIFT + R
+Shell · Capture a region		
+Shell · Capture a window		
+Shell · Capture the whole screen		
+Shell · Capture a region and annotate it		
+Shell · Read a region as text		
+Clipboard · Copy	SUPER + C	
+Clipboard · Paste	SUPER + V	
+Clipboard · Cut	SUPER + X	
+Screens · Focus the screen left	SUPER + ALT + left	SUPER + ALT + left
+Screens · Focus the screen right	SUPER + ALT + right	SUPER + ALT + right
+Screens · Focus the screen up	SUPER + ALT + up	SUPER + ALT + up
+Screens · Focus the screen down	SUPER + ALT + down	SUPER + ALT + down
+Screens · Move the window to the screen left	SUPER + ALT + SHIFT + left	SUPER + ALT + SHIFT + left
+Screens · Move the window to the screen right	SUPER + ALT + SHIFT + right	SUPER + ALT + SHIFT + right
+Screens · Move the window to the screen up	SUPER + ALT + SHIFT + up	SUPER + ALT + SHIFT + up
+Screens · Move the window to the screen down	SUPER + ALT + SHIFT + down	SUPER + ALT + SHIFT + down
+Workspaces · Toggle the scratchpad	SUPER + S	SUPER + S
+Workspaces · Move the window to the scratchpad	SUPER + SHIFT + S	SUPER + SHIFT + S

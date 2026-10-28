@@ -10,12 +10,12 @@
 # No ConfigFile: the theme's values are fixed in components/Theme.qml.
 
 [SddmGreeterTheme]
-Name=impasto
-Description=The lock screen, before there is a desk behind it
+Name=Eclipse
+Description=Eclipse login screen, derived from Impasto
 Author=Andreu Massanet
 License=GPL-3.0
 Type=sddm-theme
 Version=1.0
-Website=https://github.com/andreumassanet/impasto
+Website=https://github.com/Arsalan-Namvar/eclipse
 QtVersion=6
 MainScript=Main.qml

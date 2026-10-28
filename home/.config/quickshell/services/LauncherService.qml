@@ -131,6 +131,47 @@ QtObject {
 
     property var applications: []
 
+    function entryOf(id: string): var {
+        return root.applications.find(app => app.id === id) ?? null
+    }
+
+    // `/usr/bin/foo %U` -> `foo`.
+    function binaryOf(exec: string): string {
+        const first = (exec ?? "").trim().split(/\s+/)[0] ?? ""
+        return first.replace(/"/g, "").split("/").pop()
+    }
+
+    // Match window classes to desktop entries once per application-index
+    // refresh. Screen time needs identity matching independently of launching.
+    readonly property var classIndex: {
+        const best = ({})
+        const claim = (key, id, score) => {
+            const normalised = (key ?? "").trim().toLowerCase()
+            if (normalised === "")
+                return
+            const held = best[normalised]
+            if (!held || score > held.score)
+                best[normalised] = { id: id, score: score }
+        }
+        for (const app of root.applications) {
+            const base = app.id.replace(/\.desktop$/, "")
+            const wmclass = app.wmclass ?? ""
+            claim(app.name, app.id, 1)
+            claim(root.binaryOf(app.exec), app.id, 2)
+            claim(base.split(".").pop(), app.id, 3)
+            claim(base, app.id, 4)
+            claim(wmclass, app.id,
+                  wmclass.toLowerCase() === base.toLowerCase() ? 6 : 5)
+        }
+        return best
+    }
+
+    function idFor(windowClass: string): string {
+        const key = (windowClass ?? "").trim().toLowerCase()
+        const found = key === "" ? null : root.classIndex[key]
+        return found ? found.id : ""
+    }
+
     // ── LAUNCH HISTORY ──────────────────────────────────────────────────────
     //
     // Results are ranked by a launch count with exponential decay (frecency),
@@ -178,17 +219,6 @@ QtObject {
         next[id] = { count: root.scoreOf(id) + 1, last: Date.now() }
         root.launches = next
         history.launches = next
-    }
-
-    // ── FAVOURITES ──────────────────────────────────────────────────────────
-    //
-    // The dock's pinned apps, read from the settings rather than `DockService`
-    // (which depends on this service). They get a bonus of one launch.
-    readonly property var favourites: SettingsService.dockPinned ?? []
-
-    function weightOf(app: var): real {
-        return root.scoreOf(app.id)
-            + (root.favourites.indexOf(app.id) >= 0 ? 1 : 0)
     }
 
     readonly property Process applicationsProcess: Process {
@@ -240,11 +270,10 @@ QtObject {
     // All applications matching `term`, sorted by:
     //
     //   1. name starts with the term (applies in every order)
-    //   2. weight: decayed launches plus the favourite bonus
-    //   3. dock order, between two favourites of equal weight
-    //   4. name
+    //   2. decayed launcher usage
+    //   3. name
     //
-    // With `order` set to alphabetical only 1 and 4 apply.
+    // With `order` set to alphabetical only 1 and 3 apply.
     function rank(term: string): var {
         const found = []
         for (const app of root.applications) {
@@ -263,13 +292,9 @@ QtObject {
                     return leadA - leadB
             }
             if (byUse) {
-                const weight = root.weightOf(b) - root.weightOf(a)
+                const weight = root.scoreOf(b.id) - root.scoreOf(a.id)
                 if (Math.abs(weight) > 0.0001)
                     return weight
-                const keptA = root.favourites.indexOf(a.id)
-                const keptB = root.favourites.indexOf(b.id)
-                if (keptA >= 0 && keptB >= 0 && keptA !== keptB)
-                    return keptA - keptB
             }
             return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1
         })
@@ -434,8 +459,7 @@ QtObject {
         if (!entry)
             return
         if (entry.kind === "app") {
-            // Recorded here, not in `launchDesktop`, so dock launches do not
-            // count towards the ranking.
+            // Only launcher activations contribute to launcher usage ranking.
             root.record(entry.id)
             root.launchDesktop(entry.id)
         }

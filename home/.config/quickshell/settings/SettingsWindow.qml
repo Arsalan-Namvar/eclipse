@@ -12,6 +12,7 @@ import Quickshell
 
 import "../components"
 import "../theme"
+import "../services"
 
 // Settings is a window rather than an island panel, so the bar and island stay
 // visible and react live while their own settings change.
@@ -33,6 +34,16 @@ FloatingWindow {
 
     // Island panels are opened by the shell, not by this window.
     signal panelRequested(string panel)
+
+    function arrangeControls(): void {
+        root.close()
+        // Do not open a focus-grabbing layer while the toplevel is closing.
+        // Queue from the window, which survives unloading its SettingsPanel.
+        Qt.callLater(function() {
+            ControlsService.edit(true)
+            root.panelRequested("controls")
+        })
+    }
 
     // Matched by the window rule in `windowrules.lua`.
     title: "Settings"
@@ -62,6 +73,7 @@ FloatingWindow {
         SettingsPanel {
             onClosed: root.close()
             onPanelRequested: name => root.panelRequested(name)
+            onArrangementRequested: root.arrangeControls()
         }
     }
 }

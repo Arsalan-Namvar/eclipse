@@ -1,0 +1,16 @@
+# Candidates come from the CLI's own command table and running desktop.
+_impasto() {
+    local current=${COMP_WORDS[COMP_CWORD]} candidate
+    COMPREPLY=()
+    if [[ ${COMP_WORDS[1]-} == wallpaper && ${COMP_WORDS[2]-} == set ]]; then
+        compopt -o filenames
+        while IFS= read -r candidate; do
+            COMPREPLY+=("$candidate")
+        done < <(compgen -f -- "$current")
+    else
+        while IFS= read -r candidate; do
+            [[ $candidate == "$current"* ]] && COMPREPLY+=("$candidate")
+        done < <(impasto complete "${COMP_WORDS[@]:1:COMP_CWORD-1}" 2>/dev/null)
+    fi
+}
+complete -F _impasto impasto

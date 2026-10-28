@@ -1,0 +1,8 @@
+{
+  "name": "eclipse-desktop",
+  "private": true,
+  "version": "1.0.0",
+  "omp": {
+    "extensions": ["index.ts"]
+  }
+}

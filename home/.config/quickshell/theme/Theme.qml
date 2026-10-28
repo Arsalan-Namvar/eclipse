@@ -82,23 +82,9 @@ QtObject {
     readonly property color islandSurfaceHover: "#1f1f1f"
     readonly property color islandBorder: "#262626"
 
-    // The desk's widgets have a ground of their own
-    // (`SettingsService.desktopGround`; empty, from an old file, follows).
-    readonly property string deskStyle: SettingsService.gameMode ? "classic"
-        : SettingsService.desktopGround || root.surfaceStyle
-    readonly property bool deskSolid: !root.seeThrough(root.deskStyle)
-    readonly property bool deskGlass: root.seeThrough(root.deskStyle)
 
-    // The dock's, the same way (`SettingsService.dockGround`).
-    readonly property string dockStyle: SettingsService.gameMode ? "classic"
-        : SettingsService.dockGround || root.surfaceStyle
-    readonly property bool dockGlass: root.seeThrough(root.dockStyle)
-
-    // The same three on glass: white veils, by style. Only the bar's and the
-    // desk's windows are glass, each in its own style (a `glassy` window
-    // with a `groundStyle`), and the dock, which asks `dockStyle` directly;
-    // everything else — the settings, the lock — stays black, so a part
-    // drawn in both asks by its window (`surfaceIn`).
+    // Glass veils follow the retained bar/island surface style. Settings and
+    // lock surfaces remain opaque; shared components resolve by their window.
     function veilOf(style: string): color {
         return style === "liquid" ? Qt.rgba(1, 1, 1, 0.07)
             : style === "glass" ? Qt.rgba(1, 1, 1, 0.08) : root.islandSurface
@@ -130,7 +116,7 @@ QtObject {
     function borderIn(window: var): color {
         return root.veilLineOf(root.styleIn(window))
     }
-    // The outline of the island, the capsules and the desk's widgets: the
+    // The outline of the island and capsules:
     // hairline on solid, a line of light on glass.
     readonly property color islandRim: root.rimOf(root.surfaceStyle)
     // A see-through ground under the pointer: the same glass, a little lit.
@@ -169,10 +155,9 @@ QtObject {
     // drawn there under another name, and every file manager as somebody
     // else's, so those ask for the picture meant for them.
     readonly property var appIconAliases: ({
-        "vesktop": "Vesktop",
-        "org.gnome.Nautilus": "impasto-files",
-        "thunar": "impasto-files",
-        "org.xfce.thunar": "impasto-files"
+        "telegram-desktop": "org.telegram.desktop",
+        "TelegramDesktop": "org.telegram.desktop",
+        "io.github.lgse.Strata": "io.github.lgse.Strata"
     })
 
     function appIcon(name: string): string {
@@ -196,7 +181,6 @@ QtObject {
     // liquid: over a pale wallpaper that glass measures mid grey, where the
     // palette's own grey is under 2:1.
     readonly property color textMuted: root.litOf(root.surfaceStyle)
-            || root.litOf(root.dockStyle) || root.litOf(root.deskStyle)
         ? Qt.tint(root.paletteMuted, Qt.alpha(root.text, root.mutedLift))
         : root.paletteMuted
     readonly property real mutedLift: 0.45
@@ -247,15 +231,6 @@ QtObject {
     readonly property color paperLine: "#261c1c1e"
     readonly property int paperRadius: 10
 
-    // Sticker widgets: a die-cut edge of vinyl white, fixed like the island's
-    // black, around a palette hue washed towards it; what is printed on one
-    // is the same hue darkened. The edge is a share of the sticker's short
-    // side, the lean a sticker's largest tilt in degrees.
-    readonly property color stickerPaper: "#fbf7ee"
-    readonly property real stickerWash: 0.45
-    readonly property real stickerDeep: 0.62
-    readonly property real stickerEdge: 0.028
-    readonly property real stickerLean: 5
 
     // Contribution graph, empty to busiest. GitHub's dark ramp, fixed across
     // palettes; the empty step is lifted off black so it reads as a cell.
@@ -308,18 +283,8 @@ QtObject {
     // Where the bar's input region ends: 8 px of slack under the capsules.
     readonly property int barBand: root.barReserve + 8
 
-    // ── DESKTOP GRID ────────────────────────────────────────────────────────
-    //
-    // Widgets span whole cells. The gutter matches Hyprland's `gaps_out`.
-    // A square is at least `desktopCell` and grows up to `desktopCellLargest`
-    // so the board's margin is the same on all four sides
-    // (`DesktopService.gridFor`). At the least, a 4 × 2 widget is 398 × 190,
-    // which fits a two-row module card with one gutter around it; a larger
-    // detail needs a larger cell.
-    readonly property int desktopCell: 86
-    readonly property int desktopCellLargest: 108
+    // Shared spacing for the control editor and retained screen-edge decks.
     readonly property int desktopGutter: 18
-    readonly property int desktopStride: root.desktopCell + root.desktopGutter
 
     // ── CONTROL CENTRE GRID ─────────────────────────────────────────────────
     //
@@ -383,58 +348,19 @@ QtObject {
             + (body > 0 ? root.cardGap + body : 0)
     }
 
-    // ── DOCK ────────────────────────────────────────────────────────────────
-    //
-    // Everything scales off the icon size. The margin matches `gaps_out`.
-    readonly property int dockIcon: SettingsService.dockIconSize
-    // Little room round the icons, so the icon is most of the dock.
-    readonly property int dockPadding: 6
-    readonly property int dockGap: root.capsuleSpacing
-    readonly property int dockMargin: root.desktopGutter
-
-    // The icons are centred across the dock; the running dot sits in the
-    // padding on the screen-edge side. An icon is drawn `dockInset` inside its
-    // square, so the dot clears both it and the rim.
-    readonly property int dockDot: 4
-    readonly property int dockInset: 1
-
-    // The launcher button is a glyph narrower than an icon, so its square is
-    // too: the mark with room either side, or it reads as a gap.
-    readonly property int dockLauncher: Math.round(root.dockIcon * 0.7)
-    readonly property int dockThickness: root.dockIcon + 2 * root.dockPadding
-
-    // Screen-edge strip a hidden dock still listens on.
-    readonly property int dockReveal: 4
-
-    // Fixed width so a long window title does not stretch the menu.
-    readonly property int dockMenuWidth: 250
-    readonly property int dockMenuRow: 30
-    readonly property int dockMenuPadding: 6
-
-    readonly property int dockRadius: root.desktopRadius
-
-    // Hover scale when the dock does not magnify. Small enough that the
-    // neighbours never move.
-    readonly property real dockLift: 1.125
-
-    // Magnifying, the icon under the pointer grows to this, and the swell
-    // falls off over this many icons either side.
-    readonly property real dockMagnify: 1.7
-    readonly property real dockReach: 2.5
-
-    // Matches Hyprland's `rounding`: widgets sit among windows.
-    readonly property int desktopRadius: 22
-    // The screen's own corners, when they are rounded: the same curve.
-    readonly property int screenRadius: root.desktopRadius
+    // Shared context menus, also used by the retained edge notes.
+    readonly property int menuWidth: 250
+    readonly property int menuRow: 30
+    readonly property int menuPadding: 6
+    readonly property int screenRadius: 22
 
     readonly property int radiusSmall: 8
     readonly property int radiusMedium: 12
     readonly property int radiusLarge: 18
     readonly property int radiusPill: 999
-
-    // Corner radius for pictures, as a fraction of the box. They range from
-    // 20 px to 58 px, and no fixed radius looks right at both ends.
+    // Shared proportional corners for media artwork and profile thumbnails.
     readonly property real pictureCorner: 0.24
+
 
     // Where the notch meets the screen edge.
     readonly property int radiusNotch: 6
@@ -534,10 +460,8 @@ QtObject {
     readonly property int fontSizeMedium: 14
     readonly property int fontSizeLarge: 16
 
-    // Desktop widgets are read from further away. `fontSizeDisplay` is for
-    // faces that are a single number (the large clocks).
+    // Large figures in retained control-centre cards and their editor.
     readonly property int fontSizeWidget: 30
-    readonly property int fontSizeDisplay: 68
 
     // ── MOTION ──────────────────────────────────────────────────────────────
 
@@ -548,8 +472,6 @@ QtObject {
     // The shell's own shadows are blurred on the GPU, so game mode drops them
     // with the compositor's; the settings come back when it is off.
     readonly property bool barShadowShown: SettingsService.barShadow && !SettingsService.gameMode
-    readonly property bool dockShadowShown: SettingsService.dockShadow && !SettingsService.gameMode
-    readonly property bool widgetShadowShown: SettingsService.widgetShadow && !SettingsService.gameMode
 
     readonly property var easingCurves: [
         { id: "OutCubic", label: "Smooth",  type: Easing.OutCubic },

@@ -104,37 +104,6 @@ SettingsSection {
             }
         }
 
-        // The tiles play the generated greeting scenes in the current palette.
-        SettingGroup {
-            title: Tr.t("Greeting")
-            note: Tr.t("The animation shown beside fastfetch when you run fa.")
-            hint: Tr.t("Four pixel-art scenes, redrawn in the current palette whenever it changes. Random picks a new one on every run, and fa with a scene name (fa koi) plays that one.")
-
-            SettingTiles {
-                label: Tr.t("Scene")
-
-                Repeater {
-                    model: ThemeService.greetings
-
-                    PreviewTile {
-                        id: greetingTile
-
-                        required property var modelData
-
-                        stageHeight: 124
-                        caption: Tr.t(greetingTile.modelData.label)
-                        selected: SettingsService.greeting === greetingTile.modelData.id
-                        onPicked: SettingsService.set("greeting", greetingTile.modelData.id)
-
-                        GreetingPreview {
-                            anchors.centerIn: parent
-                            scene: greetingTile.modelData.id
-                            version: ThemeService.greetingStamp
-                        }
-                    }
-                }
-            }
-        }
     }
 
     // ── TYPE ────────────────────────────────────────────────────────────────
@@ -199,7 +168,7 @@ SettingsSection {
         SettingGroup {
             title: Tr.t("Game mode")
             note: Tr.t("Everything still, for a game or a slow machine.")
-            hint: Tr.t("Stops the shell's animations, the spectrum and the pet, makes the island, the dock and the widgets solid without shadows, and turns off Hyprland's animations, blur, shadow and glass. The settings below are kept and come back when it is turned off.")
+            hint: Tr.t("Stops the shell's animations and the spectrum, makes the island solid without shadows, and turns off Hyprland's animations, blur, shadow and glass. The settings below are kept and come back when it is turned off.")
 
             SettingRow {
                 label: Tr.t("Game mode")

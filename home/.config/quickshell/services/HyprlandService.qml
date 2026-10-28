@@ -240,10 +240,8 @@ QtObject {
 
     property var clients: []
 
-    // Keep the client list refreshed on every window event, even when it is
-    // empty. Without it, refreshes only happen while the list is non-empty,
-    // which is fine for the overview but freezes the dock once the last
-    // window closes.
+    // Edge notes and spectrum need fresh fullscreen state even after the last
+    // window closes, while overview-only consumers can refresh on demand.
     property bool watchClients: false
 
     // Address (`0x…`) of the window with keyboard focus, or "". Not

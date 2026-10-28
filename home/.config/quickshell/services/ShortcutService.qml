@@ -43,13 +43,10 @@ Singleton {
         { name: "stats",          label: "System statistics",    description: "Shell · Open system statistics" },
         { name: "session",        label: "Session menu",         description: "Session · Session menu" },
         { name: "lock",           label: "Lock the screen",      description: "Session · Lock the screen" },
-        { name: "pet",            label: "Pet",                  description: "Shell · Open the pet" },
-        { name: "games",          label: "Games",                description: "Shell · Open the games" },
         { name: "notes",          label: "Notes",                description: "Shell · Open the notes" },
         { name: "board",          label: "Task board",           description: "Shell · Open the task board" },
         { name: "keys",           label: "Keys",                 description: "Shell · Show every key" },
         { name: "zen",            label: "Zen",                  description: "Shell · Hide or show the bar" },
-        { name: "widgets",        label: "Hide the widgets",     description: "Shell · Hide or show the desktop widgets" },
         { name: "game",           label: "Game mode",            description: "Shell · Turn game mode on or off" },
         { name: "layout",         label: "Window layout",        description: "Windows · Cycle the layout" },
         { name: "packages",       label: "Packages",             description: "Shell · Open the packages" },
@@ -73,14 +70,14 @@ Singleton {
 
     // ── TABLE ───────────────────────────────────────────────────────────────
     //
-    // Every bind with the profile's combination: the compositor's in config
-    // order, then unbound shell shortcuts, then any other unbound keys the
-    // profile names (Hyprland does not list unbound binds). Switches are left
-    // out. The profile's value wins, so a row updates before the reload lands.
+    // Shared defaults first, including unbound actions Hyprland cannot list;
+    // then bindings supplied outside the shared map. The profile's explicit
+    // overrides always win, even before Hyprland finishes reloading.
     readonly property var table: {
         const kept = root.keys ?? ({})
         const rows = []
         const seen = ({})
+        const retired = ({})
         const add = (description, bound) => {
             if (description === "" || seen[description])
                 return
@@ -91,14 +88,21 @@ Singleton {
                 combination: typeof own === "string" ? own : bound
             })
         }
+        for (const row of SettingsService.keymap) {
+            if (row.combination === "@removed")
+                retired[row.description] = true
+            else
+                add(row.description, row.combination)
+        }
         for (const bind of HyprlandService.binds) {
-            if (!(bind.key || "").startsWith("switch:"))
+            if (!(bind.key || "").startsWith("switch:") && !retired[bind.description])
                 add(bind.description ?? "", HyprlandService.spell(bind))
         }
         for (const item of root.catalogue)
             add(item.description, "")
         for (const description in kept)
-            add(description, "")
+            if (!retired[description])
+                add(description, "")
         return rows
     }
 
@@ -121,34 +125,32 @@ Singleton {
 
     // Hyprland accepts duplicate binds (both fire), so check beforehand.
     function clash(combination: string, exclude: string): string {
-        const wanted = combination.toUpperCase()
+        const wanted = SettingsService.keyChord(combination)
         const other = root.table.find(row => row.description !== exclude
-            && row.combination !== "" && row.combination.toUpperCase() === wanted)
+            && row.combination !== "" && SettingsService.keyChord(row.combination) === wanted)
         if (!other)
             return ""
         const split = other.description.indexOf(" · ")
         return split < 0 ? other.description : other.description.slice(split + 3)
     }
 
-    // Writes the whole table, since a profile built from defaults has no keys
-    // stored yet. Refused until the bind list has been read.
+    // Keep overrides sparse: changing one row must not freeze every other
+    // inherited default into the saved profile.
     function rebind(description: string, combination: string): void {
-        if (combination === "" || !root.index[description]
-                || HyprlandService.binds.length === 0)
+        if (!root.index[description] || HyprlandService.binds.length === 0)
             return
-        const next = ({})
-        for (const row of root.table)
-            next[row.description] = row.description === description
-                ? combination : row.combination
+        const next = Object.assign({}, root.keys ?? ({}))
+        next[description] = combination
         SettingsService.set("keys", next)
     }
 
     // ── KEYS.TSV ────────────────────────────────────────────────────────────
     //
-    // `description<TAB>combination` per line, since the Lua config cannot
-    // parse JSON. Empty for a profile with no keys of its own.
+    // `description<TAB>combination` per line; the marker also distinguishes a
+    // migrated empty profile from a legacy file before the shell starts.
     readonly property string keysHeader:
-        "# The keys of the profile in use: a bind's description, a tab, and its\n"
+        `# eclipse-keymap=${SettingsService.keymapVersion}\n`
+        + "# The keys of the profile in use: a bind's description, a tab, and its\n"
         + "# combination, empty for none. Written by the shell from Settings → Keys\n"
         + "# and read by hypr/modules/keybinds.lua, so an edit here is overwritten.\n"
 
@@ -163,7 +165,7 @@ Singleton {
             if (typeof kept[description] === "string")
                 lines.push(`${root.flat(description)}\t${root.flat(kept[description])}`)
         }
-        return lines.length === 0 ? "" : root.keysHeader + lines.join("\n") + "\n"
+        return root.keysHeader + (lines.length === 0 ? "" : lines.join("\n") + "\n")
     }
 
     onKeysTextChanged: root.writeKeys()

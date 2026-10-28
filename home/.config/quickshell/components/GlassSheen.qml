@@ -23,7 +23,7 @@ Item {
     // Off where the ground runs on past its own rectangle (the attached
     // notch), whose edge follows the fillets instead (`NotchOutline`).
     property bool edges: true
-    // Whose glass: the bar's unless the dock or the desk hands in its own.
+    // Defaults to the retained bar/island material.
     property string style: Theme.surfaceStyle
 
     anchors.fill: parent

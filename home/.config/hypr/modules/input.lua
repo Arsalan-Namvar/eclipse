@@ -9,10 +9,10 @@
 
 hl.config({
     input = {
-        kb_layout  = "us",
-        kb_variant = "",
+        kb_layout  = "us,ir",
+        kb_variant = ",winkeys",
         kb_model   = "",
-        kb_options = "",
+        kb_options = "grp:caps_toggle",
         kb_rules   = "",
 
         follow_mouse = 1,
