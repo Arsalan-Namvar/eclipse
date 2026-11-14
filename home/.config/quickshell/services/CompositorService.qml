@@ -95,8 +95,6 @@ Singleton {
 
     function applyStore(): void {
         const kept = Object.assign({}, root.store ?? ({}), root.keyboard ?? ({}))
-        if (SettingsService.gameMode)
-            kept["decoration:blur:enabled"] = "false"
         if (Object.keys(kept).length === 0) {
             root.load()
             return
@@ -174,9 +172,9 @@ Singleton {
 
     // ── GAME MODE ───────────────────────────────────────────────────────────
     //
-    // No animations, blur, shadow or glass, each push reading it over its own
-    // setting. Turning it off reloads instead: blur nobody has set lives in
-    // look.lua, and only a reload reads it back.
+    // No animations, shadow or application translucency. Shell surfaces also
+    // resolve to Classic through Theme, without disabling blur globally.
+    // Leaving game mode reloads the user's config before reasserting settings.
     readonly property bool gameMode: SettingsService.gameMode
 
     onGameModeChanged: {
@@ -186,7 +184,7 @@ Singleton {
         }
         root.applyAnimations()
         root.applyShadow()
-        root.applyGlass()
+        root.applyMaterial()
         root.applyGround()
         root.applyStore()
     }
@@ -198,13 +196,15 @@ Singleton {
     // so no window animates on a mix of old and new curves.
     function applyAnimations(): void {
         root.animator.command = ["hyprctl", "eval",
-            Motion.chunk(SettingsService.gameMode ? "off" : SettingsService.animationPreset)]
+            Motion.chunk(SettingsService.animationPreset, SettingsService.workspaceAnimationPreset,
+                         SettingsService.gameMode)]
         root.animator.running = true
     }
 
     readonly property Process animator: Process {}
 
     onAnimationPresetChanged: root.applyAnimations()
+    onWorkspaceAnimationPresetChanged: root.applyAnimations()
 
 
     // ── SHADOW ──────────────────────────────────────────────────────────────
@@ -241,6 +241,7 @@ Singleton {
 
 
     readonly property string animationPreset: SettingsService.animationPreset
+    readonly property string workspaceAnimationPreset: SettingsService.workspaceAnimationPreset
 
     // A reload drops everything pushed at runtime; push it all again.
     readonly property Connections reloads: Connections {
@@ -253,7 +254,7 @@ Singleton {
                 root.applyStore()
                 root.applyCursor()
                 root.applyShake()
-                root.applyGlass()
+                root.applyMaterial()
                 root.applyGround()
             }
         }
@@ -268,7 +269,7 @@ Singleton {
         root.applyStore()
         // A shell-only restart fires no reload, so push plugin settings here.
         root.applyShake()
-        root.applyGlass()
+        root.applyMaterial()
         root.applyGround()
     }
 
@@ -386,12 +387,11 @@ Singleton {
     readonly property bool shakeToFind: SettingsService.shakeToFind
 
 
-    // ── GLASS ───────────────────────────────────────────────────────────────
+    // ── APPLICATION MATERIAL ────────────────────────────────────────────────
     //
-    // hyprglass `enabled`: off in `look.lua`, pushed on change and after
-    // every reload. The chunk carries its own `hl.plugin.hyprglass` guard,
-    // since that table doesn't exist until the plugin loads; the eval is a
-    // no-op without the plugin and on the parse before it loads.
+    // Whole application windows are composed at one opacity. Quickshell
+    // toplevels keep their native QML alpha and are never refracted.
+    // HyprGlass draws through the shadow decoration (see shadowChunk).
     property bool glassAvailable: false
 
     function loadGlass(): void {
@@ -405,38 +405,70 @@ Singleton {
         }
     }
 
-    function applyGlass(): void {
-        root.glassSetter.command = ["hyprctl", "eval",
-            `if hl.plugin.hyprglass ~= nil then hl.plugin.hyprglass.config({ enabled = ${
-                root.glassOn() ? "true" : "false"} }) end`]
-        root.glassSetter.running = true
+    readonly property string windowMaterial: SettingsService.windowMaterial
+
+    // Functions read the setting directly: a game-mode handler can fire before
+    // a dependent QML binding has caught up.
+    function material(): string {
+        return SettingsService.gameMode ? "classic" : SettingsService.windowMaterial
     }
 
-    readonly property Process glassSetter: Process {}
-
-    readonly property bool windowGlass: SettingsService.windowGlass
-    // A function, not a binding: the game mode's handler pushes before a
-    // binding on the same change would have caught up.
     function glassOn(): bool {
-        return SettingsService.windowGlass && !SettingsService.gameMode
+        return root.material() === "liquid"
     }
 
-    // Glass depends on the shadow decoration (see `shadowChunk`).
-    onWindowGlassChanged: {
-        root.applyGlass()
-        root.applyShadow()
+    function materialChunk(): string {
+        const style = root.material()
+        const opacity = style === "liquid" ? "0.75" : style === "glass" ? "0.90" : "1.0"
+        return `local liquid = ${style === "liquid"} and hl.plugin.hyprglass ~= nil; `
+            + `hl.config({ decoration = { active_opacity = 1.0, inactive_opacity = 1.0, fullscreen_opacity = 1.0, blur = { enabled = true } } }); `
+            + `hl.window_rule({ name = "impasto-application-material", match = { class = "negative:^(org\\\\.quickshell)$" }, `
+            + `opacity = "${opacity} override ${opacity} override ${opacity} override", no_blur = ${style === "classic"} or liquid, tag = "${style === "liquid" ? "-" : "+"}hyprglass_disabled" }); `
+            + `if hl.plugin.hyprglass ~= nil then hl.plugin.hyprglass.config({ enabled = ${style === "liquid"}, manage_window_blur = false, layers = { enabled = false } }) end; `
+            + root.shadowChunk() + "; " + root.groundChunk() + "; require('modules.media').apply()"
     }
 
-    // Blur the retained bar/island only while its ground is translucent.
-    // The alpha floor excludes the empty part of the layer surface.
+    function applyMaterial(): void {
+        root.materialSoon.restart()
+    }
+
+    // Collapse startup/profile bursts and serialize pushes so an older mode
+    // cannot finish after the most recent selection.
+    readonly property Timer materialSoon: Timer {
+        interval: 0
+        onTriggered: {
+            if (root.materialSetter.running) {
+                root.materialPending = true
+                return
+            }
+            root.materialSetter.command = ["hyprctl", "eval", root.materialChunk()]
+            root.materialSetter.running = true
+        }
+    }
+
+    property bool materialPending: false
+    readonly property Process materialSetter: Process {
+        onExited: {
+            if (root.materialPending) {
+                root.materialPending = false
+                root.applyMaterial()
+            }
+        }
+    }
+
+    onWindowMaterialChanged: root.applyMaterial()
+
+    // Native shell surfaces opt into blur independently of application mode.
+    // The alpha floor excludes empty parts of transparent layer surfaces.
+    function groundChunk(): string {
+        const blur = !Theme.solid
+        return `hl.layer_rule({ name = "impasto-shell-blur", match = { namespace = "^(impasto-bar|impasto-deck|impasto-desktop|impasto-capture)$" }, blur = ${blur}, ignore_alpha = 0.12 }); `
+            + `hl.window_rule({ name = "impasto-shell-material", match = { class = "^(org\\\\.quickshell)$" }, opacity = "1.0 override 1.0 override 1.0 override", no_blur = ${!blur}, tag = "+hyprglass_disabled" })`
+    }
+
     function applyGround(): void {
-        root.groundSetter.command = ["hyprctl", "eval",
-            `hl.layer_rule({ name = "impasto-bar-blur", match = { namespace = "^(impasto-bar)$" }, blur = true, ignore_alpha = 0.12, enabled = ${
-                Theme.solid || SettingsService.gameMode ? "false" : "true"} })`]
-        root.groundSetter.running = true
+        root.applyMaterial()
     }
-
-    readonly property Process groundSetter: Process {}
 
     readonly property bool solidGround: Theme.solid
 

@@ -299,7 +299,9 @@ Singleton {
             return
         }
 
-        const given = document.settings
+        // Retired material keys are consumed by migration, not skipped as
+        // unknown settings. Count only the resulting canonical payload.
+        const given = SettingsService.migrateMaterials(document.settings)
         const skipped = Object.keys(given).filter(key =>
             SettingsService.profileKeys.indexOf(key) < 0
             || !SettingsService.accepts(key, given[key])).length

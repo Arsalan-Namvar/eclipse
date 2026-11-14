@@ -11,8 +11,8 @@ pragma Singleton
 
 import QtQuick
 
-// Fixed tokens: the greeter runs before any user's palette applies. Values
-// match the shell's fixed island colours and its default accent.
+// Fixed greeter tokens: selected dark/pale-gold identity, independent of any
+// logged-in user's palette.
 QtObject {
     id: root
 
@@ -24,12 +24,11 @@ QtObject {
     readonly property color islandSurfaceHover: "#1f1f1f"
     readonly property color islandBorder: "#262626"
 
-    readonly property color text: "#ffffff"
-    readonly property color textMuted: "#8e8e93"
+    readonly property color text: "#eee4cc"
+    readonly property color textMuted: "#aaa69d"
 
-    // The shell's default accent.
-    readonly property color accent: "#0a84ff"
-    readonly property color accentText: "#ffffff"
+    readonly property color accent: "#cbbb92"
+    readonly property color accentText: "#101119"
 
     readonly property color indicator: "#ffffff"
     readonly property color indicatorWarn: "#ffd60a"
@@ -67,16 +66,11 @@ QtObject {
     readonly property string fontMono:
         root.fontOf("JetBrainsMono Nerd Font, monospace")
 
-    // Inter's display cut, for the clock.
-    readonly property string fontDisplay:
-        root.fontOf("Inter Display, Inter, Cantarell, sans-serif")
 
     readonly property int fontSizeSmall: 11
     readonly property int fontSizeRegular: 13
     readonly property int fontSizeMedium: 14
     readonly property int fontSizeLarge: 16
-    readonly property int fontSizeDate: 26
-    readonly property int fontSizeClock: 300
 
     // ── MOTION ──────────────────────────────────────────────────────────────
 

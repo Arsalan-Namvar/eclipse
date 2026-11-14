@@ -26,6 +26,8 @@ import "../services"
 PanelWindow {
     id: root
     CornerGuard {}
+    readonly property bool glassy: true
+    readonly property string groundStyle: Theme.surfaceStyle
 
     // The window under the pointer in window mode, the dragged box in region
     // mode.
@@ -199,9 +201,11 @@ PanelWindow {
             width: readingText.implicitWidth + 20
             height: 28
             radius: height / 2
-            color: Theme.island
-            border.color: Theme.islandBorder
+            color: Theme.islandGround
+            border.color: Theme.islandRim
             border.width: 1
+
+            GlassSheen { shape: reading }
 
             Text {
                 id: readingText

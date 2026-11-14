@@ -22,7 +22,7 @@ SettingsSection {
     // Unused: this page has no parts, but `SettingsPanel` sets it on all pages.
     property string tab: ""
 
-    // `SettingsPanel` closes the window on this.
+    // The persistent SettingsWindow closes first, then enables the editor.
     signal arranging()
 
     SettingGroup {
@@ -36,10 +36,7 @@ SettingsSection {
             PillButton {
                 text: Tr.t("Edit")
                 implicitHeight: 30
-                onClicked: {
-                    DesktopService.edit(true)
-                    root.arranging()
-                }
+                onClicked: root.arranging()
             }
         }
     }

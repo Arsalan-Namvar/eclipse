@@ -14,8 +14,8 @@ import "../services"
 import "../components"
 
 // Capture options: the shape, the kind, and where the result goes (or, for a
-// recording, whether it includes audio). Drawn in the island's black at the
-// bottom of the screen, as glyphs, each named on hover.
+// recording, whether it includes audio). Uses the native shell material at
+// the bottom of the screen, as glyphs, each named on hover.
 Rectangle {
     id: root
 
@@ -27,9 +27,11 @@ Rectangle {
     implicitWidth: row.implicitWidth + 12
     implicitHeight: 52
     radius: height / 2
-    color: Theme.island
-    border.color: Theme.islandBorder
+    color: Theme.islandGround
+    border.color: Theme.islandRim
     border.width: 1
+
+    GlassSheen { shape: root }
 
     // The bar takes its own presses; without this, a click on a segment starts
     // a selection underneath it.

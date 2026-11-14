@@ -106,38 +106,19 @@ QtObject {
         }
     }
 
-    // ── GROUND ──────────────────────────────────────────────────────────────
-    //
-    // The terminal's ground, chosen beside the shell's.
-    readonly property string terminalGround: SettingsService.terminalGround
-
-    onTerminalGroundChanged: root.pushTerminalGround()
-
-    function pushTerminalGround(): void {
-        if (!SettingsService.arrived)
-            return
-        root.groundProcess.command = [root.script, "push-terminal-ground",
-                                      SettingsService.terminalGround]
-        if (root.groundProcess.running)
-            root.groundAgain = true
-        else
-            root.groundProcess.running = true
+    // Native app paint stays opaque. Hyprland owns the application material.
+    function prepareAppBackgrounds(): void {
+        if (!SettingsService.arrived) return
+        root.backgroundProcess.running = true
+    }
+    readonly property Process backgroundProcess: Process {
+        command: [root.script, "prepare-app-backgrounds"]
     }
 
-    property bool groundAgain: false
-    readonly property Process groundProcess: Process {
-        onExited: if (root.groundAgain) {
-            root.groundAgain = false
-            root.pushTerminalGround()
-        }
-    }
-
-    // Also pushed at startup, once the settings are read: before that they
-    // hold the defaults, and a setting that never changes would leave the
-    // fragment kitty.conf includes unwritten.
+    // Push the font and opaque native bases after settings arrive and at login.
     function pushTerminalSettings(): void {
         root.pushTerminalFont()
-        root.pushTerminalGround()
+        root.prepareAppBackgrounds()
     }
 
     Component.onCompleted: root.pushTerminalSettings()

@@ -314,15 +314,6 @@ QtObject {
             "No such place — the last reading is still showing":
                 "No existe ese lugar — se sigue mostrando la última lectura",
 
-            "The graph is read from the public profile page, so no token or account is needed. It stays empty until you enter a username.":
-                "El gráfico se lee de la página pública del perfil, así que no hace falta token ni cuenta. Queda vacío hasta que escribes un usuario.",
-            "Username": "Usuario",
-            "Whose public contribution graph to draw.":
-                "De quién se dibuja el gráfico público de contribuciones.",
-            "Nobody yet": "Nadie todavía",
-            "No such profile — the last grid is still showing":
-                "No existe ese perfil — se sigue mostrando la última cuadrícula",
-
             "A note on the wallpaper is written the same way as one in the panel.":
                 "Una nota en el fondo se escribe igual que una del panel.",
             "Handwriting": "A mano",
@@ -665,12 +656,20 @@ QtObject {
                 "Escala a su sitio y frena con una cola larga. Rápido, y nunca rebota.",
             "Half the distance and half the time. Movement you register rather than watch.":
                 "La mitad de distancia y de tiempo. Movimiento que registras más que miras.",
-            "Long and soft, and the screen fades between workspaces rather than sliding.":
-                "Largo y suave, y la pantalla funde entre espacios en vez de deslizar.",
+            "Long and soft, with a gentle arrival.":
+                "Largo y suave, con una llegada delicada.",
             "Overshoots a little and settles back. The look most Hyprland presets are after.":
                 "Se pasa un poco y vuelve a asentarse. El aspecto que persiguen la mayoría de preajustes.",
-            "Nothing moves. Windows and workspaces appear where they are going to be.":
-                "Nada se mueve. Ventanas y espacios aparecen donde van a estar.",
+            "Windows appear where they are going to be.":
+                "Las ventanas aparecen en su destino.",
+            "Workspace animation": "Animación de espacios de trabajo",
+            "Workspace switching and scratchpad show/hide, independent of window animations.":
+                "Cambio de espacios y apertura/cierre del scratchpad, independiente de las animaciones de ventanas.",
+            "Slide with a long, smooth deceleration.": "Desliza con una desaceleración larga y suave.",
+            "A quick slide with a short settling time.": "Un deslizamiento rápido que se asienta pronto.",
+            "Fade gently between workspaces.": "Funde suavemente entre espacios de trabajo.",
+            "Slide with a small overshoot and settle.": "Desliza con un pequeño rebote y se asienta.",
+            "Switch workspaces and show the scratchpad instantly.": "Cambia de espacio y muestra el scratchpad al instante.",
 
             // ── DISPLAYS ────────────────────────────────────────────────────
             "The screens": "Las pantallas",

@@ -13,23 +13,23 @@ import "../theme"
 import "../services"
 import "../components"
 
-// One layer's ground, on the page of the layer it paints.
+// The two material layers share the same choices, not the same rendering.
 SettingRow {
     id: root
 
-    // The setting that holds it: surfaceStyle or terminalGround.
+    // The setting that holds it: windowMaterial or surfaceStyle.
     required property string key
 
-    // Empty, from a profile saved when the layer could follow the bar, is
-    // drawn as the bar's, so it reads as the bar's.
-    readonly property string stored: SettingsService[root.key] === ""
-        ? SettingsService.surfaceStyle : SettingsService[root.key]
-    readonly property string value: Theme.seeThrough(root.stored) ? root.stored : "classic"
+    readonly property string value: SettingsService[root.key]
 
-    label: Tr.t("Ground")
-    reading: root.value === "liquid" ? Tr.t("Clear frosted glass, lit at the edge")
-        : root.value === "glass" ? Tr.t("The terminal's glass, over a blur")
-        : Tr.t("Solid black")
+    label: Tr.t("Material")
+    reading: root.key === "windowMaterial"
+        ? (root.value === "classic" ? Tr.t("Opaque · no blur or refraction")
+           : root.value === "glass" ? Tr.t("90% opacity · blur")
+           : Tr.t("75% opacity · blur · optional refraction"))
+        : (root.value === "classic" ? Tr.t("Solid native surfaces")
+           : root.value === "glass" ? Tr.t("Tinted native glass")
+           : Tr.t("Clear native frosted glass"))
 
     SegmentedControl {
         options: [

@@ -10,6 +10,8 @@ import "../components"
 PanelWindow {
     id: root
     CornerGuard {}
+    readonly property bool glassy: true
+    readonly property string groundStyle: Theme.surfaceStyle
     readonly property string screenName: root.screen?.name ?? ""
     readonly property bool editing: DesktopService.editing
     readonly property bool hosting: DesktopService.editingScreen === root.screenName
@@ -60,8 +62,8 @@ PanelWindow {
             width: Math.min(360, surfaceBoard.width - 24)
             height: Math.min(content.implicitHeight + 28, surfaceBoard.height - 36)
             radius: Theme.radiusLarge
-            color: Theme.island
-            border.color: Theme.hairline
+            color: Theme.islandGround
+            border.color: Theme.islandRim
             onXChanged: publishBox()
             onYChanged: publishBox()
             onWidthChanged: publishBox()
@@ -71,6 +73,7 @@ PanelWindow {
                 if (visible) DesktopService.trayBox = { x: x, y: y, width: width, height: height }
             }
             TapHandler { acceptedButtons: Qt.LeftButton | Qt.RightButton; gesturePolicy: TapHandler.ReleaseWithinBounds }
+            GlassSheen { shape: card }
             Flickable {
                 anchors.fill: parent
                 anchors.margins: 14

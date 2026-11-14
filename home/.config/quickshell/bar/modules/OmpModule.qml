@@ -7,7 +7,7 @@ import "../island"
 Item {
     id: root
     property bool compact: false
-    implicitWidth: root.compact ? Theme.capsuleHeight : 520
+    implicitWidth: root.compact ? Theme.capsuleHeight : OmpService.panelWidth - 2 * Theme.panelPadding
     implicitHeight: root.compact ? Theme.capsuleHeight : detail.implicitHeight
 
     Component.onCompleted: OmpService.subscribe()

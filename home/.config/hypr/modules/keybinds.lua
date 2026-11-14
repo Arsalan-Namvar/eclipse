@@ -323,7 +323,7 @@ bind("", hl.dsp.exec_cmd("pkill -x quickshell; pkill -x qs; sleep 0.5; qs -d"), 
 bind(mainMod .. " + Space",     hl.dsp.global("quickshell:launcher"),   { description = "Shell · Open the launcher" })
 bind(mainMod .. " + CTRL + A",  hl.dsp.global("quickshell:controls"),   { description = "Shell · Open the control centre" })
 bind(mainMod .. " + TAB",       hl.dsp.global("quickshell:overview"),   { description = "Shell · Open the workspace overview" })
-bind(mainMod .. " + CTRL + S",  hl.dsp.global("quickshell:settings"),   { description = "Shell · Open settings" })
+bind(mainMod .. " + comma",     hl.dsp.global("quickshell:settings"),   { description = "Shell · Open settings" })
 bind(mainMod .. " + CTRL + W",  hl.dsp.global("quickshell:appearance"), { description = "Shell · Open appearance" })
 bind(mainMod .. " + CTRL + T",  hl.dsp.global("quickshell:palette"),    { description = "Shell · Open the palette" })
 bind(mainMod .. " + CTRL + U",  hl.dsp.global("quickshell:stats"),      { description = "Shell · Open system statistics" })

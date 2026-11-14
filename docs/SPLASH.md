@@ -1,30 +1,63 @@
 # Eclipse splash and original identity
 
-The new splash is an **implementation candidate for visual review**, not a claim
-that the owner has approved final artwork. Its original conjunction seal combines
+The owner selected the original emblem, rounded geometric wordmark (option 1),
+dark background and pale-gold colors on 2026-11-03. Its conjunction seal combines
 an eclipsed dark disc, broken meridians, an inclined ring and a small northern
 index diamond. Sparse rays retain a recognizable silhouette without turning the
 splash into a game sigil. The outlined wordmark is constructed from original
 paths, not a font. No game assets, reference photographs or generated wallpaper
 are included in this theme. The rejected generated image is not used.
 
+## Owner review — 2026-11-03
+
+- Keep the dark background and pale-gold color direction.
+- Keep the original celestial emblem after comparing alternatives; no emblem redesign.
+- Replace rejected angular lettering with rounded geometric option 1: curved
+  C/P/S, softened corners and rounded terminals. C059 comparison was not selected.
+- Canonical SVG, Quickshell/SDDM copies and Plymouth raster now use this selection.
+- Owner accepted the corrected login-screen preview on 2026-11-03.
+- Visual approval does not authorize boot deployment; actual password login,
+  session startup and boot/SDDM handoff still require verification.
+- Owner separately authorized login-theme-only deployment; installed SDDM theme
+  updated on 2026-11-03 with backup, without service restart or boot changes.
+  Owner reports real login works after an accidental reboot; wrong-password
+  rejection and the new Plymouth boot theme remain separate/unverified.
+
+### Login preview
+
+The SDDM checkout theme uses the same dark gradient, original emblem and rounded
+wordmark. The centered emblem is 256 logical pixels times the responsive UI
+scale, with 300-pixel lettering below; no clock/date is drawn. Preview it without
+changing installed SDDM:
+
+```bash
+sddm-greeter-qt6 --test-mode --theme "$HOME/Projects/eclipse/system/usr/share/sddm/themes/impasto"
+```
+
+Test mode displays a preview banner, disables login/power actions and clears
+dummy input with an explanatory message on submission. Never enter a real
+password in preview. Real login still calls SDDM normally and handles success,
+failure and socket disconnect. Preview success is not a PAM/session-start test.
+
+
+
 ## Files and provenance
 
 - `.github/assets/eclipse-mark.svg`: canonical, original small-size mark.
 - `.github/assets/eclipse-wordmark.svg`: canonical, original outlined wordmark.
-- `.github/assets/eclipse-splash.png`: static layout preview at 1920 × 1080;
-  illustrative 70% progress, with the rings in their aligned position. This is
-  an asset composition, **not a screenshot of Plymouth**.
-- `.github/assets/eclipse-plymouth-{boot,password,shutdown}.png`: actual
-  Plymouth/X11 renderer captures at 1280 × 720 from the isolated smoke below.
+- `.github/assets/eclipse-splash.png`: static 1920 × 1080 activity-frame layout;
+  an asset composition, **not a screenshot of Plymouth** or a percentage reading.
+- `.github/assets/eclipse-plymouth-{boot,password,shutdown}.png`: historical actual
+  Plymouth/X11 captures at 1280 × 720 with the previous angular lettering; they
+  are not updated screenshots of the selected rounded wordmark.
 - `system/usr/share/plymouth/themes/eclipse/eclipse.plymouth`: script-module
   descriptor, installed theme name `eclipse`.
-- `system/usr/share/plymouth/themes/eclipse/eclipse.script`: runtime layout,
-  progress, authentication, messages and shutdown presentation.
-- `system/usr/share/plymouth/themes/eclipse/source/`: editable SVG sources for
-  the outer/inclined meridians, entry field, password bullet and progress rule.
-  PNGs beside the script are the runtime assets; Plymouth does not need an SVG
-  renderer in the initramfs.
+- `system/usr/share/plymouth/themes/eclipse/eclipse.script`: runtime activity,
+  authentication, messages and shutdown presentation.
+- `system/usr/share/plymouth/themes/eclipse/source/`: original orbital projection
+  generator plus editable entry-field/password-bullet SVGs.
+- `system/usr/share/plymouth/themes/eclipse/orbits/`: 64 paired near/far raster
+  frames. Plymouth needs no SVG renderer or Python in the initramfs.
 
 The new vectors were authored for Eclipse on 2026-10-28 and are distributed under
 GPL-3.0-or-later, as stated in each source. They contain no third-party font
@@ -42,12 +75,14 @@ from the theme rather than retained as a hidden fallback.
 ## Behavior
 
 The background is a quiet charcoal-violet gradient, not a scene wallpaper.
-Meridians ease from slightly separated positions into conjunction as Plymouth
-reports boot progress. They do not spin endlessly or pretend time alone is
-progress. A thin track/fill gives explicit progress independent of that motion.
-Images are scaled once at initialization; the refresh callback only moves/fades
-sprites. Progress images are resized only when their displayed pixel width
-changes. Shutdown/reboot begins with the mark aligned and a clear mode label.
+The original emblem stays centered and stationary. Two inclined orbital bands
+precess continuously around it: their far halves render behind the opaque emblem,
+their near halves in front. This replaces the rejected drifting/pulsing flat
+rings. The 64-frame loop advances every six refresh callbacks (about 7.7 seconds
+at Plymouth's nominal 50 Hz), independent of reported progress; there is no
+percentage or progress bar. Frames are decoded/scaled once at initialization,
+then refresh swaps cached images without rotation or image allocation. The loop
+also runs during shutdown/reboot, with a mode label below the lettering.
 
 An encrypted-disk prompt raises the emblem and shows Plymouth's actual prompt,
 a field and masked bullets. Only the bullet count is rendered: the script never
@@ -59,7 +94,7 @@ bottom rows. Long text is scaled to fit, rather than silently truncated.
 Plymouth's normal Escape-to-details behavior is not intercepted.
 
 The API is Plymouth's script module, using Image, Sprite, Window and Math plus
-its password, normal, progress, status and display/hide-message callbacks. See
+its password, normal, refresh, status and display/hide-message callbacks. See
 [the upstream scripting reference](https://www.freedesktop.org/wiki/Software/Plymouth/Scripts/)
 and the installed example `/usr/share/plymouth/themes/script/script.script`.
 There are no Qt, JavaScript browser or canvas dependencies.
@@ -72,16 +107,17 @@ From the repository root, with librsvg installed:
 theme=system/usr/share/plymouth/themes/eclipse
 rsvg-convert -w 1024 -h 1024 .github/assets/eclipse-mark.svg -o "$theme/mark.png"
 rsvg-convert -w 1200 -h 187 .github/assets/eclipse-wordmark.svg -o "$theme/wordmark.png"
-for asset in ring-a ring-b entry progress bullet; do
+for asset in entry bullet; do
     rsvg-convert "$theme/source/$asset.svg" -o "$theme/$asset.png"
 done
+python3 "$theme/source/render-orbits.py"
 ```
 
-The runtime sizes at 1080p are 256 px for the seal, 360 px for the meridians,
+The runtime sizes at 1080p are 256 px for the seal, 400 px for the orbital canvas,
 300 × 47 px for the wordmark and 440 × 60 px for the password field. All share
 the smaller of the horizontal/vertical screen scale, preserving aspect ratio.
-The reusable mark SVG is deliberately less detailed than the surrounding splash
-instrument, so it can also stand alone at small sizes.
+The reusable canonical emblem remains unchanged; moving bands are separate
+original artwork. Raster caching uses about 78 MiB at 1080p (less at 720p).
 
 ## Preview and smoke recipe — disposable VM or designated test laptop only
 
@@ -126,8 +162,8 @@ terminal for control and recovery. Keep a working SSH/console session.
    `reboot` label is selected when Plymouth reports reboot mode.
 4. Check 1280 × 720, 1920 × 1080 and a HiDPI VM display, plus portrait/narrow
    layouts if used. Confirm clear silhouette, wordmark, password prompt, bottom
-   status/messages, and no ongoing spin after alignment. The preview daemon's
-   estimated boot progress is not proof of real service progress.
+   status/messages, and continued activity without progress updates. The motion
+   communicates activity, not real service progress or an ETA.
 5. Quit the daemon and restore the target's previous default theme/config after
    preview. Keep the debug log and visual captures as evidence.
 
@@ -182,3 +218,43 @@ shutdown and restart on the target. An image preview or syntax check cannot
 establish those outcomes. Only the isolated, private-renderer smoke above was
 performed on the development workstation; no live daemon, host settings,
 service, bootloader or initramfs operation was performed.
+
+### Target recovery image
+
+The designated laptop uses GRUB, an unencrypted ext4 root and a separate /boot.
+For the selected-theme deployment, preserve its working image as
+`/boot/initramfs-linux-before-eclipse.img` before replacing the normal image.
+To boot that image without changing permanent GRUB configuration:
+
+1. At the GRUB menu, select Arch Linux and press **e**.
+2. On the `initrd` line, keep `/intel-ucode.img` unchanged and replace only
+   `/initramfs-linux.img` with `/initramfs-linux-before-eclipse.img`.
+3. Press **Ctrl+X** or **F10** to boot the temporary edit.
+
+The recovery image matches the currently installed kernel. Do not rely on it
+after a later kernel update. Configuration/theme/image backups are under
+`~/eclipse-backups/plymouth-review-20261103/`. Restore only after inspecting a
+failure; do not blindly extract a boot archive over a newer kernel installation.
+
+Selected theme deployed on the designated laptop on 2026-11-03: exact theme
+assets verified inside a newly generated initramfs before replacing the normal
+image. Kernel, GRUB and mkinitcpio inputs stayed unchanged. No reboot performed
+by the assistant; actual boot/shutdown presentation remains an owner check.
+
+Centered clock-free login and continuous-activity splash refinements were deployed
+on 2026-11-10 after a fresh backup in
+`~/eclipse-backups/centered-activity-20261110/`. New initramfs contents were checked
+before cutover; the original recovery image above remains unchanged. No reboot
+or login-manager restart was performed; owner boot/login acceptance is pending.
+
+Approved enlarged login identity and depth-layered orbital revision deployed on
+2026-11-12. Backup: `~/eclipse-backups/orbit-depth-g42MjTv7/`. Every new Plymouth
+file was compared inside the extracted temporary initramfs before replacing the
+normal image; kernel, GRUB, recovery image and configuration hashes were unchanged.
+SDDM remained running with the same PID; no reboot or logout performed. Observe
+the front/back ring motion and larger login emblem on the next deliberate reboot.
+
+Owner subsequently confirmed the deployed orbital motion and larger login emblem
+look correct and login returns to the desktop. Boot/login acceptance for this
+revision is complete; this does not claim separate shutdown verification.
+

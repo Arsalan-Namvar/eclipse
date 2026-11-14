@@ -33,11 +33,17 @@ Item {
     height: implicitHeight
 
     Rectangle {
+        id: plate
         anchors.fill: parent
         radius: Theme.radiusMedium
-        color: Theme.island
+        color: Theme.groundOf(Theme.styleIn(QsWindow.window))
         border.color: Theme.borderIn(QsWindow.window)
         border.width: 1
+
+        GlassSheen {
+            shape: plate
+            style: Theme.styleIn(QsWindow.window)
+        }
     }
 
     ColumnLayout {

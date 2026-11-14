@@ -21,7 +21,7 @@ awww                         # the wallpaper
 imagemagick                  # the palette board
 python                       # every backend in scripts/
 git                          # setup's own clones, ./setup cursors, lazy.nvim
-github-cli                   # authenticated read-only GitHub repository/org panel
+github-cli                   # GitHub CLI for direct terminal and development use
 grim                         # the capture's photograph, and the lock screen's
 dbus                         # dbus-monitor, which hears logind about to sleep
 wl-clipboard                 # copying, and the clipboard's history
@@ -96,6 +96,7 @@ pipewire-pulse               # what pactl talks to
 fzf                          # Bash fuzzy completion and keybindings, plus fzf-lua
 zoxide                       # Bash z/zi directory navigation
 fnm                          # Node.js versions, switched on directory changes
+nodejs                       # system runtime for Spicetify's pnpm/esbuild package build; fnm manages user projects
 btop                         # themed by the palette push
 cava                         # the same, and the bar's visualiser
 yazi                         # the file manager in the terminal

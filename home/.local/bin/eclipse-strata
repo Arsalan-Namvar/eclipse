@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# GTK 4.24 creates an empty ext-background-effect object unconditionally,
+# overriding Hyprland's blur. Disable only that protocol for this application.
+export GDK_WAYLAND_DISABLE="${GDK_WAYLAND_DISABLE:+$GDK_WAYLAND_DISABLE,}ext_background_effect_manager_v1"
+exec /usr/bin/strata "$@"

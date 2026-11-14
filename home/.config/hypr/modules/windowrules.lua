@@ -37,6 +37,29 @@ hl.window_rule({
 
 -- ── SHELL ───────────────────────────────────────────────────────────────────
 
+-- Native QML surfaces own their alpha and lighting, even when an ordinary
+-- toplevel (Settings). HyprGlass supports exclusion through this dynamic tag;
+-- disabling global window glass alone would not override per-window tags.
+hl.window_rule({
+    name = "impasto-shell-material",
+    match = { class = "^(org\\.quickshell)$" },
+    opacity = "1.0 override 1.0 override 1.0 override",
+    no_blur = false,
+    tag = "+hyprglass_disabled",
+})
+
+-- Glass is the application's default until the shell pushes its saved mode.
+-- negative: is Hyprland's supported regex inversion (RE2 has no lookahead).
+hl.window_rule({
+    name = "impasto-application-material",
+    match = { class = "negative:^(org\\.quickshell)$" },
+    opacity = "0.90 override 0.90 override 0.90 override",
+    no_blur = false,
+    tag = "+hyprglass_disabled",
+})
+
+require("modules.media").apply()
+
 -- · the settings window is a regular toplevel; float it instead of tiling.
 -- · The title is set by settings/SettingsWindow.qml.
 hl.window_rule({

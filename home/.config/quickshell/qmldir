@@ -56,8 +56,6 @@ singleton TrayService        1.0 services/TrayService.qml
 singleton PrivacyService     1.0 services/PrivacyService.qml
 singleton SunsetService      1.0 services/SunsetService.qml
 singleton IdleService        1.0 services/IdleService.qml
-singleton GithubService      1.0 services/GithubService.qml
-singleton GithubBrowserService 1.0 services/GithubBrowserService.qml
 singleton OmpService         1.0 services/OmpService.qml
 singleton PackagesService    1.0 services/PackagesService.qml
 singleton ProfileService     1.0 services/ProfileService.qml
@@ -70,7 +68,6 @@ ToggleSwitch     1.0 components/ToggleSwitch.qml
 SegmentedControl 1.0 components/SegmentedControl.qml
 SettingRow       1.0 components/SettingRow.qml
 RingIndicator    1.0 components/RingIndicator.qml
-ContributionGrid 1.0 components/ContributionGrid.qml
 Sparkline        1.0 components/Sparkline.qml
 UsageBars        1.0 components/UsageBars.qml
 UsageRing        1.0 components/UsageRing.qml
@@ -216,9 +213,9 @@ BluetoothDetail  1.0 bar/island/BluetoothDetail.qml
 Commands         1.0 Commands.qml
 ScreenCorners    1.0 ScreenCorners.qml
 singleton OmpService 1.0 services/OmpService.qml
-singleton GithubBrowserService 1.0 services/GithubBrowserService.qml
 singleton VpnService 1.0 services/VpnService.qml
 OmpModule 1.0 bar/modules/OmpModule.qml
 OmpPanel 1.0 bar/island/OmpPanel.qml
-GithubPanel 1.0 bar/island/GithubPanel.qml
+OmpLabel 1.0 bar/island/OmpLabel.qml
+OmpMetric 1.0 bar/island/OmpMetric.qml
 VpnSection 1.0 settings/VpnSection.qml

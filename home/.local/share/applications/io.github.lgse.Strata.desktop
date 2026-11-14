@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Strata
+GenericName=File Manager
+Comment=Browse files with Eclipse's live palette and material
+Exec=sh -c "exec \\"\\$HOME/.local/bin/eclipse-strata\\" \\"\\$@\\"" sh %U
+Icon=io.github.lgse.Strata
+Terminal=false
+Categories=Utility;FileTools;FileManager;
+MimeType=inode/directory;
+StartupWMClass=io.github.lgse.Strata

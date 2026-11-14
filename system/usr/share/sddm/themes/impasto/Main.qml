@@ -8,7 +8,6 @@
 // ╰──────────────────────────────────────────────────────────────────────────╯
 
 import QtQuick
-import QtQuick.Effects
 
 import "components"
 
@@ -16,54 +15,52 @@ import "components"
 // load. `sddm`, `userModel`, `sessionModel` and `keyboard` are context
 // properties.
 
-// The lock screen over a painting instead of the desktop, blurred the same
-// way. At rest the clock alone; a key or a click wakes it, and the account,
-// the field and the power and session controls come in underneath. Escape or
-// a while untouched sends them away again.
+// The selected celestial identity is shared with the splash. Authentication
+// remains SDDM's responsibility; test mode never submits a password.
 Rectangle {
     id: root
 
-    color: Theme.island
+    readonly property bool preview: Qt.application.arguments.indexOf("--test-mode") >= 0
+    readonly property real uiScale: Math.max(0.6, Math.min(1.1, root.width / 1280, root.height / 900))
+    color: "#06070b"
+    gradient: Gradient {
+        GradientStop { position: 0; color: "#06070b" }
+        GradientStop { position: 1; color: "#0e0d13" }
+    }
 
-
-    Image {
+    Column {
+        id: identity
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: parent.top
-        anchors.topMargin: 32
-        width: 180
-        height: 28
-        source: "eclipse-wordmark.svg"
-        fillMode: Image.PreserveAspectFit
-        Accessible.name: "Eclipse"
-        z: 1
-    }
-    // ── BACKGROUND ──────────────────────────────────────────────────────────
-    //
-    // Blurred like the lock screen's desktop, and darkened as a whole: the
-    // painting is bright strokes edge to edge, and black capsules on a bright
-    // ground read as holes.
+        // Center the emblem itself; lettering sits beneath it.
+        y: root.height / 2 - 128 * root.uiScale
+        spacing: 16 * root.uiScale
 
-    Image {
-        id: painting
-
-        anchors.fill: parent
-        source: "background.jpg"
-        fillMode: Image.PreserveAspectCrop
-        asynchronous: false
-        cache: true
-        visible: false
-        sourceSize.width: root.width
-        sourceSize.height: root.height
+        Image {
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: 256 * root.uiScale
+            height: width
+            source: "eclipse-mark.svg"
+            fillMode: Image.PreserveAspectFit
+            Accessible.name: "Eclipse celestial emblem"
+        }
+        Image {
+            width: 300 * root.uiScale
+            height: width * 112 / 720
+            source: "eclipse-wordmark.svg"
+            fillMode: Image.PreserveAspectFit
+            Accessible.name: "Eclipse"
+        }
     }
 
-    MultiEffect {
-        anchors.fill: parent
-        source: painting
-        blurEnabled: true
-        blur: 1
-        blurMax: 64
-        brightness: -0.28
-        saturation: -0.15
+    Text {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: identity.bottom
+        anchors.topMargin: 14 * root.uiScale
+        visible: root.preview
+        text: qsTr("Preview only · login and power actions are disabled")
+        color: Theme.textMuted
+        font.family: Theme.fontFamily
+        font.pixelSize: 12 * root.uiScale
     }
 
     // ── STATE ───────────────────────────────────────────────────────────────
@@ -75,6 +72,12 @@ Rectangle {
     function attempt(password: string): void {
         if (root.authenticating)
             return
+        if (root.preview) {
+            account.clear()
+            root.failed = false
+            root.message = qsTr("Preview only — authentication is not available")
+            return
+        }
         root.authenticating = true
         root.failed = false
         root.message = ""
@@ -98,6 +101,12 @@ Rectangle {
 
         function onInformationMessage(message: string): void {
             root.message = message
+        }
+
+        function onSocketDisconnected(): void {
+            root.authenticating = false
+            account.clear()
+            root.message = qsTr("Login service disconnected")
         }
     }
 
@@ -126,8 +135,7 @@ Rectangle {
         root.awake = false
     }
 
-    // A screen left untouched goes back to its clock, unless a password is
-    // being checked.
+    // Return to the centered identity after inactivity, unless authenticating.
     Timer {
         id: drowse
 
@@ -142,48 +150,6 @@ Rectangle {
         }
     }
 
-    // ── CLOCK ───────────────────────────────────────────────────────────────
-    //
-    // The lock screen's numbers: just above the middle at rest; awake, it
-    // rises toward the top and steps back a little for the account.
-
-    property date now: new Date()
-
-    Timer {
-        interval: 1000
-        running: true
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: root.now = new Date()
-    }
-
-    Item {
-        id: face
-
-        readonly property real restY: Math.round((root.height - clock.height) / 2 - 40)
-        readonly property real awakeY: Math.min(face.restY, 170)
-
-        anchors.horizontalCenter: parent.horizontalCenter
-        y: face.restY + (face.awakeY - face.restY) * root.stage
-        width: clock.width
-        height: clock.height
-        scale: 1 - 0.1 * root.stage
-        transformOrigin: Item.Top
-
-        layer.enabled: true
-        layer.effect: MultiEffect {
-            shadowEnabled: true
-            shadowBlur: 1
-            shadowOpacity: 0.45
-            shadowVerticalOffset: 3
-            shadowColor: Theme.island
-        }
-
-        Clock {
-            id: clock
-            now: root.now
-        }
-    }
 
     // ── ACCOUNT ─────────────────────────────────────────────────────────────
 
@@ -274,11 +240,11 @@ Rectangle {
         opacity: root.stage
         visible: opacity > 0
 
-        canReboot: sddm.canReboot
-        canPowerOff: sddm.canPowerOff
+        canReboot: !root.preview && sddm.canReboot
+        canPowerOff: !root.preview && sddm.canPowerOff
 
-        onRebootRequested: sddm.reboot()
-        onPowerOffRequested: sddm.powerOff()
+        onRebootRequested: if (!root.preview) sddm.reboot()
+        onPowerOffRequested: if (!root.preview) sddm.powerOff()
     }
 
     SessionPicker {

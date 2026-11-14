@@ -9,6 +9,7 @@
 
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 
 import "../theme"
 import "../services"
@@ -30,6 +31,7 @@ Item {
     signal closed()
     signal panelRequested(string panel)
     signal arrangementRequested()
+    signal edgeArrangementRequested()
 
     readonly property int gap: 12
 
@@ -50,7 +52,7 @@ Item {
           tabs: [{ id: "style", label: Tr.t("Style") },
                  { id: "layout", label: Tr.t("Layout") },
                  { id: "workspaces", label: Tr.t("Workspaces") }],
-          keywords: "bar style grouped spread one capsule bezel frame rounded corners screen sides capsules wallpaper every screen monitors height margin scale ground glass classic liquid shadow layout left right split drag catalogue chip icon ring figure hover shape modules media battery timer volume brightness network wifi bluetooth weather stats cpu updates capture record screenshot buttons workspaces strip shown available shared per screen",
+          keywords: "bar style grouped spread one capsule bezel frame rounded corners screen sides capsules wallpaper every screen monitors height margin scale shadow layout left right split drag catalogue chip icon ring figure hover shape modules media battery timer volume brightness network wifi bluetooth weather stats cpu updates capture record screenshot buttons workspaces strip shown available shared per screen animation scratchpad glide brisk calm bounce",
           page: barPage },
 
         { id: "island", category: "shell", icon: "󰌢", label: Tr.t("Island"),
@@ -83,22 +85,22 @@ Item {
         { id: "modules", category: "shell", icon: "󰆧", label: Tr.t("Modules"),
           blurb: Tr.t("What the modules know, on the bar and the panels."),
           tabs: [],
-          keywords: "modules weather location place city github contributions username lyrics lrclib song music notes note handwriting",
+          keywords: "modules weather location place city lyrics lrclib song music notes note handwriting",
           page: modulesPage },
 
         { id: "appearance", category: "desk", icon: "󰏘", label: Tr.t("Appearance"),
-          blurb: Tr.t("Wallpaper, terminal, fonts and the shell's motion."),
+          blurb: Tr.t("Wallpaper, materials, fonts and the shell's motion."),
           tabs: [{ id: "wallpaper", label: Tr.t("Wallpaper") },
-                 { id: "terminal", label: Tr.t("Terminal") },
+                 { id: "materials", label: Tr.t("Materials") },
                  { id: "type", label: Tr.t("Type") },
                  { id: "motion", label: Tr.t("Motion") }],
-          keywords: "appearance theme colour color palette wallpaper transition fade wipe wave circle random terminal kitty ground glass font family sans mono nerd icons typeface animation speed pace curve easing motion game mode performance",
+          keywords: "appearance theme colour color palette wallpaper transition fade wipe wave circle random materials application windows quickshell terminal kitty files file manager strata classic glass liquid opacity blur refraction hyprglass plugin font family sans mono nerd icons typeface animation speed pace curve easing motion game mode performance",
           page: appearancePage },
 
         { id: "windows", category: "desk", icon: "󰖯", label: Tr.t("Windows"),
           blurb: Tr.t("How Hyprland lays out, draws and animates windows."),
           tabs: [],
-          keywords: "windows layout dwindle master scrolling rounding border gaps inner outer opacity inactive blur refraction glass hyprglass shadow animation preset hyprland",
+          keywords: "windows layout dwindle master scrolling rounding border gaps inner outer shadow animation preset hyprland",
           page: windowsPage },
 
         { id: "monitors", category: "desk", icon: "󰍹", label: Tr.t("Displays"),
@@ -285,8 +287,8 @@ Item {
             Layout.fillWidth: false
             Layout.fillHeight: true
             radius: Theme.radiusLarge
-            color: Theme.islandSurface
-            border.color: Theme.islandBorder
+            color: Theme.surfaceIn(QsWindow.window)
+            border.color: Theme.borderIn(QsWindow.window)
             border.width: 1
 
             ColumnLayout {
@@ -314,8 +316,9 @@ Item {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 30
                     radius: Theme.radiusSmall
-                    color: Theme.island
-                    border.color: search.activeFocus ? Theme.accent : Theme.islandBorder
+                    color: Theme.styleIn(QsWindow.window) === "classic"
+                        ? Theme.island : Theme.surfaceIn(QsWindow.window)
+                    border.color: search.activeFocus ? Theme.accent : Theme.borderIn(QsWindow.window)
                     border.width: 1
 
                     Behavior on border.color { ColorAnimation { duration: Theme.durationFast } }
@@ -416,8 +419,8 @@ Item {
                             visible: !entry.modelData.heading
                             anchors.fill: parent
                             radius: Theme.radiusSmall
-                            color: entry.active ? Theme.islandSurfaceHover
-                                : (entryMouse.containsMouse ? Theme.island : Qt.alpha(Theme.island, 0))
+                            color: entry.active ? Theme.surfaceHoverIn(QsWindow.window)
+                                : (entryMouse.containsMouse ? Theme.surfaceIn(QsWindow.window) : "transparent")
                             border.color: entry.active ? Theme.accent : "transparent"
                             border.width: 1
 
@@ -562,7 +565,7 @@ Item {
     Component { id: islandPage;     IslandSection {} }
     // Edge notes and the spectrum are arranged outside this window.
     Component { id: widgetsPage;    WidgetsSection {
-        onArranging: root.closed() } }
+        onArranging: root.edgeArrangementRequested() } }
     Component { id: modulesPage;    ModulesSection {} }
     // The persistent window owns the handoff; this page is unloaded on close.
     Component { id: controlsPage;   ControlsSection {

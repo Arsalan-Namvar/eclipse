@@ -50,9 +50,7 @@ Singleton {
     readonly property alias centreColumns: config.centreColumns
     readonly property alias centreRows: config.centreRows
     readonly property alias centreToggles: config.centreToggles
-    readonly property alias terminalGround: config.terminalGround
     readonly property alias weatherPlace: config.weatherPlace
-    readonly property alias githubUser: config.githubUser
     readonly property alias launcherResults: config.launcherResults
     readonly property alias launcherOrder: config.launcherOrder
     readonly property alias launcherFits: config.launcherFits
@@ -84,9 +82,10 @@ Singleton {
     readonly property alias motionScale: config.motionScale
     readonly property alias motionCurve: config.motionCurve
     readonly property alias animationPreset: config.animationPreset
+    readonly property alias workspaceAnimationPreset: config.workspaceAnimationPreset
     readonly property alias windowShadow: config.windowShadow
     readonly property alias barShadow: config.barShadow
-    readonly property alias windowGlass: config.windowGlass
+    readonly property alias windowMaterial: config.windowMaterial
     readonly property alias surfaceStyle: config.surfaceStyle
     readonly property alias barSides: config.barSides
     readonly property alias wallpaperTransition: config.wallpaperTransition
@@ -320,7 +319,7 @@ Singleton {
     // Reset. The recorder and capture entries are last-used state.
     readonly property var machineKeys: [
         "displays", "lidPolicy", "workspaceMode",
-        "userName", "userAvatar", "language", "keyboard", "weatherPlace", "githubUser",
+        "userName", "userAvatar", "language", "keyboard", "weatherPlace",
         "emojiTone",
         "doNotDisturb", "nightLight", "nightTemperature", "barHidden",
         "gameMode",
@@ -366,6 +365,38 @@ Singleton {
         return wanted === given
     }
 
+    // Material migration uses only the original payload, before profile
+    // defaults can mask an older choice. The shell remains independent.
+    function migrateMaterials(values: var): var {
+        const next = Object.assign({}, values ?? ({}))
+        const valid = value => ["classic", "glass", "liquid"].includes(value)
+        if (next.surfaceStyle === "frosted")
+            next.surfaceStyle = "glass"
+        if (!valid(next.windowMaterial)) {
+            const terminal = next.terminalGround === ""
+                ? (valid(next.surfaceStyle) ? next.surfaceStyle : root.pristine.surfaceStyle)
+                : next.terminalGround
+            next.windowMaterial = next.windowGlass === true ? "liquid"
+                : valid(terminal) ? terminal
+                : valid(next.fileManagerGround) ? next.fileManagerGround : "glass"
+        }
+        delete next.terminalGround
+        delete next.fileManagerGround
+        delete next.windowGlass
+        return next
+    }
+
+    // Opacity, blur eligibility and refraction now belong to windowMaterial.
+    // Keep blur tuning, layout, shadows and all unrelated overrides.
+    function withoutMaterialOverrides(values: var): var {
+        const next = Object.assign({}, values ?? ({}))
+        for (const key of ["decoration:active_opacity", "decoration:inactive_opacity",
+                "decoration:fullscreen_opacity", "decoration:blur:enabled",
+                "plugin:hyprglass:enabled"])
+            delete next[key]
+        return next
+    }
+
     // Deep copy as plain data, so callers never hold the store's objects.
     function copy(value: var): var {
         return value === undefined ? null : JSON.parse(JSON.stringify(value))
@@ -380,7 +411,7 @@ Singleton {
         printErrors: true
     }
 
-    readonly property int currentKeymapVersion: 1
+    readonly property int currentKeymapVersion: 2
     readonly property var keymap: {
         const rows = []
         for (const line of root.keymapFile.text().split("\n")) {
@@ -415,7 +446,8 @@ Singleton {
         for (const row of root.keymap) {
             const kept = next[row.description]
             if (row.combination === "@removed"
-                    || (typeof kept === "string" && kept !== ""
+                    || ((version < 1 || row.description === "Shell · Open settings")
+                        && typeof kept === "string" && kept !== ""
                         && row.legacy.some(old => root.keyChord(old) === root.keyChord(kept))))
                 delete next[row.description]
         }
@@ -443,19 +475,22 @@ Singleton {
     // Every profile key, from `values` where valid and from the defaults
     // otherwise, so a switch never inherits the previous profile's values.
     function complete(values: var): var {
-        const given = values ?? ({})
+        const given = root.migrateMaterials(values)
         const out = {}
         for (const key of root.profileKeys) {
             const taken = Object.prototype.hasOwnProperty.call(given, key)
                 && root.accepts(key, given[key])
             out[key] = root.copy(taken ? given[key] : root.pristine[key])
         }
+        // Freeze legacy coupled workspace motion at the previous window choice.
+        if (!Object.prototype.hasOwnProperty.call(given, "workspaceAnimationPreset"))
+            out.workspaceAnimationPreset = out.animationPreset
         out.desktopEdges = root.edgeRecords(given.desktopEdges ?? given.desktopWidgets ?? [])
         for (const key of ["barLeft", "barRight", "centreButtons", "centreTop", "centreBlocks", "centreToggles"])
             out[key] = root.retainedEntries(out[key])
         // Old exported profiles kept keyboard options in `compositor`.
         // Keyboard settings are machine-wide now, never profile overrides.
-        out.compositor = root.withoutKeyboard(out.compositor)
+        out.compositor = root.withoutMaterialOverrides(root.withoutKeyboard(out.compositor))
         out.keys = root.migrateKeys(out.keys, Number(given.keymapVersion) || 0)
         out.keymapVersion = root.keymap.length > 0 ? root.currentKeymapVersion
             : Number(given.keymapVersion) || 0
@@ -578,10 +613,21 @@ Singleton {
         onAdapterUpdated: saver.restart()
         onLoaded: {
             const saved = JSON.parse(file.text())
+            const materials = root.migrateMaterials(saved)
+            config.windowMaterial = materials.windowMaterial
+            if (typeof materials.surfaceStyle === "string")
+                config.surfaceStyle = materials.surfaceStyle
+            // Unknown legacy keys are absent from Store, so explicitly write
+            // the canonical schema even when the resolved value is unchanged.
+            if (["terminalGround", "fileManagerGround", "windowGlass"].some(
+                    key => Object.prototype.hasOwnProperty.call(saved, key)))
+                saver.restart()
+            if (!Object.prototype.hasOwnProperty.call(saved, "workspaceAnimationPreset"))
+                config.workspaceAnimationPreset = config.animationPreset
             const keyboard = root.migrateKeyboard(saved)
             if (JSON.stringify(config.keyboard) !== JSON.stringify(keyboard))
                 config.keyboard = keyboard
-            const compositor = root.withoutKeyboard(config.compositor)
+            const compositor = root.withoutMaterialOverrides(root.withoutKeyboard(config.compositor))
             if (JSON.stringify(config.compositor) !== JSON.stringify(compositor))
                 config.compositor = compositor
             if (config.keymapVersion < root.currentKeymapVersion && root.keymap.length > 0) {
@@ -593,8 +639,6 @@ Singleton {
             config.desktopEdges = root.edgeRecords(saved.desktopEdges ?? saved.desktopWidgets ?? [])
             for (const key of ["barLeft", "barRight", "centreButtons", "centreTop", "centreBlocks", "centreToggles"])
                 config[key] = root.retainedEntries(config[key])
-            if (config.surfaceStyle === "frosted")
-                config.surfaceStyle = "glass"
             // One island spanning the screen is the bezel now.
             if (/"barFullWidth":\s*true/.test(file.text()) && config.barStyle === "island")
                 config.barStyle = "bezel"
@@ -657,13 +701,12 @@ Singleton {
         property bool windowShadow: false
         property bool barShadow: false
 
-        // hyprglass. Dimmed in the settings when the plugin is not built;
-        // `CompositorService` pushes it at login and after every reload.
-        property bool windowGlass: false
+        // Application windows are composited as a whole, including text and
+        // media: Classic opaque, Glass 90%, Liquid 75% with optional hyprglass.
+        property string windowMaterial: "glass"
 
-        // The island's and the bar's ground: "classic" solid black,
-        // "glass", the terminal's ground over the compositor's blur, or
-        // "liquid", a clear frost over it (`Theme.islandGround`).
+        // Native Quickshell surfaces, independent from application windows.
+        // Classic is solid; Glass and Liquid use the shell's own materials.
         property string surfaceStyle: "classic"
 
         // The bar's sides: "capsule", each group in a capsule, or "bare",
@@ -799,6 +842,8 @@ Singleton {
         // are the shell's own). `CompositorService` pushes it at startup and
         // after every reload; `animations.lua` deliberately has no preset.
         property string animationPreset: "macos"
+        // Independent workspace switching and shared scratchpad show/hide.
+        property string workspaceAnimationPreset: "macos"
 
         property string fontFamily: "Inter, Cantarell, SF Pro Text, sans-serif"
         property string fontMono: "JetBrainsMono Nerd Font Mono, monospace"
@@ -881,16 +926,9 @@ Singleton {
         // overflow becomes a second page.
         property var centreToggles: null
 
-        // kitty's ground, as `surfaceStyle`.
-        property string terminalGround: "glass"
-
-
         // Anything wttr.in accepts: a city, postcode or airport code. Empty
         // lets wttr.in geolocate by IP, which can be tens of kilometres off.
         property string weatherPlace: ""
-
-        // GitHub account used by the retained contribution service.
-        property string githubUser: ""
 
 
         // Idle timeouts in minutes, 0 = never; all off by default.

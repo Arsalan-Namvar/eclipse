@@ -103,8 +103,7 @@ Rectangle {
         servers:    { width: ServersService.panelWidth, height: ServersService.panelHeight },
         screentime: { width: 940,  height: 614 },
         camera:     { width: CameraService.panelWidth, height: CameraService.panelHeight },
-        github:     { width: GithubBrowserService.panelWidth, height: GithubBrowserService.panelHeight },
-        omp:        { width: 560, height: 620 },
+        omp:        { width: OmpService.panelWidth, height: OmpService.panelHeight },
         // Declared by their services, which the panels read back for layout.
         notes:      { width: NotesService.panelWidth, height: NotesService.panelHeight },
         board:      { width: TasksService.panelWidth, height: TasksService.panelHeight },
@@ -182,7 +181,6 @@ Rectangle {
         servers: serversPanel,
         screentime: screenTimePanel,
         camera: cameraPanel,
-        github: githubPanel,
         omp: ompPanel,
         notes: notesPanel,
         board: boardPanel,
@@ -654,10 +652,6 @@ Rectangle {
         CameraPanel { onClosed: root.close() }
     }
 
-    Component {
-        id: githubPanel
-        GithubPanel { onClosed: root.close() }
-    }
 
     Component {
         id: ompPanel

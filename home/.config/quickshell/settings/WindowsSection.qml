@@ -14,8 +14,8 @@ import "../theme"
 import "../services"
 import "../components"
 
-// Everything Hyprland does to a window: how windows are laid out and shaped,
-// what shows through them, and how they move.
+// Window layout, shape, shadow and motion. The two material selectors are
+// under Appearance; this page never overrides their opacity or effects.
 //
 // These values are stored in the shell's settings and pushed to Hyprland at
 // login and after every reload. `hypr/modules/look.lua` holds the defaults
@@ -41,13 +41,8 @@ SettingsSection {
         return Number(CompositorService.value(option, fallback))
     }
 
-    readonly property bool blurOn: {
-        const kept = SettingsService.compositor
-        const raw = kept && kept["decoration:blur:enabled"] !== undefined
-            ? kept["decoration:blur:enabled"]
-            : CompositorService.value("decoration:blur:enabled", true)
-        return String(raw) === "true" || raw === true || raw === 1
-    }
+    readonly property string material: SettingsService.gameMode
+        ? "classic" : SettingsService.windowMaterial
 
     SettingGroup {
         title: Tr.t("Shape")
@@ -61,10 +56,11 @@ SettingsSection {
                 borderWidth: root.live("general:border_size", 0)
                 gapsIn: root.live("general:gaps_in", 7)
                 gapsOut: root.live("general:gaps_out", 18)
-                inactiveOpacity: root.live("decoration:inactive_opacity", 1)
-                blur: root.blurOn ? root.live("decoration:blur:size", 6) : 0
-                glassed: SettingsService.windowGlass && CompositorService.glassAvailable
-                lifted: SettingsService.windowShadow
+                inactiveOpacity: root.material === "classic" ? 1
+                    : root.material === "glass" ? 0.90 : 0.75
+                blur: root.material === "classic" ? 0 : root.live("decoration:blur:size", 6)
+                glassed: root.material === "liquid" && CompositorService.glassAvailable
+                lifted: SettingsService.windowShadow && !SettingsService.gameMode
                 wallpaper: WallpaperService.currentWallpaper
             }
         }
@@ -119,50 +115,9 @@ SettingsSection {
     }
 
     SettingGroup {
-        title: Tr.t("Depth")
-        note: Tr.t("What shows through a window, and what lifts it off the wallpaper.")
-        hint: Tr.t("Inactive opacity fades the windows without focus. Blur shows behind anything translucent, such as the terminal. Refraction (a Hyprland plugin, tuned in look.lua) frosts and bends what is behind a window, like wet glass.")
-
-        SettingSlider {
-            label: Tr.t("Inactive opacity")
-            value: Math.round(CompositorService.value("decoration:inactive_opacity", 1) * 100)
-            from: 60
-            to: 100
-            unit: "%"
-            onMoved: value => CompositorService.remember(
-                "decoration:inactive_opacity", (Math.round(value) / 100).toFixed(2))
-        }
-
-        SettingSlider {
-            label: Tr.t("Blur")
-            value: CompositorService.value("decoration:blur:enabled", 0)
-                ? CompositorService.value("decoration:blur:size", 4) : 0
-            from: 0
-            to: 12
-            reading: {
-                const on = CompositorService.value("decoration:blur:enabled", 0)
-                const size = CompositorService.value("decoration:blur:size", 4)
-                return on ? `${Tr.t("size")} ${size}` : Tr.t("Off")
-            }
-            onMoved: value => {
-                const size = Math.round(value)
-                CompositorService.remember("decoration:blur:enabled", size === 0 ? "false" : "true")
-                if (size > 0)
-                    CompositorService.remember("decoration:blur:size", size)
-            }
-        }
-
-        // Locked, with the reason, when the hyprglass plugin is not loaded.
-        SettingRow {
-            label: Tr.t("Refraction")
-            locked: !CompositorService.glassAvailable
-            reason: Tr.t("Needs the refraction plugin — run ./setup plugins")
-
-            ToggleSwitch {
-                checked: SettingsService.windowGlass
-                onToggled: checked => SettingsService.set("windowGlass", checked)
-            }
-        }
+        title: Tr.t("Shadow")
+        note: Tr.t("What lifts a window off the wallpaper.")
+        hint: Tr.t("Application opacity, blur and refraction follow Appearance → Materials → Application windows.")
 
         SettingRow {
             label: Tr.t("Shadow")

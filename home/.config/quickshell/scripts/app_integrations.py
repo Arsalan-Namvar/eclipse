@@ -37,16 +37,27 @@ def install_file_manager():
     source = Path("/usr/share/dbus-1/services/io.github.lgse.Strata.FileManager1.service")
     if not source.is_file():
         raise ValueError("Strata package lacks its FileManager1 service template")
+    # Keep the upstream executable/arguments, but opt this app out of GTK's
+    # empty background-effect region so Hyprland can blur its native alpha.
+    contents = source.read_text()
+    contents = re.sub(r"(?m)^Exec=", "Exec=/usr/bin/env GDK_WAYLAND_DISABLE=ext_background_effect_manager_v1 ", contents)
     destination = services / source.name
     services.mkdir(parents=True, exist_ok=True)
     backup = state / "quickshell/app-backups" / ("filemanager-" + str(time.time_ns()))
     for service in services.glob("*.service"):
         if "Name=org.freedesktop.FileManager1" in service.read_text():
-            if service == destination and service.read_bytes() == source.read_bytes():
+            if service == destination and service.read_text() == contents:
                 continue
             backup.mkdir(parents=True, exist_ok=True)
             shutil.move(str(service), backup / service.name)
-    shutil.copy2(source, destination)
+    destination.write_text(contents)
+    # The supported portal installer creates this per-user activation file.
+    # It starts a separate process, so it needs the same per-app opt-out.
+    portal = services / "org.freedesktop.impl.portal.desktop.strata.service"
+    if portal.is_file():
+        text = portal.read_text()
+        if "GDK_WAYLAND_DISABLE=" not in text:
+            portal.write_text(re.sub(r"(?m)^Exec=", "Exec=/usr/bin/env GDK_WAYLAND_DISABLE=ext_background_effect_manager_v1 ", text))
     subprocess.run(["gdbus", "call", "--session", "--dest", "org.freedesktop.DBus",
                     "--object-path", "/org/freedesktop/DBus", "--method",
                     "org.freedesktop.DBus.ReloadConfig"], check=True)

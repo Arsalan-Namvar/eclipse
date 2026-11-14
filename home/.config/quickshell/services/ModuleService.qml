@@ -34,7 +34,7 @@ Singleton {
     readonly property var catalogue: [
         { id: "media",         name: "Media",         bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(1, Theme.cardRowGap + 34) },
         { id: "timer",         name: "Timer",         bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(2, 0) },
-        { id: "omp",           name: "OMP",           bar: true,  width: 560, height: 620 },
+        { id: "omp",           name: "OMP",           bar: true,  width: OmpService.panelWidth, height: OmpService.panelHeight },
         { id: "battery",       name: "Battery",       bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(3, 0) },
         { id: "volume",        name: "Volume",        bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(2, 0) },
         { id: "brightness",    name: "Brightness",    bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(1, 0) },
@@ -66,7 +66,7 @@ Singleton {
     // Capture is what the capture key does: the photo is taken at once, so
     // whatever the island has open is in it.
     readonly property var buttonIds: ["launcher", "overview", "controls", "capture",
-        "appearance", "notes", "board", "github", "keys", "packages", "settings", "session"]
+        "appearance", "notes", "board", "keys", "packages", "settings", "session"]
 
     readonly property var buttons: {
         const out = {}
@@ -192,8 +192,6 @@ Singleton {
             return "󰍛"
         case "calendar":
             return "󰃭"
-        case "github":
-            return "󰊤"
         }
         return ""
     }

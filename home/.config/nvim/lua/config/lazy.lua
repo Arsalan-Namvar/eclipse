@@ -14,6 +14,9 @@ require("lazy").setup({
     { import = "plugins" },
   },
   defaults = { lazy = false, version = false },
+  -- The selected plugin set has no LuaRocks dependencies. Enable and provision
+  -- a rocks toolchain only when adding a plugin that actually needs one.
+  rocks = { enabled = false },
   install = { colorscheme = { "tokyonight", "habamax" } },
   checker = { enabled = true, notify = false },
   performance = {

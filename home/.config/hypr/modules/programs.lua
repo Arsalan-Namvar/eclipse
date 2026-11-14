@@ -12,7 +12,7 @@
 
 return {
     terminal     = "kitty",
-    file_manager = "strata",
+    file_manager = [["$HOME/.local/bin/eclipse-strata"]],
     browser      = [["$HOME/.local/bin/eclipse-browser"]],
     editor       = "kitty -- nvim",
     agent        = [[bash "$HOME/.config/quickshell/scripts/omp-launch.sh" --general]],

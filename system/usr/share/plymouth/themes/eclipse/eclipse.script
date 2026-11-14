@@ -1,4 +1,4 @@
-# Eclipse conjunction splash — original artwork and alignment motion.
+# Eclipse conjunction splash — original artwork and continuous activity motion.
 # Copyright 2026 Eclipse contributors. GPL-3.0-or-later; see repository LICENSE.
 # Dialogue/layout derived from Impasto by Andreu Massanet:
 # https://github.com/andreumassanet/impasto
@@ -34,32 +34,29 @@ fun text_image(text, red, green, blue) {
 
 mark.image = scaled("mark.png", 256, 256);
 mark.sprite = Sprite(mark.image);
-mark.rest = screen.cy - 72 * u;
-mark.raised = screen.cy - 180 * u;
+mark.rest = screen.cy;
+mark.raised = screen.cy - 220 * u;
 mark.cy = mark.rest;
 word.image = scaled("wordmark.png", 300, 47);
 word.sprite = Sprite(word.image);
-ring[0].image = scaled("ring-a.png", 360, 360);
-ring[1].image = scaled("ring-b.png", 360, 360);
-for (i = 0; i < 2; i++)
-    ring[i].sprite = Sprite(ring[i].image);
-
-progress = 0;
-aligned = 0;
-if (leaving) {
-    progress = 1;
-    aligned = 1;
+# Decode and scale the finite frame loop once, never rotate/allocate on refresh.
+orbit.frames = 64;
+for (i = 0; i < orbit.frames; i++) {
+    name = i;
+    if (i < 10) name = "0" + i;
+    orbit.back[i] = scaled("orbits/back-" + name + ".png", 400, 400);
+    orbit.front[i] = scaled("orbits/front-" + name + ".png", 400, 400);
 }
+orbit.back_sprite = Sprite(orbit.back[0]);
+orbit.front_sprite = Sprite(orbit.front[0]);
+orbit.back_sprite.SetOpacity(0.72);
+orbit.front_sprite.SetOpacity(0.90);
+orbit.tick = 0;
+orbit.frame = 0;
 asking = 0;
 asked = 0;
 dots = 0;
 
-# A fixed track remains visible when Plymouth has not yet supplied progress.
-track.image = scaled("progress.png", 320, 2);
-track.sprite = Sprite(track.image);
-track.sprite.SetOpacity(0.18);
-rule.sprite = Sprite();
-rule.pixels = 0;
 
 entry.image = scaled("entry.png", 440, 60);
 entry.sprite = Sprite(entry.image);
@@ -90,7 +87,7 @@ if (leaving) {
         farewell.image = text_image("Shutting down", 0.80, 0.78, 0.74);
     farewell.sprite.SetImage(farewell.image);
     farewell.sprite.SetPosition(screen.cx - farewell.image.GetWidth() / 2,
-        screen.cy + 205 * u, 5);
+        screen.cy + 290 * u, 8);
 }
 
 fun place_mark() {
@@ -99,21 +96,13 @@ fun place_mark() {
     mark.sprite.SetPosition(screen.cx - mark.image.GetWidth() / 2,
         mark.cy - mark.image.GetHeight() / 2, 5);
     word.sprite.SetPosition(screen.cx - word.image.GetWidth() / 2,
-        mark.cy + 178 * u, 5);
-    # The meridians begin displaced and approach conjunction once, not a spinner.
-    local.remaining = 1 - aligned;
-    ring[0].sprite.SetPosition(screen.cx - ring[0].image.GetWidth() / 2 - 44 * u * local.remaining,
-        mark.cy - ring[0].image.GetHeight() / 2 + 18 * u * local.remaining, 0);
-    ring[1].sprite.SetPosition(screen.cx - ring[1].image.GetWidth() / 2 + 44 * u * local.remaining,
-        mark.cy - ring[1].image.GetHeight() / 2 - 18 * u * local.remaining, 1);
-    ring[0].sprite.SetOpacity(0.32 + 0.38 * aligned);
-    ring[1].sprite.SetOpacity(0.32 + 0.38 * aligned);
-    track.sprite.SetPosition(screen.cx - track.image.GetWidth() / 2, mark.cy + 242 * u, 5);
-    rule.sprite.SetPosition(screen.cx - track.image.GetWidth() / 2, mark.cy + 242 * u, 6);
+        mark.cy + 218 * u, 8);
+    orbit.back_sprite.SetPosition(screen.cx - orbit.back[0].GetWidth() / 2,
+        mark.cy - orbit.back[0].GetHeight() / 2, 0);
+    orbit.front_sprite.SetPosition(screen.cx - orbit.front[0].GetWidth() / 2,
+        mark.cy - orbit.front[0].GetHeight() / 2, 6);
     entry.sprite.SetOpacity(asked);
     prompt.sprite.SetOpacity(asked);
-    track.sprite.SetOpacity(0.18 * (1 - asked));
-    rule.sprite.SetOpacity(1 - asked);
     for (local.i = 0; local.i < bullet.most; local.i++) {
         if (local.i < dots)
             bullet[local.i].sprite.SetOpacity(asked);
@@ -139,16 +128,6 @@ fun normal_callback() {
     global.dots = 0;
 }
 
-fun progress_callback(duration, fraction) {
-    global.progress = Math.Max(progress, Math.Min(1, Math.Max(0, fraction)));
-    local.pixels = Math.Int(track.image.GetWidth() * progress);
-    # Avoid a zero-width image, and only allocate when visible progress changes.
-    if (local.pixels > 0 && local.pixels != rule.pixels) {
-        rule.image = track.image.Scale(local.pixels, track.image.GetHeight());
-        rule.sprite.SetImage(rule.image);
-        rule.pixels = local.pixels;
-    }
-}
 
 fun status_callback(text) {
     status.image = text_image(text, 0.64, 0.63, 0.69);
@@ -172,8 +151,13 @@ fun hide_message_callback(text) {
 }
 
 fun refresh_callback() {
-    # Ease only towards real boot progress; do not imply progress on a timer.
-    global.aligned += (progress - aligned) * 0.045;
+    global.orbit.tick = (orbit.tick + 1) % (orbit.frames * 6);
+    local.frame = Math.Int(orbit.tick / 6);
+    if (local.frame != orbit.frame) {
+        global.orbit.frame = local.frame;
+        orbit.back_sprite.SetImage(orbit.back[local.frame]);
+        orbit.front_sprite.SetImage(orbit.front[local.frame]);
+    }
     if (asking > asked)
         global.asked = Math.Min(asked + 1 / 19, 1);
     else if (asking < asked)
@@ -183,11 +167,8 @@ fun refresh_callback() {
 
 Plymouth.SetDisplayPasswordFunction(password_callback);
 Plymouth.SetDisplayNormalFunction(normal_callback);
-Plymouth.SetBootProgressFunction(progress_callback);
 Plymouth.SetUpdateStatusFunction(status_callback);
 Plymouth.SetDisplayMessageFunction(message_callback);
 Plymouth.SetHideMessageFunction(hide_message_callback);
 Plymouth.SetRefreshFunction(refresh_callback);
-if (leaving)
-    progress_callback(0, 1);
 place_mark();

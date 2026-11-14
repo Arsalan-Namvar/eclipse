@@ -26,6 +26,8 @@ import "../components"
 PanelWindow {
     id: root
     CornerGuard {}
+    readonly property bool glassy: true
+    readonly property string groundStyle: Theme.surfaceStyle
 
     readonly property bool editing: DesktopService.editing
 
@@ -303,14 +305,16 @@ PanelWindow {
                     width: DeckService.grip
                     height: DeckService.grip
                     radius: width / 2
-                    color: Theme.island
-                    border.color: slide.active ? Theme.accent : Theme.islandBorder
+                    color: Theme.islandGround
+                    border.color: slide.active ? Theme.accent : Theme.islandRim
                     border.width: slide.active ? 2 : 1
                     visible: opacity > 0
                     opacity: root.editing ? 1 : 0
                     z: 2
 
                     Behavior on opacity { NumberAnimation { duration: Theme.durationFast } }
+
+                    GlassSheen { shape: grip }
 
                     Text {
                         anchors.centerIn: parent

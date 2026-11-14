@@ -37,6 +37,10 @@ Singleton {
     property var monitors: []
     property bool loaded: false
 
+    // hyprctl reports whether VRR is active, not the configured 0/1/2 policy.
+    // Remember accepted requests so unsupported/adaptive panels do not loop.
+    property var appliedVrr: ({})
+
     readonly property Process reader: Process {
         command: [root.script, "get"]
         stdout: StdioCollector {
@@ -233,7 +237,8 @@ Singleton {
             || (rule.scale !== undefined && Number(rule.scale) !== Number(found.scale))
             || (rule.transform !== undefined && Number(rule.transform) !== Number(found.transform))
             || (rule.mirror !== undefined && rule.mirror !== found.mirror)
-            || (rule.vrr !== undefined && Number(rule.vrr) !== Number(found.vrr))
+            || (rule.vrr !== undefined && Number(rule.vrr)
+                !== Number(root.appliedVrr[description] ?? found.vrr))
     }
 
     function applyProfile(): void {
@@ -250,6 +255,7 @@ Singleton {
         if (rules.length === 0)
             return
         root.settling.restart()
+        root.applier.rules = rules
         root.applier.command = [root.script, "apply", JSON.stringify(rules)]
         root.applier.running = true
     }
@@ -278,6 +284,7 @@ Singleton {
         }))
         console.warn("No screen is lit — putting them all back on.")
         root.settling.restart()
+        root.applier.rules = rules
         root.applier.command = [root.script, "apply", JSON.stringify(rules)]
         root.applier.running = true
         return true
@@ -286,11 +293,9 @@ Singleton {
 
     // ── WORKSPACES ──────────────────────────────────────────────────────────
     //
-    // Hyprland moves workspaces off a removed screen but never moves them
-    // back (upstream's choice). This fixes two cases: workspaces with windows
-    // stranded on a dark or missing output, and a lit screen showing an empty
-    // workspace while its windows sit on another one, e.g. after unplugging
-    // breaks a mirror.
+    // Recover occupied workspaces stranded on a missing/dark output. An empty
+    // workspace on a connected screen is legitimate and must never be replaced
+    // with an occupied one merely because display settings were reconciled.
     //
     // `hl.dsp.workspace.move`, not `hyprctl dispatch moveworkspacetomonitor`:
     // plain dispatcher names do not resolve with a Lua config.
@@ -333,25 +338,6 @@ Singleton {
             calls.push(`hl.dispatch(hl.dsp.workspace.move({ workspace = ${row.id}, `
                        + `monitor = "${home}" }))`)
 
-        // Bring forward windows that landed behind another workspace, but
-        // only on screens currently showing an empty one.
-        for (const monitor of lit) {
-            const here = real.filter(row => row.monitor === monitor.name)
-            const active = here.find(row => row.id === monitor.workspace)
-            if (active && active.windows > 0)
-                continue
-            const carrying = here.filter(row => row.windows > 0)
-                .sort((a, b) => a.id - b.id)
-            const wanted = monitor.name === home && stranded.length > 0
-                ? stranded[0] : carrying[0]
-            // Two calls: `focus` with both a monitor and a workspace reports
-            // ok but ignores the workspace. `focus({ workspace })` acts on the
-            // focused monitor, so focus that first.
-            if (wanted) {
-                calls.push(`hl.dispatch(hl.dsp.focus({ monitor = "${monitor.name}" }))`)
-                calls.push(`hl.dispatch(hl.dsp.focus({ workspace = ${wanted.id} }))`)
-            }
-        }
 
         if (calls.length === 0)
             return
@@ -410,7 +396,19 @@ Singleton {
         }
     }
 
-    readonly property Process applier: Process {}
+    readonly property Process applier: Process {
+        property var rules: []
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode !== 0)
+                return
+            const next = Object.assign({}, root.appliedVrr)
+            for (const rule of rules) {
+                if (rule.vrr !== undefined && rule.output.startsWith("desc:"))
+                    next[rule.output.slice(5)] = Number(rule.vrr)
+            }
+            root.appliedVrr = next
+        }
+    }
 
     // A reload resets monitors to the Lua config and a hotplug may change the
     // profile; either way, re-read and reconcile.
@@ -424,6 +422,7 @@ Singleton {
             case "monitoraddedv2":
             case "monitorremoved":
             case "monitorremovedv2":
+                root.appliedVrr = ({})
                 root.hotplug.restart()
                 break
             }

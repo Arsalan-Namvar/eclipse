@@ -36,4 +36,16 @@ assert(effective["Shell · Open the capture surface"] == "SUPER + CTRL + C")
 assert(effective["Workspaces · Toggle the scratchpad"] == "SUPER + S")
 assert(effective["Workspaces · Move the window to the scratchpad"] == "SUPER + SHIFT + S")
 
+local revised = keymap.migrate({
+    ["Shell · Open settings"] = "SUPER + CTRL + S",
+    ["Applications · Open the browser"] = "SUPER + B",
+}, 1)
+assert(revised["Shell · Open settings"] == nil, "old Settings default must adopt comma")
+assert(revised["Applications · Open the browser"] == "SUPER + B", "version 2 must not remigrate unrelated customized chords")
+assert(keymap.migrate({ ["Shell · Open settings"] = "SUPER + ALT + S" }, 1)["Shell · Open settings"] == "SUPER + ALT + S")
+assert(keymap.migrate({ ["Shell · Open settings"] = "" }, 1)["Shell · Open settings"] == "")
+local collision = keymap.migrate({ ["Personal · Command"] = "SUPER + comma" }, 1)
+assert(collision["Shell · Open settings"] == "", "custom comma action must win without firing Settings too")
+assert(keymap.defaults()["Shell · Open settings"] == "SUPER + comma")
+
 print("Keyboard migration: legacy cutover, custom precedence, retirement, version and first-boot TSV passed")

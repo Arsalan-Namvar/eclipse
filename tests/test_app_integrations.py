@@ -36,7 +36,6 @@ class FileManagerActivation(unittest.TestCase):
                     patch.object(apps.subprocess, "run", return_value=subprocess.CompletedProcess([], 0)):
                 apps.install_file_manager()
                 installed = services / template.name
-                self.assertEqual(installed.read_bytes(), template.read_bytes())
                 self.assertFalse(previous.exists())
                 self.assertEqual(len(list((state / "quickshell/app-backups").glob("filemanager-*/previous.service"))), 1)
                 self.assertIn("Name=example.Other", other.read_text())

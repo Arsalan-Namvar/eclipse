@@ -46,6 +46,7 @@ hl.config({
 
         active_opacity   = 1.0,
         inactive_opacity = 1.0,
+        fullscreen_opacity = 1.0,
 
         -- Toggled from Settings → Appearance: CompositorService.applyShadow
         -- pushes it at startup and on `configreloaded`, using the values in
@@ -73,20 +74,21 @@ hl.config({
 -- hyprglass (built by `./setup plugins`): refracted blur behind windows. The
 -- guard skips the block on the first parse, before the plugin is loaded.
 --
--- Off without the shell; toggled from Settings → Appearance and pushed by
--- CompositorService like the shadow.
+-- Off without the shell; CompositorService enables refraction only for Liquid
+-- application windows. Glass uses Hyprland's blur at 0.90 whole-window opacity;
+-- Liquid uses 0.75. Native shell surfaces retain their own QML material.
 --
--- Tuned for kitty at 0.90 opacity, where the defaults flatten the background
--- into a wash: less blur, no dimming or tone mapping, a lighter tint and a
--- stronger edge. Only values that differ from the defaults are listed. Layers
--- stay off (the default).
+-- The shell owns no_blur rules so switching materials restores ordinary blur.
+-- HyprGlass must not overwrite those rules or refract layer surfaces.
 if hl.plugin.hyprglass ~= nil then
     hl.plugin.hyprglass.config({
         enabled = false,
+        manage_window_blur = false,
+        layers = { enabled = false },
 
         blur_strength        = 0.7,    -- default 2.0
 
-        -- Edge effects, all raised so the pane still reads at 0.90 opacity.
+        -- Edge effects make the pane read at Liquid's 0.75 opacity.
         refraction_strength  = 1.0,
         chromatic_aberration = 0.6,
         fresnel_strength     = 1.0,

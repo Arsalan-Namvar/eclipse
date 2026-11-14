@@ -31,6 +31,10 @@ import sys
 import textwrap
 import zipfile
 import omp_theme
+import file_manager_theme
+import tempfile
+import time
+import tomllib
 
 
 XDG_CONFIG_HOME = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
@@ -49,33 +53,20 @@ STATE_FILE = os.path.join(STATE_DIR, "state.json")
 TERMINAL_PALETTE_FILE = os.path.join(STATE_DIR, "kitty-palette.conf")
 # Separate from the palette fragment, which is rewritten whole on every push.
 TERMINAL_FONT_FILE = os.path.join(STATE_DIR, "kitty-font.conf")
-TERMINAL_GROUND_FILE = os.path.join(STATE_DIR, "kitty-ground.conf")
 
 # kitty appends `-<pid>` to `listen_on`, so this globs every running
 # instance. Reaching none is fine: new terminals read the fragment anyway.
 XDG_RUNTIME_DIR = os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}"
 KITTY_SOCKETS = os.path.join(XDG_RUNTIME_DIR, "kitty.sock*")
 
-# The terminal background: the accent scaled towards black, so it follows the
-# wallpaper and always stays dark. The palette's own background is not used
-# because some palettes are light (Catppuccin Latte). kitty draws it at 0.90
-# opacity over the blurred wallpaper, which lightens it further; 0.22 accounts
-# for that.
+# Terminal backgrounds stay opaque; Hyprland applies application material once.
+# Keep the accent-tinted base independent of window opacity.
 TERMINAL_TINT = 0.22
 
 # What kitty.conf falls back to when nothing has been pushed yet.
 TERMINAL_BACKGROUND_FALLBACK = "#000000"
 
 
-# The terminal's ground, named as the shell's: classic is opaque black, glass
-# the tinted ground at kitty.conf's opacity, liquid a neutral smoke thinner
-# than glass so the wallpaper comes through in its own colours. A background
-# of None keeps the palette's tinted one.
-TERMINAL_GROUNDS = {
-    "classic": ("#000000", 1.0),
-    "glass": (None, 0.90),
-    "liquid": ("#0f1217", 0.72),
-}
 
 
 def terminal_background(colors):
@@ -90,8 +81,8 @@ TERMINAL_NORMAL = (("color1", "red"), ("color2", "green"), ("color3", "yellow"),
                    ("color4", "blue"), ("color6", "accent"), ("color7", "textMuted"))
 TERMINAL_BRIGHT = (("color9", "red"), ("color10", "green"), ("color11", "yellow"),
                    ("color12", "blue"), ("color14", "accent"), ("color15", "text"))
-# The cursor stays white (set in kitty.conf) so it is visible in any palette.
-TERMINAL_ACCENT = ("selection_background", "active_tab_background")
+# Kitty's trail takes its cursor color, updated with the rest of the palette.
+TERMINAL_ACCENT = ("cursor", "selection_background", "active_tab_background")
 
 # WCAG contrast floors: AA for the normal slots, AAA for the bright ones.
 MIN_CONTRAST = 4.5
@@ -228,18 +219,15 @@ QT_BEVEL_SHADOW = 0.55
 # How far disabled text and selection fade towards the ground.
 QT_DISABLED = 0.55
 
-# KDE applications ignore the QPalette and read colours through KColorScheme,
-# i.e. kdeglobals. Without it they stay in Breeze's light grey.
+# KDE widgets also use KColorScheme, whose system colours come from kdeglobals.
 KDEGLOBALS_FILE = os.path.join(XDG_CONFIG_HOME, "kdeglobals")
+KDE_SCHEME_NAME = "Impasto"
 
 # KColorScheme colour sets. Window and View are the ground; Button, Tooltip
 # and Header are raised. Complementary (the inverse set) gets the ground too.
 KDE_GROUND_SETS = ("Window", "View", "Complementary")
 KDE_RAISED_SETS = ("Button", "Tooltip", "Header")
 
-# kdeglobals is merged through a parser that drops comments, so the scheme
-# name is the only marker of what wrote it.
-KDE_SCHEME_NAME = "Impasto"
 
 # How far ForegroundInactive on a selection fades towards the accent.
 KDE_SELECTION_QUIET = 0.35
@@ -631,6 +619,7 @@ def build_terminal_palette(colors):
     lines.append("")
     for slot in TERMINAL_ACCENT:
         lines.append(f"{slot} {accent}")
+    lines.append(f"cursor_text_color {background}")
     lines.append(f"selection_foreground {background}")
     lines.append(f"active_tab_foreground {background}")
     lines.append(f"inactive_tab_background {background}")
@@ -660,65 +649,25 @@ def push_terminal_palette(colors):
             sys.stderr.write(f"{os.path.basename(socket_path)}: "
                              f"{result.stderr.strip()}\n")
             continue
-        # The palette carries the tinted background; a ground with its own
-        # puts it back over it.
-        background = ground_background()
-        if background:
-            subprocess.run(
-                [kitten, "@", "--to", f"unix:{socket_path}", "set-colors", "--all",
-                 "--configured", f"background={background}"],
-                capture_output=True, text=True)
 
 
-def ground_background():
-    """The background the chosen ground sets, or None for the palette's."""
-    try:
-        with open(TERMINAL_GROUND_FILE, encoding="utf-8") as handle:
-            for line in handle:
-                if line.startswith("background "):
-                    return line.split()[1]
-    except OSError:
-        pass
-    return None
-
-
-def push_terminal_ground(style):
-    """Write the ground fragment and give it to running terminals.
-
-    The opacity reaches an open window only if it was started with
-    dynamic_background_opacity, which kitty.conf sets.
-    """
-    background, opacity = TERMINAL_GROUNDS.get(style, TERMINAL_GROUNDS["glass"])
-
+def prepare_app_backgrounds():
+    """Use opaque native paint; the compositor owns all application fading."""
     ensure_state_dir()
-    with open(TERMINAL_GROUND_FILE, "w", encoding="utf-8") as handle:
-        handle.write("# Written by theme_manager.py; edits here are lost.\n")
-        handle.write(f"# The terminal's ground: {style}.\n")
-        handle.write(f"background_opacity {opacity:.2f}\n")
-        if background:
-            handle.write(f"background {background}\n")
-
+    # Retire generated per-app material files; no saved material is read here.
+    for name in ("kitty-ground.conf", "file-manager-ground.json"):
+        try:
+            os.unlink(os.path.join(STATE_DIR, name))
+        except FileNotFoundError:
+            pass
+    config = os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config')
+    file_manager_theme.opaque_background(config)
     kitten = shutil.which("kitten")
-    if not kitten:
-        sys.stderr.write("kitten not found; the ground applies to new terminals only\n")
-        return
-
-    for socket_path in sorted(glob.glob(KITTY_SOCKETS)):
-        target = ["--to", f"unix:{socket_path}"]
-        result = subprocess.run(
-            [kitten, "@", *target, "set-background-opacity", "--all", f"{opacity:.2f}"],
-            capture_output=True, text=True)
-        if result.returncode != 0:
-            # A stale socket from a closed terminal is normal; keep going.
-            sys.stderr.write(f"{os.path.basename(socket_path)}: "
-                             f"{result.stderr.strip()}\n")
-            continue
-        # Back to the palette's tinted background, or over it with the
-        # ground's own.
-        colors = [f"background={background}"] if background else [TERMINAL_PALETTE_FILE]
-        subprocess.run(
-            [kitten, "@", *target, "set-colors", "--all", "--configured", *colors],
-            capture_output=True, text=True)
+    if kitten:
+        for socket_path in sorted(glob.glob(KITTY_SOCKETS)):
+            subprocess.run([kitten, "@", "--to", f"unix:{socket_path}",
+                            "set-background-opacity", "--all", "1.0"],
+                           capture_output=True, text=True)
 
 
 
@@ -1829,66 +1778,89 @@ def build_kde_colors(colors):
     return sections
 
 
-def write_kde_colors(colors):
-    """Merge the colour sets into kdeglobals, keeping every other key.
+def write_kde_config(path, sections, merge=True):
+    """Write KConfig sections atomically, preserving unrelated merged keys.
 
-    Comments in the file are lost in the merge. Parsed with RawConfigParser:
-    keys are case sensitive, `%` is literal and duplicate sections are
-    tolerated. A file that cannot be parsed is left untouched. Skipped without
-    kreadconfig6 (kconfig), since nothing would read the file.
+    As in the existing kdeglobals merge, comments are not retained. Use a raw,
+    case-sensitive parser so literal percent signs and KDE key names survive.
+    An unreadable or malformed existing file is never replaced.
     """
-    if not shutil.which("kreadconfig6"):
-        return
-
     parser = configparser.RawConfigParser(strict=False)
     parser.optionxform = str
-    if os.path.exists(KDEGLOBALS_FILE):
+    if merge and os.path.exists(path):
         try:
-            parser.read(KDEGLOBALS_FILE, encoding="utf-8")
+            with open(path, encoding="utf-8") as handle:
+                parser.read_file(handle)
         except (OSError, UnicodeDecodeError, configparser.Error) as error:
-            sys.stderr.write(f"Cannot read kdeglobals, so it is left alone: "
-                             f"{error}\n")
-            return
+            sys.stderr.write(f"Cannot read {path}, so it is left alone: {error}\n")
+            return False
 
-    for section, entries in build_kde_colors(colors):
+    for section, entries in sections:
         if not parser.has_section(section):
             parser.add_section(section)
         for key, value in entries:
             parser.set(section, key, value)
 
-    # Written to a temporary file and renamed, so it is never left truncated.
-    temporary = KDEGLOBALS_FILE + ".impasto"
+    temporary = path + ".impasto"
     try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(temporary, "w", encoding="utf-8") as handle:
             parser.write(handle, space_around_delimiters=False)
-        os.replace(temporary, KDEGLOBALS_FILE)
+        os.replace(temporary, path)
     except OSError as error:
-        sys.stderr.write(f"Cannot write kdeglobals: {error}\n")
+        sys.stderr.write(f"Cannot write {path}: {error}\n")
+        return False
+    finally:
+        try:
+            if os.path.exists(temporary):
+                os.unlink(temporary)
+        except OSError as error:
+            sys.stderr.write(f"Cannot remove {temporary}: {error}\n")
+    return True
+
+
+def write_kde_colors(colors):
+    """Keep shared KDE application colors in sync without changing preferences."""
+    if not shutil.which("kreadconfig6"):
+        return
+
+    sections = build_kde_colors(colors)
+    write_kde_config(KDEGLOBALS_FILE, sections)
 
 
 def write_qt6ct_theme(colors):
     """Write qt6ct's colour scheme and config.
 
-    Only newly started Qt applications pick up the change: qt6ct's directory
-    watcher does not repaint windows that are already open. Skipped when qt6ct
-    is not installed.
+    qt6ct watches its config directory and reloads after a three-second
+    debounce. Replace the config after its palette so directoryChanged fires
+    even when the contents are unchanged. Applications owning their palette
+    may still need reopening.
+    Skipped when qt6ct is not installed.
     """
     if not shutil.which("qt6ct"):
         return
     for path, contents in ((QT6CT_COLORS_FILE, build_qt_colors(colors)),
                            (QT6CT_CONFIG_FILE, build_qt6ct_config())):
+        temporary = path + ".impasto"
         try:
             os.makedirs(os.path.dirname(path), exist_ok=True)
-            with open(path, "w", encoding="utf-8") as handle:
+            with open(temporary, "w", encoding="utf-8") as handle:
                 handle.write(contents)
+            os.replace(temporary, path)
         except OSError as error:
             sys.stderr.write(f"Cannot write {os.path.basename(path)}: {error}\n")
+        finally:
+            try:
+                if os.path.exists(temporary):
+                    os.unlink(temporary)
+            except OSError as error:
+                sys.stderr.write(f"Cannot remove {temporary}: {error}\n")
 
 
 def write_qt_theme(colors):
-    """Write the qt6ct palette (all Qt apps) and kdeglobals (KDE apps)."""
-    write_qt6ct_theme(colors)
+    """Write KDE schemes before notifying qt6ct's directory watcher."""
     write_kde_colors(colors)
+    write_qt6ct_theme(colors)
 
 
 
@@ -2387,6 +2359,93 @@ def push_nvim_colorscheme(colors):
             # A stale socket from a closed neovim; keep going.
             sys.stderr.write(f"{os.path.basename(socket_path)}: "
                              f"{result.stderr.strip()}\n")
+
+
+def strata_theme_paths():
+    root = os.path.join(XDG_CONFIG_HOME, "strata")
+    return root, os.path.join(root, "themes", "eclipse.toml")
+
+
+def write_strata_theme(colors):
+    """Strata v1.1 watches custom token files and reapplies the selected theme."""
+    root, path = strata_theme_paths()
+    ground = gtk_ground(colors["background"], colors["accent"])
+    surface = gtk_ground(colors["surface"], colors["accent"])
+    tokens = {
+        "name": "Eclipse", "background": ground, "surface": surface,
+        "text": lift(colors["text"], 7, ground),
+        "accent": lift(colors["accent"], 4.5, ground),
+        "danger": lift(colors["red"], 4.5, ground),
+        "muted": mix(ground, surface, 0.5),
+        "highlight": mix(surface, colors["accent"], 0.24),
+        "border": mix(surface, colors["text"], 0.22),
+        "dim_text": lift(mix(colors["text"], ground, 0.35), 4.5, ground),
+        "syntax_keyword": colors["blue"], "syntax_string": colors["green"],
+        "syntax_constant": colors["yellow"], "syntax_type": colors["accent"],
+        "syntax_preprocessor": colors["red"],
+    }
+    # Never borrow Omarchy's state tree or override the user's style.css.
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    fd, pending = tempfile.mkstemp(prefix=".eclipse-", suffix=".toml", dir=os.path.dirname(path))
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write("# Generated by Eclipse on each palette push.\n")
+            for key, value in tokens.items():
+                handle.write(f"{key} = {json.dumps(value)}\n")
+        os.replace(pending, path)
+    finally:
+        if os.path.exists(pending):
+            os.unlink(pending)
+    return path
+
+
+def prepare_strata_theme():
+    """Select Eclipse once while Strata is closed; preserve unrelated preferences."""
+    if subprocess.run(["pgrep", "-x", "strata"], capture_output=True).returncode == 0:
+        sys.stderr.write("Close Strata (including chooser windows) before selecting its Eclipse theme.\n")
+        return False
+    try:
+        with open(APP_PALETTE_FILE, encoding="utf-8") as handle:
+            colors = json.load(handle)
+        write_strata_theme(colors)
+        root, _ = strata_theme_paths()
+        path = os.path.join(root, "settings.toml")
+        original = ""
+        if os.path.exists(path):
+            with open(path, encoding="utf-8") as handle:
+                original = handle.read()
+            tomllib.loads(original)  # Do not edit malformed user settings.
+        lines = original.splitlines(keepends=True)
+        # Root-level scalar preferences only: never replace a nested table key.
+        end = next((i for i, line in enumerate(lines) if line.lstrip().startswith("[")), len(lines))
+        head = "".join(lines[:end])
+        for key, value in (("mode", "theme"), ("theme", "eclipse")):
+            replacement = f"{key} = {json.dumps(value)}"
+            pattern = rf"(?m)^{key}\s*=.*$"
+            if re.search(pattern, head):
+                head = re.sub(pattern, replacement, head)
+            else:
+                head = replacement + "\n" + head
+        changed = head + "".join(lines[end:])
+        tomllib.loads(changed)
+        if changed != original:
+            if original:
+                backup = os.path.join(STATE_DIR, "app-backups", f"strata-theme-{time.time_ns()}.toml")
+                os.makedirs(os.path.dirname(backup), exist_ok=True)
+                shutil.copy2(path, backup)
+            fd, pending = tempfile.mkstemp(prefix=".settings-", dir=root)
+            try:
+                with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                    handle.write(changed)
+                os.replace(pending, path)
+            finally:
+                if os.path.exists(pending):
+                    os.unlink(pending)
+        print("Strata: Eclipse theme selected; palette changes update live on the next launch.")
+        return True
+    except (OSError, ValueError, KeyError) as error:
+        sys.stderr.write(f"Cannot prepare Strata theme: {error}\n")
+        return False
 
 
 def write_telegram_theme(colors):
@@ -2943,12 +3002,14 @@ def set_theme(theme_id):
     save_state(state)
 
 
+
+
 def main():
     actions = ("list-wallpapers | list-animated | get-current | get-state | "
                "set-wallpaper <path> [transition] | "
                "restore | extract-colors [path] | set-theme <id> | "
                "push-terminal-palette <json> | push-terminal-font <family> | "
-               "prepare-telegram")
+               "prepare-telegram | prepare-strata | prepare-app-backgrounds")
     if len(sys.argv) < 2:
         sys.stderr.write(f"Usage: theme_manager.py {actions}\n")
         sys.exit(1)
@@ -2986,18 +3047,25 @@ def main():
         push_nvim_colorscheme(colors)
         write_imv_config(colors)
         write_gtk_theme(colors)
+        try:
+            write_strata_theme(colors)
+        except (OSError, ValueError, KeyError) as error:
+            sys.stderr.write(f"Cannot write Strata theme: {error}\n")
         write_icon_theme(colors)
         write_qt_theme(colors)
+        prepare_app_backgrounds()
         write_telegram_theme(colors)
         write_spicetify_colors(colors)
         write_zen_css(colors)
         refresh_spotify()
     elif action == "push-terminal-font" and argument:
         push_terminal_font(argument)
-    elif action == "push-terminal-ground" and argument:
-        push_terminal_ground(argument)
     elif action == "prepare-telegram":
         sys.exit(0 if prepare_telegram_theme() else 1)
+    elif action == "prepare-strata":
+        sys.exit(0 if prepare_strata_theme() else 1)
+    elif action == "prepare-app-backgrounds":
+        prepare_app_backgrounds()
     else:
         sys.stderr.write(f"Unknown action: {action}\n")
         sys.exit(1)

@@ -26,11 +26,19 @@ Eclipse adds independent monitor-local numbered workspaces, directional movement
 | Send window to scratchpad | Super + Shift + S |
 | Lock | Super + Ctrl + L |
 
-The read-only GitHub navigator provides account, repository, organization, issue, PR, and contribution views through supported GitHub access. OMP quick access, supported local session/usage status, theme integration, and Eclipse-specific skills replace the legacy agent integrations; this is not a claim of an account-wide quota API. VPN Settings supports OpenVPN and WireGuard import/manual creation through NetworkManager, with everyday activation in the island network panel. Real endpoint traffic, DNS, and hardware behavior still require target testing.
+The integrated GitHub navigator was removed after target testing failed its responsiveness and usability requirements. GitHub CLI remains available for terminal/development use; existing credentials and browser access are preserved. OMP quick access, local session status, theme integration and Eclipse-specific skills replace legacy agent integrations. VPN Settings supports OpenVPN/WireGuard import/manual creation through NetworkManager. Actual account, VPN and hardware acceptance is recorded in docs/VERIFICATION.md.
 
 Application configuration selects Strata and its supported chooser integration, Kitty, Zen with explicit Sine setup, Neovim/LazyVim, Telegram native theme export/import, Spotify/Spicetify, and Bash with ble.sh and Starship. Browser/profile modifications and Telegram theme application have explicit setup/application steps rather than an assumption that copying files completes them.
 
+Strata is the sole selected file manager and follows palette changes live through its native **Eclipse** custom theme. Close Strata before the one-time `./setup strata` selection (this command also configures file-manager/portal integration), or select Eclipse in Strata's theme settings after a palette push. To select only the generated theme without changing associations, close Strata and run `python3 ~/.config/quickshell/scripts/theme_manager.py prepare-strata`. Dolphin and its experimental styling were removed by owner decision.
+
 Both preset and wallpaper-derived palettes, retained materials, fonts, animations, game mode, animated wallpapers, input controls, idle/night light, lock/SDDM, optional face unlock, and Plymouth remain in scope. Original geometric Eclipse SVG identity assets replace the visible Settings/greeter wordmark; Plymouth uses the celestial-seal direction. Final scene artwork is not approved.
+
+**Settings → Appearance → Materials** has exactly two choices: **Application windows** and **Quickshell**, each with Classic / Glass / Liquid. Hyprland applies one whole-window material to Kitty, Strata, Zen and other ordinary apps (including text/media): Classic is opaque, Glass uses 90% opacity and blur, Liquid uses 75% opacity and refraction when hyprglass is loaded (otherwise blur). Native app backgrounds stay opaque to avoid double fading. Quickshell's bar, island, Settings and panel surfaces use their own shared native material, keeping text/icons opaque and excluding them from application refraction. Lock authentication remains opaque. Game mode temporarily makes both domains Classic, then restores their choices. No per-app or bar material selectors remain.
+
+Media-accuracy exceptions keep imv, mpv, screenshot editing, fullscreen and client-reported photo/video surfaces opaque, undimmed and unrefracted. Common image files open in imv. Embedded images/video and PDF tabs in a normal browser window still share its material—Hyprland cannot exempt part of a window. Open media in its viewer or use fullscreen for protected viewing.
+
+Workspace and scratchpad animations have their own selector in **Settings → Bar → Workspaces**, independent of window animation presets. Normal sliding workspaces move horizontally; the scratchpad rises from the bottom and returns downward using the selected workspace speed/curve. Game mode temporarily disables both without changing their saved choices.
 
 ## Checkout and deployment
 
@@ -61,9 +69,22 @@ The implemented setup verbs are:
 
 Use `./setup help` for current flags and prerequisites. Deployment copies files rather than symlinking them and tracks edits/backups; this does not make deployment risk-free or imply every external application can be rolled back automatically.
 
+Run `./setup plugins` from a terminal inside the target Hyprland session, not as
+root. Eclipse downloads only the installed/running Hyprland commit and shallow
+pinned submodules, showing Git transfer progress. Sources are reused under
+`~/.cache/eclipse/hyprland-sources/`; hyprpm still owns header validation, plugin
+compatibility pins, compilation and loading. A package/session revision mismatch
+requires logging out/in first. Failed downloads stop with the Git error; rerun
+the same command after resolving connectivity. Git does not resume partial pack
+transfers, but completed source/submodule objects are reused. No global Git
+configuration or alternate download mirror is installed. This reduces transfer
+size; it cannot guarantee GitHub throughput. Confirm success with
+`hyprctl plugin list`—both dynamic-cursors and hyprglass must be loaded.
+
+
 ## Verification status
 
-Syntax and 18 backend regression tests passed, along with keyboard-migration checks. Real isolated workspaces/scratchpad, clipboard, Bash, LazyVim editing, OMP lifecycle/skills/theme emission, edge persistence, SDDM preview, GitHub navigation through isolated Zen, Strata chooser rendering, Sine staging, Plymouth rendering/password callbacks, and a controlled WireGuard tunnel were exercised. These do not prove laptop acceptance. OpenVPN traffic and several app/authentication/boot paths remain unverified. A related Settings Edit focus/lifetime failure was fixed in the nested runtime; **BUG-01 still requires confirmation on the affected laptop**. See [VERIFICATION](docs/VERIFICATION.md) for exact evidence and limits. No target deployment has occurred.
+The current implementation and testing milestone is complete under the owner's revised personal acceptance scope. Physical laptop acceptance covers the single-display desktop, boot/login/shutdown, input/workspaces, notes/tasks/edge features, idle and media inhibition, capture and chooser workflows. A disposable VM on the test laptop passed full installation, authenticated graphical login, plugin loading, actual upstream update/conflict handling and boot/baseline recovery. Telegram verification, real OMP provider-turn usage, broader VPN scenarios and external-monitor acceptance were explicitly excluded—not passed or removed. Battery tests are unavailable on the AC-only target, face unlock was not selected, and fantasy scene artwork remains deferred. See [VERIFICATION](docs/VERIFICATION.md) for observed evidence and limits.
 
 ## Attribution and license
 

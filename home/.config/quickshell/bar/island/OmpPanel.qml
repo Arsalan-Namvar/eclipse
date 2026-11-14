@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 
 import "../../theme"
 import "../../services"
@@ -8,37 +9,51 @@ import "../../components"
 ColumnLayout {
     id: root
 
-    spacing: Theme.detailGap
-    implicitWidth: 520
+    spacing: 12
+    implicitWidth: OmpService.panelWidth - 2 * Theme.panelPadding
+    readonly property var session: OmpService.selected
+    readonly property bool historical: OmpService.state === "ended" || OmpService.state === "disconnected"
+    readonly property bool contextKnown: root.session?.context?.percent !== null
+        && root.session?.context?.percent !== undefined
     Component.onCompleted: OmpService.subscribe()
     Component.onDestruction: OmpService.release()
 
+    function stateColor(state: string): color {
+        return state === "working" ? Theme.accent : state === "idle" ? Theme.green : Theme.textMuted
+    }
+    function projectName(path: string): string {
+        return path.replace(/\/$/, "").split("/").pop() || path
+    }
+
+
     RowLayout {
         Layout.fillWidth: true
-        Text {
+        Layout.preferredHeight: 36
+        spacing: 8
+        OmpLabel { text: "󰚩"; color: Theme.accent; font.family: Theme.fontMono; font.pixelSize: 22 }
+        OmpLabel {
             text: "Oh My Pi"
             color: Theme.text
-            font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeLarge
             font.weight: Font.DemiBold
             Layout.fillWidth: true
         }
-        PillButton { text: "Launch in ~/Work"; onClicked: OmpService.launch() }
-        PillButton { text: "Refresh"; onClicked: OmpService.refresh() }
+        PillButton { text: "Launch"; icon: "󰐕"; onClicked: OmpService.launch() }
+        IconButton { icon: "󰑐"; onClicked: OmpService.refresh() }
     }
 
-    Text {
+    OmpLabel {
         Layout.fillWidth: true
-        text: "Choose one session. Selection never follows terminal focus or the newest session."
+        visible: OmpService.error !== ""
+        text: OmpService.error
+        color: Theme.red
         wrapMode: Text.WordWrap
-        color: Theme.textMuted
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSizeSmall
     }
 
     Flickable {
+        visible: OmpService.sessions.length > 0
         Layout.fillWidth: true
-        implicitHeight: Math.min(180, sessionList.implicitHeight)
+        Layout.preferredHeight: OmpService.sessionListHeight
         contentHeight: sessionList.implicitHeight
         clip: true
         boundsBehavior: Flickable.StopAtBounds
@@ -51,23 +66,40 @@ ColumnLayout {
                 Rectangle {
                     id: option
                     required property var modelData
+                    readonly property bool picked: OmpService.selectedId === option.modelData.id
                     Layout.fillWidth: true
-                    implicitHeight: sessionLabel.implicitHeight + 16
+                    Layout.preferredHeight: 54
                     radius: Theme.radiusSmall
-                    color: OmpService.selectedId === option.modelData.id ? Theme.accent : Theme.surface
-                    Text {
-                        id: sessionLabel
+                    color: option.picked ? Qt.alpha(Theme.accent, .14)
+                        : press.containsMouse ? Theme.surfaceHoverIn(QsWindow.window) : Theme.surfaceIn(QsWindow.window)
+                    border.width: 1
+                    border.color: option.picked ? Theme.accent : Theme.borderIn(QsWindow.window)
+                    RowLayout {
                         anchors.fill: parent
-                        anchors.margins: 8
-                        text: `${option.modelData.name} · ${option.modelData.state}\n${option.modelData.project} · ${option.modelData.sessionId.slice(0, 8)}`
-                        textFormat: Text.PlainText
-                        wrapMode: Text.WrapAnywhere
-                        color: OmpService.selectedId === option.modelData.id ? Theme.accentText : Theme.text
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeSmall
+                        anchors.margins: 10
+                        spacing: 10
+                        Rectangle { width: 6; height: 6; radius: 3; color: root.stateColor(option.modelData.state) }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+                            OmpLabel {
+                                Layout.fillWidth: true
+                                text: option.modelData.name || "Untitled session"
+                                color: Theme.text
+                                font.weight: option.picked ? Font.DemiBold : Font.Normal
+                            }
+                            OmpLabel {
+                                Layout.fillWidth: true
+                                text: root.projectName(option.modelData.project) + " · " + option.modelData.sessionId.slice(0, 8)
+                                font.pixelSize: Theme.fontSizeLabel
+                            }
+                        }
+                        OmpLabel { text: option.modelData.state; color: root.stateColor(option.modelData.state) }
                     }
                     MouseArea {
+                        id: press
                         anchors.fill: parent
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: OmpService.select(option.modelData.id)
                     }
@@ -76,53 +108,88 @@ ColumnLayout {
         }
     }
 
-    Text {
+    ColumnLayout {
+        visible: root.session === null
         Layout.fillWidth: true
-        visible: OmpService.sessions.length === 0 || OmpService.error !== ""
-        text: OmpService.error || "No desktop-connected OMP sessions. Launch OMP above; the Eclipse extension publishes local status only."
-        wrapMode: Text.WordWrap
-        color: Theme.textMuted
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSizeSmall
+        spacing: 6
+        OmpLabel {
+            Layout.fillWidth: true
+            text: OmpService.sessions.length ? "Select a session" : "No connected sessions"
+            color: Theme.text
+            font.pixelSize: Theme.fontSizeMedium
+            font.weight: Font.DemiBold
+        }
+        OmpLabel {
+            Layout.fillWidth: true
+            text: OmpService.sessions.length ? "Your selection stays put when terminal focus changes."
+                : "Launch OMP in ~/Work. Local session status appears here; choose a session to inspect it."
+            wrapMode: Text.WordWrap
+        }
     }
 
-    Text {
+    ColumnLayout {
+        visible: root.session !== null
         Layout.fillWidth: true
-        visible: OmpService.selectedId !== ""
-        text: OmpService.selected ? `${OmpService.selected.name}\n${OmpService.selected.project}\n${OmpService.selected.sessionId}\nStatus: ${OmpService.state}` : ""
-        textFormat: Text.PlainText
-        wrapMode: Text.WrapAnywhere
-        color: Theme.text
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSizeRegular
+        spacing: 10
+        RowLayout {
+            Layout.fillWidth: true
+            OmpLabel {
+                Layout.fillWidth: true
+                text: root.session?.name || "Untitled session"
+                color: Theme.text
+                font.pixelSize: Theme.fontSizeMedium
+                font.weight: Font.DemiBold
+            }
+            OmpLabel { text: OmpService.state; color: root.stateColor(OmpService.state) }
+        }
+        OmpLabel {
+            Layout.fillWidth: true
+            text: root.session?.project ?? ""
+            elide: Text.ElideMiddle
+            font.family: Theme.fontMono
+        }
+        OmpLabel {
+            Layout.fillWidth: true
+            text: (root.session?.provider || "Provider unavailable") + " / " + (root.session?.model || "Model unavailable")
+        }
+        Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Theme.borderIn(QsWindow.window) }
+        RowLayout {
+            Layout.fillWidth: true
+            OmpLabel { text: "Context estimate"; Layout.fillWidth: true }
+            OmpLabel {
+                text: root.contextKnown ? root.session.context.percent.toFixed(1) + "%" : "Unavailable"
+                color: root.contextKnown ? Theme.accent : Theme.textMuted
+                font.family: Theme.fontMono
+            }
+        }
+        UsageBar { Layout.fillWidth: true; visible: root.contextKnown; progress: OmpService.contextFraction }
+        OmpLabel {
+            Layout.fillWidth: true
+            text: root.contextKnown ? OmpService.count(root.session.context.tokens) + " / " + OmpService.count(root.session.context.window) + " tokens"
+                : "OMP has not reported a context capacity."
+            font.pixelSize: Theme.fontSizeLabel
+        }
+        GridLayout {
+            Layout.fillWidth: true
+            columns: 3
+            columnSpacing: 12
+            rowSpacing: 10
+            OmpMetric { label: "Session tokens"; value: OmpService.count(root.session?.tokens) }
+            OmpMetric { label: "Input / output"; value: OmpService.count(root.session?.input) + " / " + OmpService.count(root.session?.output) }
+            OmpMetric { label: "Cost estimate · USD"; value: typeof root.session?.cost === "number" ? "$" + root.session.cost.toFixed(4) : "Unavailable" }
+            OmpMetric { label: "Cache read"; value: OmpService.count(root.session?.cacheRead) }
+            OmpMetric { label: "Cache write"; value: OmpService.count(root.session?.cacheWrite) }
+            OmpMetric { label: "Last observed"; value: root.session ? Qt.formatDateTime(new Date(root.session.observed), "HH:mm:ss") : "Unavailable" }
+        }
+        OmpLabel {
+            Layout.fillWidth: true
+            text: root.historical ? "Last observation · this session is " + OmpService.state + ". No replacement selected."
+                : "Session counters and estimates—not account limits or billing."
+            wrapMode: Text.WordWrap
+            color: root.historical ? Theme.accent : Theme.textMuted
+            font.pixelSize: Theme.fontSizeLabel
+        }
     }
 
-    Text {
-        Layout.fillWidth: true
-        visible: OmpService.selected !== null
-        readonly property var session: OmpService.selected
-        text: !session ? "" : [
-            `Model: ${session.provider ?? "Unavailable"} / ${session.model ?? "Unavailable"}`,
-            `Session tokens: ${OmpService.count(session.tokens)}`,
-            `Input ${OmpService.count(session.input)} · Output ${OmpService.count(session.output)}`,
-            `Cache read ${OmpService.count(session.cacheRead)} · Cache write ${OmpService.count(session.cacheWrite)}`,
-            session.context ? `Context estimate: ${OmpService.count(session.context.tokens)} / ${OmpService.count(session.context.window)} (${session.context.percent === null ? "Unavailable" : session.context.percent.toFixed(1) + "%"})` : "Context estimate: Unavailable",
-            typeof session.cost === "number" ? `OMP session cost estimate: $${session.cost.toFixed(4)} USD` : "Session cost estimate: Unavailable",
-            `Last update: ${Qt.formatDateTime(new Date(session.observed), "ddd d MMM HH:mm:ss")}`
-        ].join("\n")
-        wrapMode: Text.WordWrap
-        color: Theme.textMuted
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSizeSmall
-        lineHeight: 1.25
-    }
-
-    Text {
-        Layout.fillWidth: true
-        text: "Tokens and cost are OMP's session counters, not account limits or a bill. Context is OMP's estimate. Ended/disconnected figures are the last observation; no replacement session is selected."
-        wrapMode: Text.WordWrap
-        color: Theme.textMuted
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSizeSmall
-    }
+    Item { Layout.fillHeight: true }
 }

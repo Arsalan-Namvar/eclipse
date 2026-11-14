@@ -50,7 +50,7 @@ and suggestions are not evidence of the owner's preference.
 | Area | Topics | Status |
 | --- | --- | --- |
 | Everyday workflow | Applications, shortcuts, workspaces, window management | Complete initial map, independent per-screen workspaces, movement, clipboard, and scratchpad accepted; implementation pending |
-| Shell | Island, bar, launcher, control centre, panels | Existing interaction retained; GitHub navigator, OMP integration, and VPN controls added; BUG-01 crash resolved with owner confirmation on target |
+| Shell | Island, bar, launcher, control centre, panels | Existing interaction retained; OMP and VPN controls retained; integrated GitHub navigator removed after rejected target UX; BUG-01 resolved |
 | Appearance | Palettes, materials, motion, fonts, wallpapers | Both palette approaches, three materials, animations, fonts, game mode, and animated wallpapers retained; effect research and final artwork pending |
 | Desktop extras | Widgets, notes, tasks, games, pets | Remove general grid, dock, arcade, and pets; retain island notes/tasks plus edge note decks and edge spectrum |
 | Applications | File manager, editor, messaging, media, shell, AI | Strata/chooser, Kitty, Zen+Sine, LazyVim, Telegram themes, Spotify/Spicetify, viewers, Bash+ble.sh+Starship, helpers, and OMP selected |
@@ -71,17 +71,51 @@ for approval of decisions already recorded; handle new discoveries explicitly.
   Zsh/Oh My Zsh with Bash+ble.sh and Starship Nerd Font Symbols; legacy agent
   usage integrations with OMP; installation/update paths with the owner's fork.
 - **Remove:** dock, general grid widgets (not edge exceptions), arcade, pets,
-  Markets, bundled graphical editor, greeting/decorative terminal tools, and
-  Super + Space language-switch option. Audit dedicated packages/assets and
+  Markets, integrated GitHub navigator, bundled graphical editor,
+  greeting/decorative terminal tools, and Super + Space language-switch option.
+  Audit dedicated packages/assets and
   shared dependencies rather than mass-deleting a directory by name.
 - **Add:** shared scratchpad; independent local monitor workspace sets and
-  accepted movement rules; consistent clipboard family; read-only GitHub
-  contributions/repos/orgs/issues/PRs including authorized private data; OMP
+  accepted movement rules; consistent clipboard family; OMP
   launch/status/theme/system-aware skills; VPN Settings for OpenVPN/WireGuard
   import and manual creation with island network-panel activation.
 - **Visual direction:** original mythic-celestial Eclipse identity and Plymouth
   re-theme. Owner rejected the first generated image and paused artwork iteration.
   This is deferred work, not permission to ship the inherited painting branding.
+
+### Verification scope adjustment — 2026-11-12
+
+Owner explicitly omitted Telegram verification, real OMP provider-turn usage
+verification and broader VPN scenarios from the remaining acceptance scope.
+This supersedes their earlier pending/deferred verification status. It does not
+remove Telegram, OMP or VPN functionality or claim the omitted paths passed.
+Existing LazyVim, Zen/Sine, Strata and OMP launch/status/layout evidence stands;
+everyday VPN use was accepted by owner report. Integrated GitHub navigation was
+already removed by owner decision. The application-integration and GitHub/VPN
+implementation tasks are therefore complete under this revised acceptance scope.
+Full installation/update/recovery and remaining applicable desktop/hardware
+verification are separate and are not waived by this decision.
+
+All concrete implementation tasks are complete under the revised scope; close
+the implementation umbrella separately from final integration acceptance.
+Remaining tests may reveal defects requiring further implementation, but missing
+test evidence alone is not an unimplemented feature.
+
+Fresh-VM verification on 2026-11-14 found Spicetify's pnpm/esbuild build requires
+a system Node runtime not supplied by fnm alone. Added nodejs to the official
+package manifest; full unskipped install then succeeded. Authenticated graphical
+login, both Hyprland plugins, protected real-origin update/conflict handling and
+guest boot/baseline recovery passed. VM left powered off on test laptop; physical
+host boot images and saved power policy unchanged. See VERIFICATION for limits.
+
+Owner accepted fullscreen Zen idle inhibition, everyday retained panels and task
+status persistence, plus normal shutdown/power-off and subsequent startup/login.
+Face unlock was not selected for this personal setup; optional support remains
+unverified, not removed. Owner subsequently explicitly excluded external-monitor
+workspace/transfer/hotplug/lid acceptance from this milestone because no monitor
+is available. Multi-monitor functionality is unchanged and unverified, not passed.
+Implementation and testing milestones are complete under this revised personal
+acceptance scope; excluded checks are not prerequisites for closing this milestone.
 
 ### Remaining design/research versus missing evidence
 
@@ -100,6 +134,31 @@ for approval of decisions already recorded; handle new discoveries explicitly.
   Do not modify the current workstation as a substitute for target testing or
   claim remaining hardware scenarios passed.
 
+### Plugin download refinement — 2026-11-01
+
+Owner reported the plugin installer apparently frozen at 0/5 cloning Hyprland,
+matching an earlier Impasto attempt. Target inspection measured roughly 112 KiB
+in ten seconds during that clone; it eventually failed with a Git connection
+reset. This is not evidence of a compiler/plugin incompatibility.
+
+Upstream hyprpm 0.56.2 shallow-clones only when branch is main; release v0.56.2
+therefore fetched full history. Eclipse prepares a commit-keyed shallow source
+cache with visible Git transfer progress and shallow pinned submodules, then
+passes its file URL through hyprpm's supported --hl-url option. Child-scoped URL
+mapping reuses those local submodules during hyprpm's recursive clone, avoiding
+another network download. No global Git changes, mirrors or custom header ABI
+substitutes. Installed/running commit and ABI must agree before preparation.
+hyprpm retains compatibility selection, header checks, compilation and loading.
+Failed preparation stops instead of silently falling back to full history.
+This reduces download volume and makes activity visible; the underlying slow
+GitHub route is not claimed fixed. Source: [pinned upstream implementation](https://github.com/hyprwm/Hyprland/blob/v0.56.2/hyprpm/src/core/PluginManager.cpp).
+
+Owner subsequently completed installation on a phone hotspot. On returning to
+the previous network, target inspection confirmed both plugins enabled/loaded
+and no compositor config errors. The owner then enabled window refraction and
+reported it works very well; refraction is visually accepted on target.
+Physical shake-to-find acceptance remains separate.
+
 ### Target feedback follow-ups — 2026-10-28
 
 The owner reports the exercised keybindings work as intended. Keep the following
@@ -108,13 +167,160 @@ that they have been fixed or deployed.
 
 | Item | Owner observation / desired result | Follow-up acceptance |
 | --- | --- | --- |
-| Strata dynamic theme | Strata does not dynamically follow Eclipse's palette | Investigate supported theming; visually verify palette changes in the running file manager, documenting any actual limitations |
-| Dolphin theming exploration | Also try theming Dolphin | Evaluate palette integration and inspect the actual application; this is not a decision to replace Strata or change default folder/portal associations |
-| Persian layout mismatch | Target Persian layout is not the one on the development laptop | Compare actual compositor/input-method configuration on both laptops, match the owner's familiar character mapping, then physically verify Persian letters/punctuation and switching |
-| Settings shortcut preference | Prefer Super + comma over Super + Ctrl + S | Implement the preference in the shared map/profile migration and reference sheet; verify collisions and behavior in both English and Persian before deployment |
+| Strata dynamic theme | Strata intentionally overrides generic GTK CSS | Native Eclipse custom theme implemented and deployed; same-process dark/light/adaptive changes visually verified; owner acceptance pending |
+| Dolphin evaluation | Owner decided not to keep Dolphin after trying the integration | Removed from the selected desktop, including custom style, launcher, generated icons and build integration; Strata retained |
+| Persian layout mismatch | Main Fcitx profile uses ir(winkeys); target had plain ir | Resolved: target uses us,ir with ,winkeys; 180 XKB mappings matched and owner confirmed physical typing/switching |
+| Settings shortcut preference | Prefer Super + comma over Super + Ctrl + S | Resolved: keymap v2 deployed, custom choices preserved, owner confirmed physical shortcut in English and Persian |
+| OMP panel visual refinement ([#7](https://github.com/Arsalan-Namvar/eclipse/issues/7)) | Functional launch/status/exit checks pass, but the panel had too much empty space | Resolved: compact state-aware panel deployed and exercised; owner confirmed the result is good |
 
-These changes are deferred from the current feedback-recording step. Keep the
-existing deployed configuration until the relevant follow-up is implemented.
+Input and Settings shortcut refinements are deployed and accepted. File-manager
+theme integration and compact OMP panel are deployed with runtime evidence recorded.
+
+#### Compact OMP panel — 2026-11-03
+
+Replace fixed 560×620 OMP host dimensions with shared state-aware dimensions:
+520 wide, short empty/choose states, up to three visible session rows (scroll
+for more), and detail only for an explicitly selected session. The selected
+summary shows project/model, context estimate/gauge, grouped session counters,
+cost estimate and last observation. Long identities elide rather than expand
+the panel. Unknown capacity/counters remain Unavailable, never an implied zero.
+Ended/disconnected state keeps last observation and never selects a replacement.
+Counters are session estimates, not account quotas or a bill. Use native shell
+surface helpers rather than hardcoded solid list cards. No provider request or
+credential/transcript access is needed for layout/lifecycle checks.
+
+Owner visually accepted the deployed refinement on 2026-11-03. This closes the
+layout acceptance, not verification of provider-turn usage accumulation.
+
+
+#### File-manager selection and materials — 2026-11-01
+
+After trying Dolphin with live recoloring, soft folders and materials, the owner
+decided not to keep it. Remove Dolphin and all dedicated Eclipse integration:
+Qt style source/binary/build cache, wrapper/desktop entry, generated soft-folder
+themes, named Dolphin scheme and tests. Do not retain an optional compatibility
+path. Keep shared KDE/Qt theming and dependencies used by other applications.
+Prior experiment evidence remains historical in VERIFICATION.md.
+
+Strata remains the sole selected file manager and chooser provider. Its former
+independent Ground selector is superseded by the two-domain material decision
+below. The native base is opaque; compositor opacity/refraction supplies its
+shared application material.
+
+Strata keeps its native watched TOML theme and an owned block in style.css,
+preserving personal CSS after that block. GTK 4.24.1's unconditional empty
+background-effects region prevents compositor blur. Its launcher and per-user
+FileManager1/portal activation opt out of only `ext_background_effect_manager_v1`
+using GTK's supported GDK_WAYLAND_DISABLE control. This lets Hyprland blur native
+alpha without changing global GTK, renderer or package versions. See the
+[upstream GTK report](https://gitlab.gnome.org/GNOME/gtk/-/work_items/8344).
+Compositor blur must be enabled; optical window refraction remains a separate
+plugin capability. Actual laptop verification and recovery archives are recorded
+in VERIFICATION.md; final owner visual acceptance remains outstanding.
+
+### AP-05: two unified material domains — 2026-11-02
+
+Owner rejected separate terminal, file-manager, browser and bar material choices.
+Exactly two selectors live under Settings → Appearance → Materials, both with
+Classic / Glass / Liquid: Application windows and Quickshell. Owner explicitly
+selected compositor-controlled whole-window fading, accepting that text, images
+and video also fade, rather than background-only app-specific implementations.
+
+Application Classic sets opacity 1 and disables app blur/refraction; Glass sets
+active/inactive/fullscreen opacity .90 with blur; Liquid sets .75 with HyprGlass
+refraction if loaded (ordinary blur otherwise). Quickshell toplevels are excluded
+from application opacity/refraction, and shell layers use native alpha/blur.
+Kitty and Strata paint opaque native bases to avoid double transparency; Zen's
+palette stylesheet remains opaque and its whole window now follows Hyprland.
+Other app-owned transparency can still affect the result; this is a shared
+compositor treatment, not a guarantee of identical internal app colors.
+
+Quickshell's surfaceStyle controls bar/island, Settings, notifications and shared
+panel chrome. Text/icons remain native opaque content over the material. Notes
+retain their paper design and authentication/lock remains opaque intentionally;
+neither gains an independent material selector. Refraction is now part of app
+Liquid, not a separate toggle. Removed conflicting opacity/blur eligibility
+controls; retained layout, shadows and motion. Game mode makes both domains
+Classic without changing selected values; reload/profile changes reassert policy.
+
+Migration preserves explicit windowMaterial, otherwise maps windowGlass=true to
+Liquid, then terminalGround, then fileManagerGround, then Glass. Empty legacy
+terminalGround resolves through the shell style. surfaceStyle remains independent
+(old frosted maps to Glass). Retired fields and conflicting stored compositor
+overrides are removed on startup/import/export; unrelated settings are kept.
+
+#### Media accuracy exception — 2026-11-02
+
+Owner accepted the unified result but requested images/media not be affected.
+Fixed policy exceptions, not new selectors: imv/imv-wayland, mpv, Satty,
+client-reported photo/video surfaces and true fullscreen windows stay opacity 1,
+without blur/dimming/refraction. Reapply after generic material changes so
+Game mode/profile/reload cannot overwrite them. Maximized is not fullscreen.
+Common image formats open in the already selected imv instead of browser fallback;
+no new image viewer is introduced. Defaults setup preserves explicit user choices.
+
+Compositor effects cannot exclude a rectangle inside a browser or Telegram
+window. Embedded images, inline video, normal-window PDF tabs and Strata previews
+still share their parent window's material unless the client marks the entire
+surface as photo/video. Use imv/mpv or fullscreen for protected viewing. No
+content detection by tab-title guesses, blanket browser exemption, or new PDF
+application selected. Such app-internal protection would require a different
+native-background rendering approach than the selected whole-window policy.
+
+#### Kitty cursor and trail — 2026-11-03
+
+Owner requested the reference laptop's slower trail and live theme color.
+Match its beam, no blink, trail 10, threshold 2 cells and decay .1/.4 seconds
+instead of Eclipse's .01/.05 seconds. Shell integration does not override the
+chosen prompt cursor. Cursor/trail use the existing palette push's accent,
+contrast-lifted against terminal ground; cursor text uses that ground. Remove
+the inherited always-white cursor policy. No reference-workstation config changes.
+
+
+
+
+
+### Independent workspace and scratchpad motion
+
+The owner requests a separate animation selector in Settings → Bar → Workspaces.
+It controls regular workspace switching and scratchpad show/hide together,
+independently of Settings → Windows → Animation. Reuse Glide, Brisk, Calm,
+Bounce and None, with workspace-specific previews/descriptions. Selecting None
+for windows must not disable an enabled workspace preset, or vice versa.
+Game mode temporarily disables both and restores the saved independent choices.
+Existing settings/imported profiles without the new field adopt their previous
+combined animation choice once; new profiles default to Glide. Profile export,
+switching and persistence include the new workspace choice.
+The owner accepted independent motion, then specified scratchpad entry from the
+bottom upward and exit back downward, while ordinary sliding workspaces remain
+horizontal. Scratchpad uses the workspace preset's curve/duration/enabled state,
+but explicit vertical entry/exit directions (also for Calm); None stays instant.
+
+
+### Resumed edge acceptance: reported blockers
+
+- [Issue #5](https://github.com/Arsalan-Namvar/eclipse/issues/5): the owner
+  reports an inherited Impasto bug: an empty workspace jumps back to an occupied
+  one after a short delay unless a window is opened/moved there. This predates
+  Eclipse changes. The target trace identified repeated VRR-policy reconciliation
+  invoking workspace rescue, which selected an occupied workspace over an empty
+  one. MonitorService now distinguishes accepted VRR intent from activity and
+  only rehomes workspaces stranded on absent outputs without changing focus.
+  Target repeated switching, reload and last-window-close checks passed; the
+  owner physically confirmed the fix. Issue #5 is resolved; external-monitor
+  recovery remains unverified.
+- [Issue #6](https://github.com/Arsalan-Namvar/eclipse/issues/6): Screen edges
+  Edit crashes/closes Settings on the target. The related full nested-runtime
+  failure was reproduced: Settings closed and edge editing immediately ended.
+  The source now delegates to persistent SettingsWindow, closes/unloads the
+  page, then defers DesktopService editing, following the accepted control-centre
+  fix. Local real-compositor entry/reentry/Escape and existing controls handoff
+  passed. Following restored LAN/SSH access, only the three handoff files were
+  deployed with rollback backup, reviewed dry-run, successful target syntax
+  checks and settled shell status. The owner physically confirmed editor
+  entry/Escape/reentry, note-deck add/preview/open/move, and spectrum audio
+  response/configuration/move/persistence. Issue #6 is resolved on target.
+  The exact native target crash cause is not retrospectively proven.
 
 ### Implementation checkpoint — 2026-10-28
 
@@ -1115,9 +1321,19 @@ implemented; setup selects the `eclipse` theme. See [splash provenance and safe
 target-preview instructions](SPLASH.md). The actual Plymouth script module was
 rendered with Xvfb in private filesystem/network/PID namespaces: status/message,
 masked dummy entry with backspace/return, return-to-normal and shutdown were
-exercised, with real captures retained. Final owner approval and actual target
-boot/SDDM-handoff verification remain pending. No live host daemon, boot
+exercised, with real captures retained. Owner selected the original emblem,
+rounded geometric lettering option 1 and dark/pale-gold direction on 2026-11-03.
+Actual target boot/SDDM-handoff and login-screen review remain pending. No live host daemon, boot
 configuration or initramfs operation was performed.
+
+Login preview correction (2026-11-03): the inherited SDDM painting/top wordmark
+was not the selected celestial layout. Replaced its background with the dark
+gradient, added the original emblem and grouped rounded lettering above a
+smaller clock. Test mode explicitly disables authentication/power and explains
+dummy submissions instead of waiting indefinitely for a nonexistent daemon.
+Actual greeter preview rendered and dummy submission exercised on target;
+installed SDDM/PAM/session startup and boot handoff are not changed or proven.
+
 
 **Earlier observation:** Ly remained after Impasto installation, and the owner
 initially had not seen a splash. Subsequent owner testing confirms the current
@@ -1167,8 +1383,9 @@ though they were an Eclipse release.
 ### SH-11: remaining optional data modules
 
 **Decisions:** retain weather; remove Markets; use OMP (Oh My Pi) as the chosen
-AI harness with modest customization to be specified; retain GitHub contribution
-data and expose it in the dynamic island like notes/tasks instead of a widget.
+AI harness with modest customization to be specified. The earlier contribution
+panel decision is superseded by target feedback: remove contributions and keep
+the authenticated repository/organization/issues/PR navigator.
 
 The [upstream module catalogue](https://andreumassanet.github.io/impasto-docs/shell/bar/#the-module-catalogue)
 describes weather and market data from external services, Claude account usage
@@ -1231,32 +1448,18 @@ modes. Verify skill discovery and exercise a non-destructive system-inspection
 workflow to confirm it refers to the actual Eclipse system. Do not claim that
 skills make the assistant infallible or automatically authorize system changes.
 
-#### GitHub contribution island panel
+#### GitHub integration removed
 
-Create a first-class GitHub contribution panel in the island, reachable like
-notes and the task board through retained shell navigation. The owner suggested
-possibly using Markets' former place; final button/bar placement and shortcuts
-remain undecided, not a requirement to repurpose Markets code.
+The owner rejected the GitHub panel after page-cache and complete-snapshot
+revisions still failed the responsiveness/usability requirement. When offered
+removal versus a dashboard replacement, the owner explicitly selected removal.
+Remove the panel, service/backend, startup work, launcher/control-centre/bar and
+IPC entry points, obsolete tests and dedicated `~/.cache/eclipse/github` cache.
+Do not replace it with another embedded dashboard or compatibility alias.
 
-Initial source inspection found `services/GithubService.qml`,
-`bar/modules/GithubModule.qml`, and `components/ContributionGrid` usage in the
-module. The module is explicitly desktop-only in its comments despite its path.
-It already renders yearly total, streak, data age, and a contribution grid;
-reuse suitable data/rendering components rather than building a second backend.
-The service describes public-profile data and subscription-driven polling.
-These paths have been inspected, not runtime-tested; final data fields and
-panel layout need design before implementation.
-
-Preserve GitHub username configuration and reusable contribution code during
-widget removal; remove obsolete widget faces/placement controls only. Verify
-the island panel with a configured public profile, including missing username,
-unknown user, and failed fetch behavior, without restoring desktop widgets or
-Markets. No private-contribution authentication is requested.
-
-**Status:** weather/Markets/GitHub choices and OMP integration requirements
-recorded. Supported OMP data/theme/skill interfaces, final UI, and final GitHub
-panel presentation require research/design. No module implementation, account
-credentials, or live OMP configuration changed.
+Keep GitHub CLI installed for direct terminal/development use. Preserve its
+credentials, repository remotes, browser access and unrelated cached data.
+Earlier implementation measurements are historical evidence, not acceptance.
 
 
 ### ID-01: Eclipse visual identity references
@@ -1314,7 +1517,7 @@ to copy a game's logo or make all desktop UI imitate its HUD.
 
 **Accepted interpretation:** mythic celestial imagery rather than scientific
 astronomy or corporate orbit graphics. Use a recognizable original emblem;
-motion should suggest conjunction/alignment rather than an endless spinner.
+motion now uses a restrained continuous activity loop by the owner's later request.
 Keep the identity stable while fantasy scenery and extracted palettes vary.
 Keep ornament at branding moments rather than reducing everyday UI readability.
 An astral instrument combined with an eclipsed-sun seal is the starting design
@@ -1361,13 +1564,28 @@ https://chatgpt.com/s/m_6adf17479cbc8191bf092daaaa59bc9d and is unhappy with it.
 It is not approved for use. No visual critique of the image has been performed
 here; record the owner's judgment without inventing a reason for rejection.
 Scene/wallpaper generation remains paused; the rejected image is not bundled.
-Original deterministic Eclipse seal/wordmark SVGs and a matching Plymouth theme
-are now implemented as a visual-review candidate, not approved final artwork.
+Owner selected the original deterministic Eclipse seal, rounded geometric
+wordmark option 1 and existing dark/pale-gold colors on 2026-11-03. Canonical and
+shipped wordmark assets now use the selected lettering; scene artwork stays deferred.
 The seal combines a dark disc, broken meridians, sparse rays and a northern
-index; progress brings surrounding rings into alignment rather than spinning.
+index; surrounding rings now loop as an indeterminate activity indicator.
 Canonical vectors, a static splash composition, provenance and outstanding
 runtime acceptance are documented in [SPLASH.md](SPLASH.md). No new generated
 wallpaper or desktop-scene replacement is required for this implementation.
+
+Owner refinement (2026-11-10): login emblem was too small and the drifting/pulsing
+ring loop was rejected. Increase the centered login emblem from 120 to 256 UI-scaled
+pixels and lettering from 240 to 300. Replace splash ring drift with two inclined
+orbital bands whose near/far halves cross in front of/behind the unchanged emblem.
+Keep a continuous activity loop, not percentage-based progress. Original emblem,
+dark background, rounded lettering and gold/lavender orbital colors remain.
+
+Owner approved the orbital preview and requested deployment. Larger identity and
+depth-orbit revision deployed to the designated laptop on 2026-11-12 after fresh
+backup and extracted-initramfs comparisons; no service restart/reboot performed.
+Owner subsequently accepted actual boot orbital motion, enlarged login appearance
+and successful login return to the desktop. The agreed branding revision is
+implemented, deployed and accepted; fantasy scene artwork remains deferred.
 
 ### WF-03: universal clipboard shortcuts
 
@@ -1972,80 +2190,13 @@ with detailed interaction to be workshopped later.
 accepted. Detailed UI and supported interfaces remain implementation research;
 no launcher, directories, account settings, or live OMP configuration changed.
 
-### SH-16: GitHub panel starting design
+### SH-16: GitHub panel removed after target rejection
 
-**Decision (expanded):** retain contributions and add browsing of the owner's
-repositories and organizations, with lists of their issues and pull requests.
-Clicking a repository, organization, issue, or PR opens its corresponding page
-in the browser. Avoid overcrowding the island.
-
-#### Accepted scope
-
-- List the owner's repositories and organizations; allow selecting an
-  organization and its repositories, then a repository's issues or PRs.
-- Open the appropriate GitHub page in the selected browser (Zen), not an
-  embedded web view. Creating/editing issues, reviewing/merging PRs, and other
-  write operations are not requested.
-- Preserve the accepted contribution capability. Keep account/username context
-  clear; the graph does not have to remain visible alongside every list.
-- Keep the compact island interaction model, with bounded/scrollable lists
-  rather than expanding to fit all organizations/repositories/items.
-
-#### Accepted initial navigation
-
-Use a small overview with separate Contributions, Repositories, and
-Organizations destinations. A repository has Issues / Pull requests views;
-show one list at a time with a back action/breadcrumb. Repository/org rows
-select their contents, with an explicit external-link action for opening their
-own GitHub pages. Issue/PR rows directly open the browser. This separates
-drill-down selection from external navigation rather than assigning two
-different actions to the same click.
-
-Use search/filtering and pagination to keep large accounts usable. Start with
-open issues/PRs and offer closed/merged status filters. Keep the island bounded
-and refine row density during testing; do not show all lists simultaneously.
-
-#### Authentication and data research
-
-**Accepted access scope:** include public and private repositories, including
-organization repositories the authenticated account is permitted to access,
-and their issues/PRs. Respect organization authorization, SSO, and repository
-permissions; this is not a request to bypass access controls.
-
-The public contribution backend alone cannot provide this scope. Research
-supported authentication, pagination, rate limits, and organization requirements.
-Prefer established credential handling and minimum permissions required for
-read-only operations. Verify actual granted scopes: reusing an existing CLI
-login does not imply its token is read-only. Do not store tokens in repository,
-theme/profile settings, logs, or command-line arguments. Do not read credentials
-or query private account data during review.
-
-Private-repository browsing does not request private contribution details or
-private issue contents on the lock screen. Keep authenticated data within the
-unlocked panel and avoid persisting private item content unless needed and
-explicitly designed. The precise authentication/cache strategy is not chosen.
-
-#### Acceptance criteria
-
-- Verify configured account/username, repository/org lists, navigation/back,
-  issue/PR classification, status filters, and pagination with controlled data.
-  Large lists must remain bounded and not overflow the island.
-- Verify clicking representative issue/PR entries opens their exact GitHub URL
-  in the browser and external links for repositories/organizations work.
-- Distinguish no items, not authenticated/not authorized, rate limiting, and
-  offline/fetch failure; do not present inaccessible data as an empty account.
-- Verify authorized private and organization repositories are represented and
-  permission failures are explicit. Browser authentication is separate from
-  panel authentication; opening a private link cannot guarantee access in a
-  browser logged into another account.
-- Preserve existing island dismissal and keyboard navigation; no desktop widget
-  is restored. Control-centre/launcher entry points and bar placement remain
-  to be finalized.
-
-**Status:** public/private and authorized organization access, read-only behavior,
-compact drill-down navigation, and open-first/status-filter design accepted.
-Exact entry-point placement and authentication implementation research remain
-pending. No GitHub API/account access, credentials, or code changes performed.
+The owner explicitly chose removal after repeated target feedback that the
+integrated navigator was slow and unusable. This supersedes the earlier
+repository/organization/issues/PR and cache requirements. There is no integrated
+GitHub panel or background account fetching in the accepted desktop scope.
+GitHub CLI and browser use remain available, with existing credentials intact.
 
 ### WF-06: scratchpad
 

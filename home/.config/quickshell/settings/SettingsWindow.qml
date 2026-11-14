@@ -24,6 +24,9 @@ FloatingWindow {
     id: root
     CornerGuard {}
 
+    readonly property bool glassy: true
+    readonly property string groundStyle: Theme.surfaceStyle
+
     // Kept in sync with `visible` both ways, so closing the window from the
     // compositor resets it and it can be opened again.
     property bool shown: false
@@ -45,18 +48,38 @@ FloatingWindow {
         })
     }
 
+    function arrangeEdges(): void {
+        root.close()
+        // As with controls, activate the focus grab after Settings unloads.
+        Qt.callLater(function() { DesktopService.edit(true) })
+    }
+
     // Matched by the window rule in `windowrules.lua`.
     title: "Settings"
 
     implicitWidth: 980
     implicitHeight: 680
 
-    color: Theme.island
+    color: "transparent"
     visible: root.shown
 
     onVisibleChanged: {
         if (!root.visible && root.shown)
             root.shown = false
+    }
+
+    Rectangle {
+        id: ground
+        anchors.fill: parent
+        color: Theme.groundOf(root.groundStyle)
+        radius: CompositorService.value("decoration:rounding", 22)
+        border.width: 1
+        border.color: Theme.rimOf(root.groundStyle)
+
+        GlassSheen {
+            shape: ground
+            style: root.groundStyle
+        }
     }
 
     // Built on open and destroyed on close, so pages query state when created
@@ -74,6 +97,7 @@ FloatingWindow {
             onClosed: root.close()
             onPanelRequested: name => root.panelRequested(name)
             onArrangementRequested: root.arrangeControls()
+            onEdgeArrangementRequested: root.arrangeEdges()
         }
     }
 }

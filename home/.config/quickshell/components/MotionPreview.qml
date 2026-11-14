@@ -23,10 +23,11 @@ Item {
 
     // A row from `Motion.presets`.
     property var preset: null
+    property bool workspace: false
 
     readonly property bool still: !root.preset || !root.preset.curve
     readonly property bool slides:
-        root.preset && String(root.preset.windows ?? "").startsWith("slide")
+        root.preset && String(root.workspace ? root.preset.workspaces : root.preset.windows).startsWith("slide")
     readonly property var bezier: root.still ? [0, 0, 1, 1, 1, 1] : [
         root.preset.curve[0], root.preset.curve[1],
         root.preset.curve[2], root.preset.curve[3], 1, 1]
@@ -52,16 +53,23 @@ Item {
 
             property bool shown: false
 
-            anchors.horizontalCenter: parent.horizontalCenter
             y: (parent.height - height) / 2
-                + (root.slides && !win.shown ? 12 : 0)
+                + (!root.workspace && root.slides && !win.shown ? 12 : 0)
             width: parent.width - 20
             height: parent.height - 16
             radius: 4
             color: Theme.accent
-            scale: root.slides ? 1 : (win.shown ? 1 : 0.8)
-            // Scale or slide only; presets disable fadeIn.
+            x: root.workspace && root.slides && !win.shown ? -width : (parent.width - width) / 2
+            scale: root.workspace || root.slides ? 1 : (win.shown ? 1 : 0.8)
             opacity: win.shown ? 1 : 0
+            Behavior on x {
+                enabled: root.workspace && root.slides && !root.still
+                NumberAnimation { duration: root.span; easing.type: Easing.Bezier; easing.bezierCurve: root.bezier }
+            }
+            Behavior on opacity {
+                enabled: root.workspace && !root.slides && !root.still
+                NumberAnimation { duration: root.span }
+            }
 
             Behavior on scale {
                 enabled: !root.still

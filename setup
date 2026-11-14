@@ -935,7 +935,7 @@ verb_plugins() {
     if (( ! DRY )); then hold_sudo; fi
     # The headers first, and a rebuild of what is there when Hyprland has
     # changed under it, even by a package rebuild of the same version.
-    act hyprpm update
+    act python3 "$REPO/home/.config/quickshell/scripts/plugin_sources.py" update
     plugin dynamic-cursors https://github.com/virtcode/hypr-dynamic-cursors
     plugin hyprglass https://github.com/hyprnux/hyprglass
     act hyprpm reload
@@ -943,7 +943,7 @@ verb_plugins() {
     # same version against new libraries keeps stale ones and every plugin is
     # refused, while `reload` still reports success. Only the list says so.
     if (( ! DRY )) && hyprctl plugin list 2>/dev/null | grep -q '^no plugins loaded'; then
-        act hyprpm update -f
+        act python3 "$REPO/home/.config/quickshell/scripts/plugin_sources.py" update -f
         act hyprpm reload
     fi
     release_sudo
@@ -1135,7 +1135,7 @@ extras() {
 # already names a default for any of its types, so a browser or viewer
 # somebody chose stays chosen and is not split with ours.
 DEFAULT_APPS=(
-    'imv.desktop image/jpeg image/png image/gif image/webp image/svg+xml'
+    'imv.desktop image/jpeg image/png image/gif image/webp image/svg+xml image/bmp image/tiff image/avif image/heif image/jxl image/qoi'
     'eclipse-nvim.desktop text/plain application/json'
     'io.github.lgse.Strata.desktop inode/directory'
     'zen.desktop text/html application/pdf x-scheme-handler/http x-scheme-handler/https'
@@ -1250,12 +1250,14 @@ verb_spotify() {
     say ok
 }
 
+
 # Strata's supported installer preserves unrelated portal routes, notably
 # Hyprland ScreenCast/Screenshot. It restarts the frontend: close dialogs first.
 verb_strata() {
     section strata
     command -v strata >/dev/null || refuse 'strata is not installed (package: strata-bin)' || return
     command -v xdg-mime >/dev/null || refuse 'xdg-utils is not installed' || return
+    act python3 "$THEME_MANAGER" prepare-strata || refuse 'Strata theme setup failed; close Strata and select an Eclipse palette first' || return
     act strata --install-portal || refuse 'Strata portal setup failed; run inside the Hyprland session' || return
     act xdg-mime default io.github.lgse.Strata.desktop inode/directory || refuse 'folder association failed' || return
     act python3 "$REPO/home/.config/quickshell/scripts/app_integrations.py" file-manager \

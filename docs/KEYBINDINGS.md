@@ -81,7 +81,7 @@ changes hide it. Do not add a second workspace-trading action on monitor keys.
 | Universal paste | Super + V | Accepted |
 | Universal cut where applicable | Super + X | Accepted |
 | Clipboard history in island | Super + Ctrl + V | Accepted |
-| Settings | Super + Ctrl + S | Proposed |
+| Settings | Super + comma | Accepted; deployed with keymap version 2 |
 | Control centre | Super + Ctrl + A | Proposed |
 | Appearance / wallpaper | Super + Ctrl + W | Proposed |
 | Fixed palette picker | Super + Ctrl + T | Proposed |
@@ -105,17 +105,18 @@ power-action confirmations.
 
 ### Target-test refinement: Settings
 
-The owner reports the exercised keybindings work, but prefers **Super + comma**
-for Settings instead of **Super + Ctrl + S**. This preference is recorded for
-implementation; the table above still describes the deployed initial binding.
-Update the shared defaults, saved-profile migration and this reference together,
-and verify the comma key in both English and Persian. No shortcut change was
-deployed when recording this feedback.
+The owner prefers **Super + comma** for Settings instead of **Super + Ctrl + S**.
+Shared defaults and saved-profile migration now implement this choice. Version 2
+updates the old Settings default, preserves explicitly unbound/custom Settings
+choices, and does not remigrate unrelated version-1 shortcuts. Custom comma
+collisions retain the custom action and leave Settings unbound for resolution.
+The target uses English plus Persian Windows (`us,ir` / `,winkeys`), matching
+the main laptop's Fcitx Persian mapping, with Caps Lock switching retained.
+The owner physically confirmed the shortcut in both layouts and Persian typing.
 
 
 ## No dedicated keyboard shortcut by default (proposed)
 
-- GitHub panel: control-centre entry and launcher's `>` shell-action search.
 - OMP usage/session panel: control-centre entry and `>` search, distinct from
   launching OMP. Its selectable-session behavior remains as agreed.
 - VPN management: Settings; connect/disconnect in the network/Wi-Fi panel.

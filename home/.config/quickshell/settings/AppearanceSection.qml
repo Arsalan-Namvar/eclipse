@@ -14,8 +14,8 @@ import "../theme"
 import "../services"
 import "../components"
 
-// The wallpaper and its palette, the terminal, type and the shell's motion.
-// What Hyprland does to windows is `WindowsSection`.
+// Wallpaper, the two material layers, type and the shell's motion.
+// Window layout and animation live in `WindowsSection`.
 SettingsSection {
     id: root
 
@@ -87,23 +87,32 @@ SettingsSection {
         }
     }
 
-    // ── TERMINAL ────────────────────────────────────────────────────────────
+    // ── MATERIALS ──────────────────────────────────────────────────────────
 
     ColumnLayout {
         Layout.fillWidth: true
         spacing: root.spacing
-        visible: root.tab === "terminal"
+        visible: root.tab === "materials"
 
         SettingGroup {
-            title: Tr.t("Look")
-            note: Tr.t("What kitty's window is made of.")
-            hint: Tr.t("Classic is solid black, Glass the accent-tinted ground over a blur of the wallpaper, and Liquid a clear frosted pane. Its typeface is the monospace one, under Type.")
+            title: Tr.t("Application windows")
+            note: Tr.t("One compositor-controlled material for ordinary application windows.")
+            hint: Tr.t("Classic is opaque. Glass uses 90% opacity and blur; Liquid uses 75% and optional refraction (./setup plugins). The whole window fades. Image/video viewers, screenshot editing, fullscreen and reported photo/video surfaces stay opaque and unrefracted. Embedded browser media still shares the normal browser window's material; fullscreen protects the whole window. Quickshell is separate. Game mode temporarily uses Classic.")
 
             GroundRow {
-                key: "terminalGround"
+                key: "windowMaterial"
             }
         }
 
+        SettingGroup {
+            title: Tr.t("Quickshell")
+            note: Tr.t("Native materials for the bar, island and shell panels.")
+            hint: Tr.t("Classic is solid, Glass is tinted and blurred, and Liquid is a clear frosted pane. These native shell surfaces keep text and icons opaque and are independent of application windows. Shell Liquid does not require the window-glass plugin.")
+
+            GroundRow {
+                key: "surfaceStyle"
+            }
+        }
     }
 
     // ── TYPE ────────────────────────────────────────────────────────────────
@@ -168,7 +177,7 @@ SettingsSection {
         SettingGroup {
             title: Tr.t("Game mode")
             note: Tr.t("Everything still, for a game or a slow machine.")
-            hint: Tr.t("Stops the shell's animations and the spectrum, makes the island solid without shadows, and turns off Hyprland's animations, blur, shadow and glass. The settings below are kept and come back when it is turned off.")
+            hint: Tr.t("Stops the shell's animations and the spectrum, makes the island solid without shadows, and temporarily gives application windows Classic material without animations or shadows. Your material and motion choices are kept and restored when it is turned off.")
 
             SettingRow {
                 label: Tr.t("Game mode")

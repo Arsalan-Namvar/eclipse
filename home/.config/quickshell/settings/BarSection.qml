@@ -141,13 +141,9 @@ SettingsSection {
         }
 
         SettingGroup {
-            title: Tr.t("Look")
-            note: Tr.t("What the bar and the island are made of.")
-            hint: Tr.t("Classic is solid black, Glass the terminal's tinted ground over a blur of the wallpaper, and Liquid a clear frosted pane that lets the wallpaper's own colours through. The island is always the bar's.")
-
-            GroundRow {
-                key: "surfaceStyle"
-            }
+            title: Tr.t("Shadow")
+            note: Tr.t("What lifts the bar and island off the wallpaper.")
+            hint: Tr.t("Their material is chosen under Appearance → Materials → Quickshell.")
 
             SettingRow {
                 label: Tr.t("Shadow")
@@ -221,6 +217,34 @@ SettingsSection {
                 ]
                 current: SettingsService.workspaceMode
                 onSelected: id => SettingsService.set("workspaceMode", id)
+            }
+        }
+    }
+
+    SettingGroup {
+        visible: root.tab === "workspaces"
+        title: Tr.t("Workspace animation")
+        note: Tr.t("Workspace switching and scratchpad show/hide, independent of window animations.")
+        hint: Motion.presets.map(entry => `${Tr.t(entry.label)} — ${Tr.t(Motion.workspaceNoteOf(entry.id))}`).join(" ")
+
+        SettingTiles {
+            label: Tr.t("Preset")
+            Repeater {
+                model: Motion.presets
+                PreviewTile {
+                    id: workspaceTile
+                    required property var modelData
+                    stageHeight: 52
+                    caption: Tr.t(modelData.label)
+                    selected: SettingsService.workspaceAnimationPreset === modelData.id
+                    onPicked: SettingsService.set("workspaceAnimationPreset", modelData.id)
+                    MotionPreview {
+                        anchors.centerIn: parent
+                        width: parent.width - 22
+                        preset: workspaceTile.modelData
+                        workspace: true
+                    }
+                }
             }
         }
     }

@@ -1,6 +1,6 @@
 -- Shared accepted defaults and saved-profile migration. Descriptions are the
 -- stable identifiers used by Hyprland, QML profiles and keys.tsv.
-local M = { version = 1 }
+local M = { version = 2 }
 
 local source = debug.getinfo(1, "S").source
 local directory = assert(source:match("^@(.*/)"), "Cannot locate the keyboard map module")
@@ -67,7 +67,7 @@ function M.migrate(overrides, version)
         local kept = next_keys[row.description]
         if row.combination == "@removed" then
             next_keys[row.description] = nil
-        elseif kept and kept ~= "" then
+        elseif kept and kept ~= "" and ((version or 0) < 1 or row.description == "Shell · Open settings") then
             for _, old in ipairs(row.legacy) do
                 if M.normalize(old) == M.normalize(kept) then
                     next_keys[row.description] = nil

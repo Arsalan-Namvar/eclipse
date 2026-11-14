@@ -45,8 +45,6 @@ Singleton {
           detail: "Processor, memory, disks, the network", panel: "stats" },
         { id: "settings",   icon: "󰒓", label: "Settings",
           detail: "The whole desk, in a window",           panel: "" },
-        { id: "github",     icon: "󰊤", label: "GitHub",
-          detail: "Contributions, repositories, issues and pull requests", panel: "github" },
         { id: "omp",        icon: "󰚩", label: "OMP",
           detail: "Oh My Pi sessions and status",         panel: "omp" },
         { id: "notes",      icon: "󰎞", label: "Notes",
@@ -73,7 +71,7 @@ Singleton {
           detail: "Effects and reactions for your calls",  panel: "camera" }
     ]
 
-    readonly property var defaultButtons: ["stats", "settings", "github", "omp", "notes", "board"]
+    readonly property var defaultButtons: ["stats", "settings", "omp", "notes", "board"]
 
     // The grid when nothing is chosen, which the default layout fills.
     readonly property int defaultColumns: 6

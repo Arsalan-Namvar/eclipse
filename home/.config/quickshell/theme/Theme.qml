@@ -26,15 +26,11 @@ QtObject {
 
     // ── ISLAND ──────────────────────────────────────────────────────────────
 
-    // Pure black in every palette: the island is the shell's identity, not a
-    // themed surface. What changes is how much of it there is
-    // (`SettingsService.surfaceStyle`): solid, or glass — the terminal's own
-    // ground, the accent scaled towards black at kitty's opacity, over the
-    // compositor's blur, with a lit edge — or liquid, a clear pane of light
-    // frosted over the blur, lit harder. `island` stays opaque for what is
-    // cut out of it; the island, the capsules and the toasts are painted in
-    // `islandGround`, and what sits on them in white washes.
-    // Game mode is solid everywhere: no glass to blur behind.
+    // Native shell materials are independent of application-window opacity.
+    // Classic is opaque black; Glass is an accent-tinted pane over compositor
+    // blur; Liquid uses a cool frost and a stronger, directional lit edge.
+    // The island, capsules, toasts and Settings all use islandGround. Security
+    // lock surfaces may deliberately opt out. Game mode resolves to Classic.
     readonly property string surfaceStyle: SettingsService.gameMode ? "classic" : SettingsService.surfaceStyle
     readonly property bool solid: !root.seeThrough(root.surfaceStyle)
     readonly property bool glass: root.seeThrough(root.surfaceStyle)
@@ -47,11 +43,10 @@ QtObject {
     readonly property color island: "#000000"
     readonly property color islandGround: root.groundOf(root.surfaceStyle)
 
-    // The terminal's ground: `TERMINAL_TINT` and kitty's `background_opacity`.
-    readonly property real terminalTint: 0.22
-    readonly property real terminalOpacity: 0.90
-    readonly property color terminalGround: Qt.rgba(root.accent.r * root.terminalTint,
-        root.accent.g * root.terminalTint, root.accent.b * root.terminalTint, root.terminalOpacity)
+    readonly property real glassTint: 0.22
+    readonly property real glassOpacity: 0.90
+    readonly property color glassGround: Qt.rgba(root.accent.r * root.glassTint,
+        root.accent.g * root.glassTint, root.accent.b * root.glassTint, root.glassOpacity)
 
     // The liquid ground: a light, cool frost rather than the accent's tint,
     // so the blurred wallpaper reads through it in its own colours.
@@ -62,7 +57,7 @@ QtObject {
     // Any style's ground and rim, for a picture of one that is not chosen.
     function groundOf(style: string): color {
         return style === "liquid" ? root.liquidGround
-            : style === "glass" ? root.terminalGround : root.island
+            : style === "glass" ? root.glassGround : root.island
     }
 
     // A ground at a fraction of its own opacity: the Background slider's,
@@ -83,8 +78,8 @@ QtObject {
     readonly property color islandBorder: "#262626"
 
 
-    // Glass veils follow the retained bar/island surface style. Settings and
-    // lock surfaces remain opaque; shared components resolve by their window.
+    // Shared controls inherit their native shell window's material. Explicitly
+    // opaque surfaces (such as the security lock) do not opt into glassy.
     function veilOf(style: string): color {
         return style === "liquid" ? Qt.rgba(1, 1, 1, 0.07)
             : style === "glass" ? Qt.rgba(1, 1, 1, 0.08) : root.islandSurface
@@ -231,12 +226,6 @@ QtObject {
     readonly property color paperLine: "#261c1c1e"
     readonly property int paperRadius: 10
 
-
-    // Contribution graph, empty to busiest. GitHub's dark ramp, fixed across
-    // palettes; the empty step is lifted off black so it reads as a cell.
-    readonly property var githubLevels: [
-        "#26292e", "#0e4429", "#006d32", "#26a641", "#39d353"
-    ]
 
     // Ranked groups in a chart, as steps of the accent: one hue, so no two
     // groups collide whatever the palette. Everything past them is `text` at

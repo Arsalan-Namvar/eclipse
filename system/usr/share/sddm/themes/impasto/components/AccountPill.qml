@@ -376,7 +376,7 @@ Item {
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSizeSmall
         font.weight: Font.DemiBold
-        color: root.capsLock ? Theme.indicatorWarn : Theme.indicatorBad
+        color: root.capsLock ? Theme.indicatorWarn : root.failed ? Theme.indicatorBad : Theme.textMuted
 
         layer.enabled: true
         layer.effect: MultiEffect {
