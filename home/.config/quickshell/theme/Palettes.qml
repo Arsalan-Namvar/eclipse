@@ -91,6 +91,54 @@ QtObject {
             }
         },
         {
+            id: "everforest",
+            name: "Everforest",
+            badge: "Forest Mist",
+            swatches: ["#7fbbb3", "#a7c080", "#dbbc7f", "#e67e80"],
+            colors: {
+                background: "#2d353b", surface: "#21272c", surfaceHover: "#343f44",
+                border: "#475258", text: "#d3c6aa", textMuted: "#9da9a0",
+                accent: "#7fbbb3", accentHover: "#83c092", accentText: "#181d20",
+                red: "#e67e80", green: "#a7c080", yellow: "#dbbc7f", blue: "#7fbbb3"
+            }
+        },
+        {
+            id: "jade_horse",
+            name: "Jade Horse",
+            badge: "Deep Jade",
+            swatches: ["#8bcbb1", "#96b7d0", "#c5cc91", "#d88d91"],
+            colors: {
+                background: "#142620", surface: "#0f1e19", surfaceHover: "#203b31",
+                border: "#64887b", text: "#dfede5", textMuted: "#bed6c9",
+                accent: "#8bcbb1", accentHover: "#a2dcda", accentText: "#0a1713",
+                red: "#d88d91", green: "#8bcbb1", yellow: "#c5cc91", blue: "#96b7d0"
+            }
+        },
+        {
+            id: "miasma",
+            name: "Miasma",
+            badge: "Earth and Moss",
+            swatches: ["#78824b", "#5f875f", "#b36d43", "#c9a554"],
+            colors: {
+                background: "#222222", surface: "#191919", surfaceHover: "#2c2c2c",
+                border: "#666666", text: "#c2c2b0", textMuted: "#8a8a7e",
+                accent: "#78824b", accentHover: "#c9a554", accentText: "#121212",
+                red: "#685742", green: "#5f875f", yellow: "#b36d43", blue: "#78824b"
+            }
+        },
+        {
+            id: "last_horizon",
+            name: "Last Horizon",
+            badge: "Quiet Dusk",
+            swatches: ["#b59790", "#87a9b0", "#a5a0b6", "#c38b7b"],
+            colors: {
+                background: "#0c0b0c", surface: "#090809", surfaceHover: "#584e51",
+                border: "#584e51", text: "#fafcfb", textMuted: "#cfd3cd",
+                accent: "#b59790", accentHover: "#a5a0b6", accentText: "#060606",
+                red: "#c38b7b", green: "#87a9b0", yellow: "#6b5e73", blue: "#b59790"
+            }
+        },
+        {
             id: "cyberpunk",
             name: "Cyberpunk",
             badge: "Neon Synth",

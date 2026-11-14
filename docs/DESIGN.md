@@ -83,6 +83,23 @@ for approval of decisions already recorded; handle new discoveries explicitly.
   re-theme. Owner rejected the first generated image and paused artwork iteration.
   This is deferred work, not permission to ship the inherited painting branding.
 
+### Additional preset palettes — 2026-11-14
+
+Owner selected Everforest, Jade Horse, Miasma and Last Horizon from the installed
+Omarchy collection. Added presets everforest, jade_horse, miasma and last_horizon
+to Eclipse's existing Palettes.qml catalog; no Omarchy runtime/config dependency.
+Source: /usr/share/omarchy/themes/<slug>/colors.toml, with upstream context at
+https://github.com/basecamp/omarchy/tree/master/themes.
+
+Keep source background, foreground, accent and red/green/yellow/blue values.
+Map dark_background to surface, light_foreground to textMuted and muted to border;
+use darker_background for text on accent. Hover accent uses a source cyan or
+bright_cyan. Last Horizon's lighter_background equals its background, so use its
+selection color for surfaceHover to keep hovered controls distinguishable.
+Retain Eclipse's existing app-export/contrast handling and independent wallpaper
+selection. No wallpapers, materials, active desktop setting or other presets are
+changed by this addition. Public catalog labels follow the selected theme names.
+
 ### Verification scope adjustment — 2026-11-12
 
 Owner explicitly omitted Telegram verification, real OMP provider-turn usage

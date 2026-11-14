@@ -1560,3 +1560,21 @@ that every supported hardware/account scenario is verified. Telegram, real OMP
 provider-turn usage, broader VPN scenarios and external-monitor acceptance were
 explicitly excluded. Battery scenarios are unavailable on this AC-only target;
 face unlock was not selected, and fantasy scene artwork remains deferred.
+
+## Four additional preset palettes — 2026-11-14
+
+Added Everforest, Jade Horse, Miasma and Last Horizon using installed Omarchy
+color definitions mapped to Eclipse's existing tokens. Ran actual AppearancePanel
+carousel and ThemeService in a disposable Bubblewrap namespace with private HOME,
+XDG config/data/state/cache/runtime, no network/session bus/Hyprland connection,
+Qt offscreen software rendering. Production palette application/export code ran;
+no live workstation configuration or target deployment changed.
+
+Each preset selected successfully through ThemeService, actual panel centered on
+its ID, and captured panel screenshots were visually inspected for names, daubs,
+selected border/marker and text. Logs recorded expected backgrounds/accents for
+all four and PALETTE_SURFACE_PASS. Final private state persisted last_horizon;
+app-palette.json contained its expected tokens. Local ./setup check passed all
+five syntax phases. This is isolated actual-component verification, not target
+laptop deployment, physical material rendering or owner visual acceptance. No
+permanent test fixture added; disposable renderer files removed after verification.
