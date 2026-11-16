@@ -14,10 +14,15 @@ fi
 if [[ $directory == "$work" ]]; then
     mkdir -p -- "$directory"
 fi
-if ! command -v omp >/dev/null 2>&1; then
+omp=$(command -v omp || true)
+# Graphical sessions do not source .bashrc's ~/.local/bin PATH addition.
+if [[ -z $omp && -x $HOME/.local/bin/omp ]]; then
+    omp=$HOME/.local/bin/omp
+fi
+if [[ -z $omp ]]; then
     printf 'OMP is not installed; see Eclipse README OMP integration.\n' >&2
     exit 127
 fi
 # Explicit package path also exposes Eclipse skills with named OMP profiles.
 exec kitty --directory "$directory" --title 'OMP — Eclipse' \
-    omp --extension "$HOME/.omp/agent/extensions/eclipse" "$@"
+    "$omp" --extension "$HOME/.omp/agent/extensions/eclipse" "$@"

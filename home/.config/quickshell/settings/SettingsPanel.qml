@@ -100,7 +100,7 @@ Item {
         { id: "windows", category: "desk", icon: "󰖯", label: Tr.t("Windows"),
           blurb: Tr.t("How Hyprland lays out, draws and animates windows."),
           tabs: [],
-          keywords: "windows layout dwindle master scrolling rounding border gaps inner outer shadow animation preset hyprland",
+          keywords: "windows layout dwindle master scrolling rounding border gaps inner outer shadow animation preset hyprland focus active inactive dim dimming opacity emphasis",
           page: windowsPage },
 
         { id: "monitors", category: "desk", icon: "󰍹", label: Tr.t("Displays"),

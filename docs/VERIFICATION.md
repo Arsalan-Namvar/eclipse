@@ -1578,3 +1578,150 @@ app-palette.json contained its expected tokens. Local ./setup check passed all
 five syntax phases. This is isolated actual-component verification, not target
 laptop deployment, physical material rendering or owner visual acceptance. No
 permanent test fixture added; disposable renderer files removed after verification.
+
+## Fresh-install OMP launcher and skill discovery — 2026-11-16
+
+Owner reports desktop directory launch failing and Eclipse skills missing on
+this fresh Arch laptop. Installed OMP reports 18.20.2. Installed launcher and
+package matched the repository, but live Hyprland/Quickshell PATH omitted
+`~/.local/bin`; plain `omp skill list --json` returned an empty skills list.
+The launcher now resolves setup's local executable when absent from PATH.
+Registered the installed package with upstream `omp plugin link` through the
+new registration helper; live skill listing reports both Eclipse skills from
+`omp-plugins:user`, with no warnings. No broad setup sync/install was executed.
+
+On this laptop's actual Wayland desktop, launched real Kitty/OMP using an
+isolated HOME/runtime, PATH=/usr/bin, no credentials, no tools/title/session
+saving, and no submitted prompt. Observed terminal text and extension snapshots:
+general launch selected the isolated `~/Work`, home launch selected `~/Work`,
+and project launch preserved a directory containing spaces. Eclipse skill
+autocomplete displayed both skills. Separately registered the isolated package
+and launched plain OMP without `--extension`; its real TUI completion again
+displayed `eclipse-desktop` and `eclipse-development`. Closed only the disposable
+terminals and removed their temporary files. Kitty logged isolated-environment
+D-Bus and APC warnings but all three cwd paths and skill completion were
+observed. No model/provider request or authentication change was performed.
+
+`python3 -m unittest discover -s tests -p 'test_omp_setup.py' -v`: two tests
+passed, covering graphical executable lookup, cwd/argument preservation,
+registration preview, existing disabled registration, and same-name collision
+refusal. `./setup check`: Python/Lua/Bash/JSON/TOML syntax passed.
+`./setup omp --dry-run`: retained installed OMP and registered package.
+The setup source now registers after sync and after the OMP executable step,
+including an already installed executable. No physical shortcut keypress or
+paid-provider-turn acceptance is claimed by these checks.
+
+
+## Window focus distinction — 2026-11-16
+
+Changed SettingsService, CompositorService, WindowsSection, SettingsPanel and
+WindowsPreview. Exercised actual WindowsSection in a disposable Quickshell
+FloatingWindow on this laptop's Hyprland Wayland session, with isolated state.
+QtTest pointer clicks exercised dimming off/on, window shadows and shadow
+emphasis; slider moved signals exercised dimming 22%, opacity multiplier 80%
+and inactive shadow strength 25%. Assertions passed. Observed the rendered
+controls/preview in a desktop screenshot with all rows visible; no QML load
+errors. The pointer-driven test was disposable, not a permanent test fixture.
+
+Material calculations observed via the real service: Classic/Glass/Liquid at
+80% inactive multiplier produced 80%/72%/60% effective inactive opacity. Game
+mode produced 100% opacity and a chunk with dimming off and zero visible shadow
+alpha; leaving game mode restored saved values. Profile snapshot/adopt returned
+success and retained focus fields; isolated settings.json persisted them.
+Hyprland readback showed dim_inactive=true, dim_strength=0.22 and distinct
+active/inactive shadow alpha 0x80/0x20; configerrors was empty. These checks
+exercise configuration and the rendered settings surface, not pixel-accurate
+measurement of application alpha, a fullscreen video, or an actual profile UI
+switch. No such unobserved outcomes are claimed.
+
+Deployed only the five changed QML files on this laptop, preserving originals
+in `~/eclipse-backups/window-focus-20261116-111317/`; no setup sync/install run.
+Live shell reloaded successfully and its Settings window opened. Final compositor
+readback showed the chosen default dimming enabled at 18%; additional opacity
+reduction/shadow emphasis are off. Hyprland configerrors remained empty.
+`./setup check` passed Python, Lua, Bash, JSON and TOML syntax. Existing unrelated
+tray-icon/IPC-property/text-input warnings remain in the shell log. Removed the
+temporary verification surface/state after closing its process.
+
+
+## Scratchpad workspace indicator repair — 2026-11-16
+
+Owner's two reported disappearance cases are the reproduction. Inspected real
+Hyprland 0.57.2 JSON using a disposable Kitty moved to special:scratchpad:
+the special workspace has no id field. Fixed HyprlandService's workspace
+ingestion to exclude overlays from numbered named/occupied state.
+
+Deployed only services/HyprlandService.qml; original preserved at
+`~/eclipse-backups/scratchpad-indicator-20261116-113357/HyprlandService.qml`.
+The live shell reloaded the changed file. Captured both bars with the test
+scratchpad hidden and shown on each of HDMI-A-1 and eDP-1. Also rendered real
+WorkspacesWidget instances on both physical monitors in a disposable Quickshell
+surface; visually inspected both strips across those cases. State readback
+remained finite (span 20), with HDMI-A-1 workspace 1 and eDP-1 workspace 11
+throughout. Closed only the disposable Kitty and proof surface, hid scratchpad,
+and restored focus to HDMI. No user windows moved or closed.
+
+`python3 -m unittest discover -s tests -p test_workspace_state.py -v` passed.
+This isolated real-QML regression covers special workspaces without numeric ids
+on either monitor, legacy negative special ids, numbered occupancy and monitor
+selection preservation, visibility and finite repeater span after removal.
+It clears compositor IPC identity, uses offscreen rendering and temporary state;
+it skips when Quickshell is absent. Initial harness attempts did not execute
+the assertions; the final runner requires an explicit success marker and uses
+the complete copied QML module tree so singleton discovery is real.
+`./setup check` passed all syntax sections; Hyprland configerrors was empty.
+
+
+## OMP ended-session list cleanup — 2026-11-16
+
+Updated OmpService's report ingestion to filter ended rows and clear selection
+and cached details only when the selected row explicitly reports ended. Removed
+obsolete ended-state UI branches; disconnected-state historical display remains.
+Updated the development skill's lifecycle guidance. Collector/extension storage
+and provider configuration are unchanged.
+
+`python3 -m unittest discover -s tests -p test_omp_sessions.py -v` passed.
+Real-QML isolated regression covers previously ended rows, unselected shutdown,
+selected shutdown, no automatic replacement, disconnected retention and final
+row removal. `./setup check` passed all syntax sections.
+
+Launched actual OmpPanel/OmpService in a disposable Wayland Quickshell surface
+with isolated runtime snapshots (clearly named Verification sessions; no model
+requests). Selected first, marked its snapshot ended, and refreshed: readback
+contained only second with empty selectedId/null details. Inspected the actual
+rendered panel: first row/details absent, second retained, Select a session
+shown. Ending second yielded empty list/null details and compact height 164.
+This is controlled lifecycle evidence, not a newly launched provider session.
+Closed the proof surface and removed only its temporary files.
+
+Deployed only services/OmpService.qml and bar/island/OmpPanel.qml to the laptop;
+originals preserved at `~/eclipse-backups/omp-ended-20261116-135124/`.
+
+
+## Bluetooth blocked-radio repair — 2026-11-16
+
+This laptop: BlueZ 5.88 active/enabled, Intel AX201 hci0 detected and firmware
+load successful. rfkill showed ideapad_bluetooth and hci0 soft-blocked (neither
+hard-blocked); bluetoothctl reported off-blocked and an explicit power-on failed.
+The active user's existing /dev/rfkill ACL grants write access; no permission
+or group changes were needed.
+
+Exercised real BluetoothService/BluetoothDetail in a disposable Wayland window:
+initial blocked=true/enabled=false; new explicit on cleared both software blocks
+and powered /org/bluez/hci0. Fixed scan sequencing after observing the first
+power-on succeeded but scanning waited incorrectly for a running process. With
+onBusyChanged synchronization, observed powered/enabled true, blocked false,
+discovering true, and dozens of discovered devices. Power-off/on repeated
+successfully; scan followed completion. Inspected actual rendered device list.
+No device paired, trusted, connected or forgotten; audio/peripheral acceptance
+requires the owner's chosen device and is not claimed.
+
+Four tests in `test_bluetooth_power.py` passed (Bluetooth-only unblock before
+selected-adapter power, off without rfkill mutation, failure short-circuit and
+adapter-path rejection). Final `./setup check` passed all syntax sections.
+Deployed BluetoothService.qml, BluetoothDetail.qml and bluetooth_power.py only;
+original QML files backed up at
+`~/eclipse-backups/bluetooth-power-20261116-141851/`. Installed shell reloaded,
+opened actual island Bluetooth panel and observed Discovering=yes. Closed panel
+after verification; Bluetooth remains on. No full setup sync/install run.
+

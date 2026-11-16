@@ -32,7 +32,11 @@ install/update extras also attempt it when OMP is missing. It resolves the
 official build service's version/target metadata, verifies SHA-256, probes
 `--version` in an empty HOME, and atomically creates `~/.local/bin/omp` without
 overwriting an existing executable or symlink. It does not install Bun or
-configure providers/authentication. Existing package-manager/mise installations
+configure providers/authentication. It then registers the deployed Eclipse
+package through `omp plugin link`; `setup sync` also registers it when OMP is
+present. This exposes sibling skills to plain `omp`, not only the desktop
+launcher. Existing registration/enablement is preserved, and a different
+same-named package is not replaced. Existing package-manager/mise executables
 are retained; update those through their owner, not by overwriting their binary.
 The prebuilt path supports glibc Linux x86_64/arm64. See the pinned upstream
 [installer protocol](https://github.com/can1357/oh-my-pi/blob/v18.12.6/scripts/install.sh).
@@ -66,15 +70,20 @@ project and a directory containing spaces, launch without `--general` and
 expect the exact caller directory. Inspect the OMP session's cwd through its UI
 and the Eclipse snapshot's project field; do not ask a model to establish cwd.
 Arguments are forwarded as separate argv entries; no approval flags are added.
+The launcher also resolves `~/.local/bin/omp` if the graphical PATH omits it.
+Plain `omp` does not use this launcher's directory policy. After deploying and
+registering the package, verify `omp skill list --json` lists both Eclipse skills
+without passing `--extension`; restart existing sessions for startup discovery.
 
 Open the island OMP panel, choose one session, then open a second OMP terminal.
 The selected identity must stay unchanged while model/status/context reflect
 only that session. Change model without submitting a paid request if supported
-by the installed OMP UI. Quit the selected OMP session: it should show ended;
-kill a controlled disposable OMP process: it should show disconnected after ten
+by the installed OMP UI. Quit the selected OMP session: its row and selection
+should disappear on the next refresh, without selecting another session.
+Kill a controlled disposable OMP process: it should show disconnected after ten
 seconds rather than another terminal's metrics. If the shell restarts, choose a
-session again explicitly. Runtime snapshots are private, volatile files and
-retain ended sessions for the current login; do not infer account quotas.
+session again explicitly. Runtime snapshots are private, volatile files; ended
+snapshots may remain on disk but are not listed. Do not infer account quotas.
 
 For a paid-free snapshot regression, use a disposable HOME, isolated
 `XDG_RUNTIME_DIR` (mode 0700), and `OMP_SKIP_SETUP=1`; do not copy authentication

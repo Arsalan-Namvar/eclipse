@@ -14,8 +14,8 @@ import "../theme"
 import "../services"
 import "../components"
 
-// Window layout, shape, shadow and motion. The two material selectors are
-// under Appearance; this page never overrides their opacity or effects.
+// Window layout, focus cues, shape, shadow and motion. Base materials remain
+// under Appearance; inactive opacity is a multiplier of that material.
 //
 // These values are stored in the shell's settings and pushed to Hyprland at
 // login and after every reload. `hypr/modules/look.lua` holds the defaults
@@ -56,8 +56,11 @@ SettingsSection {
                 borderWidth: root.live("general:border_size", 0)
                 gapsIn: root.live("general:gaps_in", 7)
                 gapsOut: root.live("general:gaps_out", 18)
-                inactiveOpacity: root.material === "classic" ? 1
-                    : root.material === "glass" ? 0.90 : 0.75
+                inactiveOpacity: CompositorService.inactiveOpacity()
+                inactiveDim: !SettingsService.gameMode && SettingsService.windowDimInactive
+                    ? CompositorService.unit(SettingsService.windowDimStrength) : 0
+                inactiveShadow: SettingsService.windowFocusShadow
+                    ? CompositorService.unit(SettingsService.windowInactiveShadow) : 1
                 blur: root.material === "classic" ? 0 : root.live("decoration:blur:size", 6)
                 glassed: root.material === "liquid" && CompositorService.glassAvailable
                 lifted: SettingsService.windowShadow && !SettingsService.gameMode
@@ -111,6 +114,63 @@ SettingsSection {
             to: 40
             unit: " px"
             onMoved: value => CompositorService.remember("general:gaps_out", Math.round(value))
+        }
+    }
+
+    SettingGroup {
+        title: Tr.t("Focus distinction")
+        note: Tr.t("Keep the focused window clear and soften inactive windows.")
+        hint: Tr.t("Dimming darkens content without revealing the wallpaper. Inactive opacity multiplies the application material and affects text and images too; fullscreen keeps its normal material opacity. Shadow emphasis needs window shadows enabled. Game mode temporarily suspends these effects without forgetting your choices.")
+
+        SettingRow {
+            label: Tr.t("Dim inactive windows")
+            ToggleSwitch {
+                checked: SettingsService.windowDimInactive
+                onToggled: checked => SettingsService.set("windowDimInactive", checked)
+            }
+        }
+
+        SettingSlider {
+            label: Tr.t("Inactive dimming")
+            value: SettingsService.windowDimStrength * 100
+            from: 0
+            to: 100
+            unit: "%"
+            locked: !SettingsService.windowDimInactive
+            reason: Tr.t("Enable inactive dimming first")
+            onMoved: value => SettingsService.set("windowDimStrength", value / 100)
+        }
+
+        SettingSlider {
+            label: Tr.t("Inactive opacity")
+            value: SettingsService.windowInactiveOpacity * 100
+            from: 20
+            to: 100
+            unit: "%"
+            reading: `${Math.round(value)}% · ${Math.round(CompositorService.inactiveOpacity() * 100)}% ${Tr.t("effective")}`
+            onMoved: value => SettingsService.set("windowInactiveOpacity", value / 100)
+        }
+
+        SettingRow {
+            label: Tr.t("Emphasize active shadow")
+            locked: !SettingsService.windowShadow
+            reason: Tr.t("Enable window shadows below")
+            ToggleSwitch {
+                checked: SettingsService.windowFocusShadow
+                enabled: SettingsService.windowShadow
+                onToggled: checked => SettingsService.set("windowFocusShadow", checked)
+            }
+        }
+
+        SettingSlider {
+            label: Tr.t("Inactive shadow strength")
+            value: SettingsService.windowInactiveShadow * 100
+            from: 0
+            to: 100
+            unit: "%"
+            locked: !SettingsService.windowShadow || !SettingsService.windowFocusShadow
+            reason: Tr.t("Enable window shadows and focus emphasis first")
+            onMoved: value => SettingsService.set("windowInactiveShadow", value / 100)
         }
     }
 

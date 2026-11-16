@@ -38,10 +38,7 @@ ColumnLayout {
 
     spacing: Theme.cardGap
 
-    Component.onCompleted: {
-        if (BluetoothService.enabled)
-            BluetoothService.setDiscovering(true)
-    }
+    Component.onCompleted: BluetoothService.setDiscovering(true)
     Component.onDestruction: BluetoothService.setDiscovering(false)
 
     // The heading a module's card has (`ModuleCard`), with the back arrow in
@@ -90,9 +87,11 @@ ColumnLayout {
 
             Text {
                 Layout.fillWidth: true
-                text: BluetoothService.enabled
-                    ? (BluetoothService.discovering ? "Looking for devices…" : BluetoothService.summary)
-                    : "Adapter off"
+                text: BluetoothService.busy ? "Changing power…"
+                    : BluetoothService.blocked ? "Radio blocked · turn on to unblock"
+                    : BluetoothService.enabled
+                        ? (BluetoothService.discovering ? "Looking for devices…" : BluetoothService.summary)
+                        : "Adapter off"
                 elide: Text.ElideRight
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeSmall
@@ -102,11 +101,22 @@ ColumnLayout {
 
         ToggleSwitch {
             checked: BluetoothService.enabled
+            enabled: BluetoothService.available && !BluetoothService.busy
             onToggled: checked => {
                 BluetoothService.toggle()
-                BluetoothService.setDiscovering(checked)
+                BluetoothService.setDiscovering(true)
             }
         }
+    }
+
+    Text {
+        Layout.fillWidth: true
+        visible: BluetoothService.error !== ""
+        text: BluetoothService.error
+        wrapMode: Text.WordWrap
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSizeSmall
+        color: Theme.red
     }
 
     Text {

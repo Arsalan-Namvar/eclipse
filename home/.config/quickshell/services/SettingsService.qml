@@ -86,6 +86,11 @@ Singleton {
     readonly property alias windowShadow: config.windowShadow
     readonly property alias barShadow: config.barShadow
     readonly property alias windowMaterial: config.windowMaterial
+    readonly property alias windowDimInactive: config.windowDimInactive
+    readonly property alias windowDimStrength: config.windowDimStrength
+    readonly property alias windowInactiveOpacity: config.windowInactiveOpacity
+    readonly property alias windowFocusShadow: config.windowFocusShadow
+    readonly property alias windowInactiveShadow: config.windowInactiveShadow
     readonly property alias surfaceStyle: config.surfaceStyle
     readonly property alias barSides: config.barSides
     readonly property alias wallpaperTransition: config.wallpaperTransition
@@ -704,6 +709,13 @@ Singleton {
         // Application windows are composited as a whole, including text and
         // media: Classic opaque, Glass 90%, Liquid 75% with optional hyprglass.
         property string windowMaterial: "glass"
+
+        // Focus cues compose with the material; game mode suspends them.
+        property bool windowDimInactive: true
+        property real windowDimStrength: 0.18
+        property real windowInactiveOpacity: 1.0
+        property bool windowFocusShadow: false
+        property real windowInactiveShadow: 0.35
 
         // Native Quickshell surfaces, independent from application windows.
         // Classic is solid; Glass and Liquid use the shell's own materials.

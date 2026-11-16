@@ -37,7 +37,7 @@ Singleton {
         && root.selected?.context?.percent !== undefined
         ? Math.max(0, Math.min(1, root.selected.context.percent / 100)) : 0
     readonly property string figure: !root.selectedId ? "OMP"
-        : root.state === "ended" || root.state === "disconnected" ? root.state
+        : root.state === "disconnected" ? root.state
         : typeof root.selected?.context?.percent === "number" ? `${Math.round(root.selected.context.percent)}%` : root.state
 
     function select(id: string): void {
@@ -77,17 +77,25 @@ Singleton {
         onTriggered: root.refresh()
     }
 
+    function receive(report: var): void {
+        const rows = report.sessions ?? []
+        const chosen = rows.find(entry => entry.id === root.selectedId)
+        if (chosen?.state === "ended") {
+            root.selectedId = ""
+            root.lastSelected = null
+        } else if (chosen) {
+            root.lastSelected = chosen
+        }
+        root.sessions = rows.filter(entry => entry.state !== "ended")
+        root.error = report.error ?? ""
+    }
+
     readonly property Process query: Process {
         command: ["python3", Quickshell.shellPath("scripts/omp_status.py")]
         stdout: StdioCollector {
             onStreamFinished: {
                 try {
-                    const report = JSON.parse(text)
-                    root.sessions = report.sessions ?? []
-                    root.error = report.error ?? ""
-                    const chosen = root.sessions.find(entry => entry.id === root.selectedId)
-                    if (chosen)
-                        root.lastSelected = chosen
+                    root.receive(JSON.parse(text))
                 } catch (error) {
                     root.error = "Cannot read OMP status"
                     root.sessions = []

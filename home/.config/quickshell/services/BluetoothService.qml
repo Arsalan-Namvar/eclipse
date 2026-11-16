@@ -12,17 +12,22 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Bluetooth
+import Quickshell.Io
 
 // The default adapter, flattened for the control centre.
 //
-// `enabled` on the adapter is writable, so nothing shells out here: the toggle
-// is a property assignment and the state comes back over D-Bus.
+// Power-on also clears Bluetooth software rfkill blocks. Adapter/device state
+// still arrives over D-Bus; scanning waits for power-on to complete.
 Singleton {
     id: root
 
     readonly property BluetoothAdapter adapter: Bluetooth.defaultAdapter
     readonly property bool available: root.adapter !== null
     readonly property bool enabled: root.available && root.adapter.enabled
+    readonly property bool blocked: root.available && root.adapter.state === BluetoothAdapterState.Blocked
+    readonly property bool busy: root.powerProcess.running
+    property string error: ""
+    property bool discoveryRequested: false
 
     // Everything BlueZ currently knows about, listed or not.
     readonly property var allDevices: {
@@ -37,6 +42,10 @@ Singleton {
     readonly property string summary: {
         if (!root.available)
             return "Unavailable"
+        if (root.busy)
+            return "Changing power…"
+        if (root.blocked)
+            return "Blocked"
         if (!root.enabled)
             return "Off"
         const connected = root.connectedDevices
@@ -105,12 +114,41 @@ Singleton {
     }
 
     function setDiscovering(on: bool): void {
-        if (root.available)
-            root.adapter.discovering = on
+        root.discoveryRequested = on
+        root.syncDiscovery()
+    }
+
+    function syncDiscovery(): void {
+        if (root.available && root.enabled && !root.busy)
+            root.adapter.discovering = root.discoveryRequested
+    }
+
+    onEnabledChanged: root.syncDiscovery()
+    onBusyChanged: root.syncDiscovery()
+
+    readonly property Process powerProcess: Process {
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const result = JSON.parse(text)
+                    root.error = result.ok ? "" : result.error
+                } catch (error) {
+                    root.error = "Cannot read Bluetooth power result"
+                }
+            }
+        }
+        onExited: code => {
+            if (code !== 0 && root.error === "")
+                root.error = "Cannot change Bluetooth power"
+        }
     }
 
     function toggle(): void {
-        if (root.available)
-            root.adapter.enabled = !root.adapter.enabled
+        if (!root.available || root.busy)
+            return
+        root.error = ""
+        root.powerProcess.command = ["python3", Quickshell.shellPath("scripts/bluetooth_power.py"),
+            root.adapter.dbusPath, root.enabled ? "off" : "on"]
+        root.powerProcess.running = true
     }
 }

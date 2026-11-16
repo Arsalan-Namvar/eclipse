@@ -219,20 +219,21 @@ Singleton {
     // invisible (range 0, alpha 0).
     function shadowChunk(): string {
         const drawn = SettingsService.windowShadow && !SettingsService.gameMode
-        const alpha = drawn ? Math.round(Theme.shadowOpacity * 255)
-                                  .toString(16).padStart(2, "0") : "00"
+        const strength = drawn ? Theme.shadowOpacity : 0
+        const alpha = Math.round(strength * 255).toString(16).padStart(2, "0")
+        const inactiveAlpha = Math.round(strength * (SettingsService.windowFocusShadow
+            ? root.unit(SettingsService.windowInactiveShadow) : 1) * 255)
+            .toString(16).padStart(2, "0")
         return `hl.config({ decoration = { shadow = { `
              + `enabled = ${drawn || root.glassOn()}, `
              + `range = ${drawn ? Theme.shadowRange : 0}, render_power = 3, `
-             + `color = "rgba(000000${alpha})" } } })`
+             + `color = "rgba(000000${alpha})", color_inactive = "rgba(000000${inactiveAlpha})" } } })`
     }
 
     function applyShadow(): void {
-        root.shadower.command = ["hyprctl", "eval", root.shadowChunk()]
-        root.shadower.running = true
+        root.applyMaterial()
     }
 
-    readonly property Process shadower: Process {}
 
     // Mirrored locally so a change triggers a push.
     readonly property bool windowShadow: SettingsService.windowShadow
@@ -406,6 +407,25 @@ Singleton {
     }
 
     readonly property string windowMaterial: SettingsService.windowMaterial
+    readonly property var focusSettings: [SettingsService.windowDimInactive,
+        SettingsService.windowDimStrength, SettingsService.windowInactiveOpacity,
+        SettingsService.windowFocusShadow, SettingsService.windowInactiveShadow]
+
+    onFocusSettingsChanged: root.applyMaterial()
+
+    function unit(value: real): real {
+        return Math.max(0, Math.min(1, value))
+    }
+
+    function materialOpacity(): real {
+        const style = root.material()
+        return style === "liquid" ? 0.75 : style === "glass" ? 0.90 : 1
+    }
+
+    function inactiveOpacity(): real {
+        return root.materialOpacity() * (SettingsService.gameMode
+            ? 1 : root.unit(SettingsService.windowInactiveOpacity))
+    }
 
     // Functions read the setting directly: a game-mode handler can fire before
     // a dependent QML binding has caught up.
@@ -419,11 +439,13 @@ Singleton {
 
     function materialChunk(): string {
         const style = root.material()
-        const opacity = style === "liquid" ? "0.75" : style === "glass" ? "0.90" : "1.0"
+        const opacity = root.materialOpacity()
+        const inactive = root.inactiveOpacity()
+        const dim = !SettingsService.gameMode && SettingsService.windowDimInactive
         return `local liquid = ${style === "liquid"} and hl.plugin.hyprglass ~= nil; `
-            + `hl.config({ decoration = { active_opacity = 1.0, inactive_opacity = 1.0, fullscreen_opacity = 1.0, blur = { enabled = true } } }); `
+            + `hl.config({ decoration = { dim_inactive = ${dim}, dim_strength = ${root.unit(SettingsService.windowDimStrength)}, active_opacity = 1.0, inactive_opacity = 1.0, fullscreen_opacity = 1.0, blur = { enabled = true } } }); `
             + `hl.window_rule({ name = "impasto-application-material", match = { class = "negative:^(org\\\\.quickshell)$" }, `
-            + `opacity = "${opacity} override ${opacity} override ${opacity} override", no_blur = ${style === "classic"} or liquid, tag = "${style === "liquid" ? "-" : "+"}hyprglass_disabled" }); `
+            + `opacity = "${opacity} override ${inactive} override ${opacity} override", no_blur = ${style === "classic"} or liquid, tag = "${style === "liquid" ? "-" : "+"}hyprglass_disabled" }); `
             + `if hl.plugin.hyprglass ~= nil then hl.plugin.hyprglass.config({ enabled = ${style === "liquid"}, manage_window_blur = false, layers = { enabled = false } }) end; `
             + root.shadowChunk() + "; " + root.groundChunk() + "; require('modules.media').apply()"
     }

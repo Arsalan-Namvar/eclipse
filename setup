@@ -176,7 +176,7 @@ Usage: ./setup <command> [options]
   strata      select Strata folders and supported FileChooser portal
   telegram    regenerate native palette/wallpaper theme for explicit import
   sine        install official Sine/bootloader into the selected Zen profile
-  omp         install verified OMP 18.12.6 binary if absent; keep existing OMP
+  omp         install verified OMP 18.12.6 if absent; register Eclipse skills
   face        unlock the lock screen with your face, where there is an
               infrared camera: installs howdy-next and enrols you
   camera      effects and gesture reactions on the webcam, for any call:
@@ -715,6 +715,7 @@ verb_sync() {
     SUDO=
     migrate_nvim
     deploy home "$HOME" "$STATE/home.manifest" '~/'
+    soft omp-integration register_omp
     reload_shell
     seed
     # What Settings → System shows: the version, the branch, the checkout
@@ -1121,9 +1122,7 @@ extras() {
     if [[ ! -d $CURSOR_SEED ]]; then soft cursors verb_cursors; fi
     applied strata || soft strata verb_strata
     applied sine || soft sine verb_sine
-    if ! command -v omp >/dev/null 2>&1 && [[ ! -e $HOME/.local/bin/omp && ! -L $HOME/.local/bin/omp ]]; then
-        soft omp verb_omp
-    fi
+    soft omp verb_omp
     applied face || soft face verb_face
     applied camera || soft camera verb_camera
     applied eclipse-splash || soft splash verb_splash
@@ -1274,6 +1273,14 @@ verb_telegram() {
     act python3 "$THEME_MANAGER" prepare-telegram || refuse 'theme generation failed' || return
 }
 
+# Register the deployed package so plain `omp` discovers its sibling skills.
+register_omp() {
+    local -a options=()
+    if (( DRY )); then options+=(--dry-run); fi
+    python3 "$REPO/home/.config/quickshell/scripts/register_omp.py" "${options[@]}" \
+        || refuse 'OMP package registration failed; no provider configuration was changed' || return
+}
+
 # Supported prebuilt release; never execute a downloaded installer or configure
 # accounts. Existing package-manager/user installations are intentionally kept.
 verb_omp() {
@@ -1282,6 +1289,7 @@ verb_omp() {
     if (( DRY )); then options+=(--dry-run); fi
     python3 "$REPO/home/.config/quickshell/scripts/install_omp.py" "${options[@]}" \
         || refuse 'OMP setup failed; no provider account configuration was changed' || return
+    register_omp
 }
 
 # Follow upstream's manual installation with verified release archives. Paths

@@ -58,7 +58,7 @@ The implemented setup verbs are:
 | `packages` | Install the package manifests |
 | `sync`, `system` | Copy user configuration or privileged system configuration |
 | `login` | Explicit next-boot Ly/other-manager → SDDM cutover; `--restore` restores saved enablement without stopping the current session |
-| `omp` | Install the verified Eclipse-supported OMP binary if absent; preserve an existing installation |
+| `omp` | Install the verified Eclipse-supported OMP binary if absent; preserve an existing installation and register the deployed Eclipse package/skills |
 | `plugins` | Build/enable the configured Hyprland plugins |
 | `defaults`, `cursors` | Apply application associations/GTK defaults or build the cursor |
 | `strata`, `sine`, `telegram` | Configure Strata/chooser, install Sine into a selected Zen profile, or generate a native Telegram theme for explicit import |
@@ -80,6 +80,26 @@ transfers, but completed source/submodule objects are reused. No global Git
 configuration or alternate download mirror is installed. This reduces transfer
 size; it cannot guarantee GitHub throughput. Confirm success with
 `hyprctl plugin list`—both dynamic-cursors and hyprglass must be loaded.
+
+OMP desktop launch (`Super + Shift + A` or the island) opens Kitty in `~/Work`.
+For a project launch, run `bash ~/.config/quickshell/scripts/omp-launch.sh`
+from that project; invoking this launcher from home also selects `~/Work`.
+Plain `omp` keeps OMP's own working-directory behavior, not the Eclipse launcher's.
+The launcher resolves the setup-installed `~/.local/bin/omp` even when the
+graphical session's PATH omits that directory. `setup sync` registers the deployed
+Eclipse package when OMP is present; `setup omp` also registers it after checking
+the executable. Registration uses upstream's local `omp plugin link` API, so plain
+`omp` discovers `eclipse-desktop` and `eclipse-development` skills without extra
+flags. Existing package enablement is preserved; a different same-named plugin
+is not replaced. Restart OMP to refresh startup discovery. Provider login remains
+separate; setup does not configure credentials or make model requests.
+
+Settings → Windows → Focus distinction offers inactive dimming (18% by default),
+material-relative inactive opacity, and optional shadow emphasis. A 100%
+inactive opacity setting leaves the application material unchanged; lower values
+multiply it and affect text/images too. Fullscreen retains the material's normal
+opacity. Shadow emphasis requires window shadows; game mode suspends focus
+effects without forgetting the profile's choices.
 
 
 ## Verification status

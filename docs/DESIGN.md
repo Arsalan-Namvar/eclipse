@@ -2357,3 +2357,91 @@ account-dependent app flows and boot-artwork acceptance remain pending. See
 - [Strata application and integration documentation](https://github.com/lgse/strata)
 - [Sine installation and behavior](https://github.com/CosmoCreeper/Sine)
 - [Omarchy hotkey reference](https://omarchy.org/manual/hotkeys/)
+
+## Fresh-install OMP integration repair — 2026-11-16
+
+Owner reports the accepted directory launcher does not work and Eclipse skills
+are absent on the fresh Arch installation. Installed OMP is 18.20.2. Live
+Hyprland/Quickshell PATH omits `~/.local/bin`, although setup places OMP there;
+the launcher previously exited before opening Kitty. Resolve the existing PATH
+executable first, then the executable at setup's known local destination, and
+pass its absolute path to Kitty. Preserve the accepted general/home/project cwd
+policy; plain `omp` retains upstream's own cwd policy.
+
+The extension package was deployed but not registered as an installed plugin.
+Automatic extension-module discovery does not register sibling skill roots;
+plain `omp skill list --json` returned no skills. Register the deployed package
+using supported `omp plugin link` after home sync and after the OMP executable
+step, including when an executable already exists. Preserve existing package
+enablement and refuse to replace a different same-named package. Keep the
+launcher's explicit extension path for profile-specific discovery. No provider
+configuration, account access, or automatic-approval changes are part of repair.
+
+
+## Window focus distinction — 2026-11-16
+
+Owner accepted adding the recommended Settings → Windows focus controls beyond
+borders: inactive dimming with strength, material-relative inactive opacity, and
+optional active/inactive shadow emphasis. Implemented defaults: dim inactive
+windows at 18%; opacity multiplier 100% (no additional transparency); shadow
+emphasis off, with an adjustable 35% inactive shadow when enabled. Existing
+window-shadow enablement is unchanged and borders remain available.
+
+These are profile preferences in SettingsService, not edits to Hyprland Lua.
+CompositorService's serialized material push applies all focus/material/shadow
+values together on settings changes, startup, and compositor reload. Inactive
+application opacity equals the material base times its multiplier; active and
+fullscreen opacity keep the material base. Native Quickshell windows retain
+their existing opacity rule. Dimming uses Hyprland's native inactive dimming.
+Shadow emphasis preserves the normal active shadow and reduces only inactive
+shadow alpha; turning it off explicitly restores equal shadow colors. HyprGlass
+still retains its required shadow decoration when visible shadows are off.
+Game mode temporarily suppresses dimming, translucency and visible shadows;
+leaving it restores the saved choices. Preview and settings search include the
+new controls; dependency-locked rows explain why shadow/dimming sliders are off.
+
+
+## Scratchpad and numbered workspace indicators — 2026-11-16
+
+Owner reports the workspace indicator disappearing when a scratchpad contains
+a window, even while hidden, and disappearing on the other monitor when shown.
+Hyprland 0.57.2 returns special workspaces with type `special` and no numeric
+id. Passing their undefined id into the per-screen span's Math.max produced
+NaN and collapsed the numbered workspace repeaters on every screen.
+
+HyprlandService now admits only positive integer, non-special workspaces to
+its named/occupied numbered workspace state. Older negative special ids are
+excluded too. The scratchpad remains an overlay, not a numbered slot; each
+monitor retains its underlying normal workspace indicator. No scratchpad
+keybindings, window movement behavior or bar preferences changed.
+
+
+## OMP ended-session list cleanup — 2026-11-16
+
+Owner requests ended sessions be removed from the OMP session list. This
+supersedes retaining ended sessions as selectable historical entries. On the
+next panel refresh, ended rows are filtered out; if the selected session ended,
+clear its selection and retained metrics without automatically choosing another.
+Disconnected sessions remain available with their last observation. The collector
+still reports private lifecycle snapshots, allowing the UI to distinguish an
+explicit end from a missing/disconnected session. No snapshot, transcript or
+saved OMP session is deleted. Existing ended snapshots are filtered immediately,
+including those written by already-running extension instances.
+
+
+## Bluetooth software-block recovery — 2026-11-16
+
+Owner reports Bluetooth not working on the fresh Arch laptop. Intel AX201
+controller/firmware and enabled running BlueZ were healthy, but both platform
+and hci Bluetooth rfkill entries were software-blocked. A BlueZ Powered request
+failed while blocked; the shell previously only assigned adapter.enabled.
+
+An explicit Bluetooth-on action now runs `rfkill unblock bluetooth`, then sets
+Powered on the selected adapter through system D-Bus. Off only powers down;
+neither direction changes Wi-Fi. No unconditional unblock at login, privileged
+fallback, pairing reset or service restart. util-linux (rfkill) is explicit in
+the package manifest. The panel identifies blocked state, disables duplicate
+power requests and displays helper failures. Discovery intent lasts only while
+the panel exists and is applied after the power process completes and adapter
+state confirms enabled, rather than racing an asynchronous power-on request.
+

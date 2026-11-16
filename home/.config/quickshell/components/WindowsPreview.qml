@@ -25,6 +25,8 @@ Item {
     property int gapsIn: 7
     property int gapsOut: 18
     property real inactiveOpacity: 1
+    property real inactiveDim: 0
+    property real inactiveShadow: 1
     // Hyprland's blur size; zero is off. Approximated as size × 2^passes,
     // with look.lua's two passes.
     property int blur: 6
@@ -89,6 +91,7 @@ Item {
                 height: root.winHeight + Theme.shadowSpread * 2
                 radius: root.corner + Theme.shadowSpread
                 color: Theme.shadowColor
+                opacity: root.inactiveShadow
             }
         }
 
@@ -227,6 +230,13 @@ Item {
                 Rectangle { width: 74; height: 5; radius: 2.5; color: Theme.textMuted; opacity: 0.6 }
                 Rectangle { width: 118; height: 5; radius: 2.5; color: Theme.textMuted; opacity: 0.3 }
                 Rectangle { width: 96; height: 5; radius: 2.5; color: Theme.textMuted; opacity: 0.3 }
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                radius: root.corner
+                color: "black"
+                opacity: root.inactiveDim
             }
         }
     }

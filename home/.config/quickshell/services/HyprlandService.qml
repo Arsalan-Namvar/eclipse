@@ -401,18 +401,26 @@ QtObject {
     // wants the full list.
     Component.onCompleted: root.loadMonitors()
 
+    function updateWorkspaces(workspaces: var): void {
+        if (!Array.isArray(workspaces))
+            return
+        // Special workspaces are overlays, not numbered slots. Hyprland 0.57
+        // omits their id; older versions use a negative id. An undefined id
+        // in `named` makes the per-screen span NaN and collapses every strip.
+        const numbered = workspaces.filter(workspace =>
+            Number.isInteger(workspace.id) && workspace.id > 0
+                && workspace.type !== "special")
+        root.named = numbered
+        root.occupiedIds = numbered.filter(workspace => workspace.windows > 0)
+            .map(workspace => workspace.id)
+    }
+
     readonly property Process workspacesProcess: Process {
         command: ["hyprctl", "workspaces", "-j"]
         running: true
         stdout: StdioCollector {
             onStreamFinished: {
-                const workspaces = root.parseJson(text)
-                if (!Array.isArray(workspaces))
-                    return
-                root.occupiedIds = workspaces
-                    .filter(workspace => workspace.windows > 0)
-                    .map(workspace => workspace.id)
-                root.named = workspaces
+                root.updateWorkspaces(root.parseJson(text))
             }
         }
     }

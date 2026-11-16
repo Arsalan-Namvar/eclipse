@@ -12,7 +12,7 @@ ColumnLayout {
     spacing: 12
     implicitWidth: OmpService.panelWidth - 2 * Theme.panelPadding
     readonly property var session: OmpService.selected
-    readonly property bool historical: OmpService.state === "ended" || OmpService.state === "disconnected"
+    readonly property bool historical: OmpService.state === "disconnected"
     readonly property bool contextKnown: root.session?.context?.percent !== null
         && root.session?.context?.percent !== undefined
     Component.onCompleted: OmpService.subscribe()
