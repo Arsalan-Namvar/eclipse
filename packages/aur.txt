@@ -35,6 +35,7 @@ wl-screenrec                 # the recorder's GPU encoder, tried before wf-recor
 # ── TERMINAL PROGRAMS ───────────────────────────────────────────────────────
 
 blesh-git                    # ble.sh 0.4 development line, including contrib fzf integration
+herdr-bin                    # persistent terminal workspace/agent multiplexer, launched in Kitty
 
 
 # ── THEMED APPLICATIONS ─────────────────────────────────────────────────────
@@ -43,6 +44,11 @@ strata-bin                  # GTK4 file manager and supported FileChooser portal
 zen-browser-bin
 spotify
 spicetify-cli                # applies the palette to Spotify · ./setup spotify
+
+
+# ── FILE SHARING ────────────────────────────────────────────────────────────
+
+localsend-bin                # cross-platform local-network file sharing
 
 
 # ── VIRTUAL MACHINES ────────────────────────────────────────────────────────

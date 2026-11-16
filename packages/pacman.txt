@@ -122,6 +122,7 @@ qt6-declarative              # qmlls6 · quickshell brings it anyway
 
 ffmpegthumbnailer            # a video's thumbnail
 gvfs                         # the trash, and mounting
+papers                       # GNOME document viewer (PDF, DjVu, comics and more)
 
 # ── MESSAGING ───────────────────────────────────────────────────────────────
 

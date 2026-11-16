@@ -83,6 +83,35 @@ for approval of decisions already recorded; handle new discoveries explicitly.
   re-theme. Owner rejected the first generated image and paused artwork iteration.
   This is deferred work, not permission to ship the inherited painting branding.
 
+### Additional default applications — 2026-11-16
+
+Owner requested LocalSend, Papers and Herdr as setup-installed applications.
+Use official Arch `papers` and AUR `localsend-bin` / `herdr-bin` in the existing
+package manifests, consumed by setup's install/package/update paths. The binary
+Herdr package avoids a local Rust/Zig build; both AUR additions follow the existing
+yay/paru installation flow and are skipped if AUR helper setup is declined.
+
+Owner clarified that the Omarchy request concerns **in-app Herdr shortcuts**, not
+a desktop launch shortcut. No Herdr global binding is assigned. Ship the `[keys]`
+table from Omarchy's [Herdr configuration](https://github.com/omacom/omarchy/blob/5bc6c46e27e99c5025f1661c73f62d3cbb74b001/config/herdr/config.toml)
+in `home/.config/herdr/config.toml`: Ctrl + Space prefix, tmux-style pane/tab/
+workspace actions and direct Alt/Ctrl+Alt alternatives. See `KEYBINDINGS.md`.
+Preserve upstream attribution/license; do not copy its appearance, working-directory
+or close-confirmation policies. Herdr's other supported defaults remain unchanged.
+LocalSend and Papers also receive no new global shortcut. Existing document MIME
+associations remain unchanged. No Omarchy runtime dependency is introduced.
+
+Acceptance: normal setup selects all three packages and deploys Herdr's in-app
+keymap. `./setup check`, `lua tests/test_keymap.lua` and Herdr 0.9.5's
+`config check` passed. An isolated temporary-HOME PTY session opened the keybinds
+surface with Ctrl + Space then `?`, displayed the configured prefix/help/reload/
+detach bindings, and detached successfully with Ctrl + Space then `d`; its named
+server was stopped afterward. The first smoke assertion incorrectly expected a
+pane action in the first help viewport; the corrected viewport assertion passed.
+Earlier manifest parsing selected each package exactly once. No live configuration
+or packages changed. Laptop deployment, all pane/tab/workspace actions, Kitty key
+forwarding, document rendering and local-network transfers remain unverified.
+
 ### Additional preset palettes — 2026-11-14
 
 Owner selected Everforest, Jade Horse, Miasma and Last Horizon from the installed

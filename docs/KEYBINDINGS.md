@@ -34,6 +34,34 @@ project-aware command preserves its working directory; the desktop shortcut
 uses the accepted general ~/Work entry point. Editor path selection remains
 an implementation detail to document, not a reason to add a file-picker feature.
 
+### Herdr in-app shortcuts
+
+No global Herdr launch shortcut is assigned. Run `herdr` in Kitty. The shipped
+`~/.config/herdr/config.toml` ports the keybindings from
+[Omarchy's Herdr configuration](https://github.com/omacom/omarchy/blob/5bc6c46e27e99c5025f1661c73f62d3cbb74b001/config/herdr/config.toml),
+without its UI or close-confirmation settings. **Prefix** means press
+**Ctrl + Space**, release, then press the following key.
+
+| Action | In-app shortcut |
+| --- | --- |
+| Help / reload config / detach | Prefix + ? / q / d |
+| Copy mode | Prefix + [ |
+| Split below / beside | Prefix + h / v; Alt + Enter / Alt + Shift + Enter |
+| Close pane / zoom / last pane | Prefix + x / z / ; (Alt + Escape also closes) |
+| Focus pane / resize pane | Ctrl + Alt + Arrow / Ctrl + Alt + Shift + Arrow |
+| Enter resize mode | Prefix + Ctrl + Arrow |
+| Rename pane | Prefix + Shift + O |
+| New / rename / close tab | Prefix + c / r / k |
+| Select tab | Prefix + 1–9 or Alt + 1–9 |
+| Previous / next tab | Prefix + p / n or Alt + Left / Right |
+| Move tab backward / forward | Alt + Shift + Left / Right |
+| New / rename / close workspace | Prefix + Shift + C / R / K |
+| Previous / next workspace | Prefix + Shift + P / N or Alt + Up / Down |
+
+Workspace corresponds to a tmux session; tab corresponds to a tmux window.
+Other Herdr shortcuts retain the application's defaults. Eclipse's global
+shortcut-reference action on Super + Ctrl + K remains unchanged.
+
 ## Windows, workspaces, and monitors
 
 | Action | Binding | Status |
