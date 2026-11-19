@@ -1,7 +1,7 @@
 // ╭──────────────────────────────────────────────────────────────────────────╮
 // │                                                                          │
 // │   B L U E T O O T H   D E T A I L                                        │
-// │   paired and nearby bluetooth devices                                    │
+// │   paired-device quick controls · management through bluetui              │
 // │                                                                          │
 // │   github.com/andreumassanet/impasto                                      │
 // │                                                                          │
@@ -15,11 +15,8 @@ import "../../theme"
 import "../../services"
 import "../../components"
 
-// The list behind the Bluetooth tile. `connected` is writable on a device, so
-// connecting is a property assignment and the state comes back over D-Bus.
-//
-// Discovery runs only while this view exists: a lingering scan costs power and
-// floods the list.
+// Paired-device status and connection/power controls. bluetui owns discovery,
+// pairing and advanced management; opening this panel does not change them.
 ColumnLayout {
     id: root
 
@@ -29,17 +26,9 @@ ColumnLayout {
     // back to.
     property bool backable: true
 
-    // Unnamed devices are folded away rather than dropped.
-    property bool showUnnamed: false
-
-    readonly property var listed: root.showUnnamed
-        ? BluetoothService.devices.concat(BluetoothService.unnamedDevices)
-        : BluetoothService.devices
 
     spacing: Theme.cardGap
 
-    Component.onCompleted: BluetoothService.setDiscovering(true)
-    Component.onDestruction: BluetoothService.setDiscovering(false)
 
     // The heading a module's card has (`ModuleCard`), with the back arrow in
     // front of it when there is somewhere to go back to.
@@ -89,9 +78,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 text: BluetoothService.busy ? "Changing power…"
                     : BluetoothService.blocked ? "Radio blocked · turn on to unblock"
-                    : BluetoothService.enabled
-                        ? (BluetoothService.discovering ? "Looking for devices…" : BluetoothService.summary)
-                        : "Adapter off"
+                    : BluetoothService.summary
                 elide: Text.ElideRight
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeSmall
@@ -102,10 +89,7 @@ ColumnLayout {
         ToggleSwitch {
             checked: BluetoothService.enabled
             enabled: BluetoothService.available && !BluetoothService.busy
-            onToggled: checked => {
-                BluetoothService.toggle()
-                BluetoothService.setDiscovering(true)
-            }
+            onToggled: BluetoothService.toggle()
         }
     }
 
@@ -119,13 +103,29 @@ ColumnLayout {
         color: Theme.red
     }
 
+    PillButton {
+        text: "Manage Bluetooth"
+        icon: "󰆍"
+        onClicked: BluetoothService.manage()
+    }
+
+    Text {
+        Layout.fillWidth: true
+        text: "Pair new devices, change trust, rename or forget devices in bluetui. Opens in Kitty."
+        wrapMode: Text.WordWrap
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSizeSmall
+        color: Theme.textMuted
+    }
+
+
     Text {
         Layout.fillWidth: true
         Layout.fillHeight: true
-        visible: root.listed.length === 0
+        visible: BluetoothService.listedDevices.length === 0
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        text: BluetoothService.enabled ? "Nothing found yet" : "Turn Bluetooth on to see devices"
+        text: BluetoothService.enabled ? "No paired devices · add one in Manage Bluetooth" : "Bluetooth is off"
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSizeSmall
         color: Theme.textMuted
@@ -134,11 +134,11 @@ ColumnLayout {
     ListView {
         Layout.fillWidth: true
         Layout.fillHeight: true
-        visible: root.listed.length > 0
+        visible: BluetoothService.listedDevices.length > 0
         clip: true
         spacing: 4
         model: ScriptModel {
-            values: root.listed
+            values: BluetoothService.listedDevices
             comparisonMode: ObjectComparison.Identity
         }
         boundsBehavior: Flickable.StopAtBounds
@@ -151,8 +151,7 @@ ColumnLayout {
             width: ListView.view.width
             height: 48
             radius: Theme.radiusMedium
-            color: entry.modelData.connected || entryMouse.containsMouse
-                ? Theme.surfaceHoverIn(QsWindow.window) : Theme.surfaceIn(QsWindow.window)
+            color: Theme.surfaceIn(QsWindow.window)
             border.color: entry.modelData.connected ? Theme.accent : Theme.borderIn(QsWindow.window)
             border.width: 1
 
@@ -161,7 +160,7 @@ ColumnLayout {
             RowLayout {
                 anchors.fill: parent
                 anchors.leftMargin: 10
-                anchors.rightMargin: 12
+                anchors.rightMargin: connectionButton.width + 20
                 spacing: 10
 
                 Text {
@@ -177,10 +176,7 @@ ColumnLayout {
 
                     Text {
                         Layout.fillWidth: true
-                        // The address rather than BlueZ's Alias, which for a
-                        // device with no name is the address with dashes.
-                        text: BluetoothService.isNamed(entry.modelData)
-                            ? entry.modelData.name : entry.modelData.address
+                        text: entry.modelData.name || entry.modelData.address
                         elide: Text.ElideRight
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSizeSmall
@@ -191,11 +187,8 @@ ColumnLayout {
                     Text {
                         Layout.fillWidth: true
                         text: {
-                            if (entry.modelData.pairing) return "Pairing…"
-                            const bits = []
-                            bits.push(entry.modelData.connected ? "Connected"
-                                : (entry.modelData.paired ? "Paired" : "Available"))
-                            if (entry.modelData.batteryAvailable)
+                            const bits = [BluetoothService.deviceStatus(entry.modelData)]
+                            if (entry.modelData.connected && entry.modelData.batteryAvailable)
                                 bits.push(`${Math.round(entry.modelData.battery * 100)}%`)
                             return bits.join(" · ")
                         }
@@ -215,51 +208,21 @@ ColumnLayout {
                 }
             }
 
-            MouseArea {
-                id: entryMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: BluetoothService.connectDevice(entry.modelData)
+            PillButton {
+                id: connectionButton
+                anchors.right: parent.right
+                anchors.rightMargin: 8
+                anchors.verticalCenter: parent.verticalCenter
+                text: BluetoothService.connecting(entry.modelData) ? "Working…"
+                    : entry.modelData.connected ? "Disconnect" : "Connect"
+                enabled: BluetoothService.enabled && !BluetoothService.busy
+                    && BluetoothService.connectionDevice === null
+                    && !BluetoothService.connecting(entry.modelData)
+                onClicked: BluetoothService.toggleConnection(entry.modelData)
             }
+
+
         }
     }
 
-    // The fold for devices without a name.
-    Item {
-        Layout.alignment: Qt.AlignHCenter
-        visible: BluetoothService.unnamedCount > 0
-        implicitWidth: unnamedRow.implicitWidth + 16
-        implicitHeight: unnamedRow.implicitHeight + 8
-
-        Row {
-            id: unnamedRow
-            anchors.centerIn: parent
-            spacing: 6
-
-            Text {
-                text: root.showUnnamed ? "󰅃" : "󰅀"
-                font.family: Theme.fontMono
-                font.pixelSize: Theme.fontSizeLabel
-                color: unnamedMouse.containsMouse ? Theme.text : Theme.textMuted
-            }
-
-            Text {
-                text: BluetoothService.unnamedCount === 1
-                    ? "1 unnamed device nearby"
-                    : `${BluetoothService.unnamedCount} unnamed devices nearby`
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSizeLabel
-                color: unnamedMouse.containsMouse ? Theme.text : Theme.textMuted
-            }
-        }
-
-        MouseArea {
-            id: unnamedMouse
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: root.showUnnamed = !root.showUnnamed
-        }
-    }
 }

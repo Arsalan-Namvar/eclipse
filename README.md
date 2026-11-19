@@ -101,6 +101,12 @@ multiply it and affect text/images too. Fullscreen retains the material's normal
 opacity. Shadow emphasis requires window shadows; game mode suspends focus
 effects without forgetting the profile's choices.
 
+Bluetooth keeps BlueZ as its system service. Eclipse lists paired/bonded devices
+even while disconnected, with Connect/Disconnect quick controls, connected
+battery status and power/software-block recovery. **Manage Bluetooth** opens
+`bluetui` in Kitty for scanning, pairing, trust, rename and removal. Setup installs
+`bluetui`; Eclipse does not run a pairing agent or change discovery/pairable mode.
+
 
 ## Verification status
 

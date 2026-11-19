@@ -2474,3 +2474,22 @@ power requests and displays helper failures. Discovery intent lasts only while
 the panel exists and is applied after the power process completes and adapter
 state confirms enabled, rather than racing an asynchronous power-on request.
 
+
+## Bluetooth management through bluetui — 2026-11-17
+
+Owner accepts using bluetui for device management instead of maintaining pairing
+logic in Eclipse. BlueZ remains the backend and owner of stored pairing keys.
+The bar/island keeps Bluetooth status, connected-device/battery display and the
+power toggle with software-rfkill recovery. Manage Bluetooth launches bluetui in
+Kitty, detached so shell reload/closing the panel does not terminate the manager.
+The official Arch package is included in the setup manifest.
+
+The owner revised the quick-control scope on 2026-11-19: the island lists paired,
+bonded or connected devices, including disconnected/unnamed saved devices, with
+Connect/Disconnect actions and in-flight status. Connected devices sort first.
+Connection failures produce a visible message; pending actions disable duplicate
+requests. These actions do not pair, trust or forget devices. New pairing,
+discovery, trust/untrust, rename and removal stay in bluetui. The panel must not
+change discovery or pairability, avoiding interference with the manager's agent.
+No custom/native pairing orchestration, key store or fallback is retained.
+

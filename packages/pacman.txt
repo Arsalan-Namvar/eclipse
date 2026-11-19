@@ -73,6 +73,7 @@ nm-connection-editor        # full protocol-specific VPN forms
 gnome-keyring               # Secret Service provider
 bluez                        # the bluetooth tile
 bluez-utils                  # bluetoothctl, which switches it
+bluetui                      # Bluetooth device management in Kitty
 util-linux                   # rfkill: explicit Bluetooth-on clears software blocks
 power-profiles-daemon        # the power profile
 upower                       # the battery

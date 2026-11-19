@@ -16,8 +16,8 @@ import Quickshell.Io
 
 // The default adapter, flattened for the control centre.
 //
-// Power-on also clears Bluetooth software rfkill blocks. Adapter/device state
-// still arrives over D-Bus; scanning waits for power-on to complete.
+// Power-on clears Bluetooth software rfkill blocks. Device status arrives over
+// D-Bus; bluetui owns discovery, pairing, trust and advanced management.
 Singleton {
     id: root
 
@@ -27,7 +27,8 @@ Singleton {
     readonly property bool blocked: root.available && root.adapter.state === BluetoothAdapterState.Blocked
     readonly property bool busy: root.powerProcess.running
     property string error: ""
-    property bool discoveryRequested: false
+    property var connectionDevice: null
+    property bool connectionWanted: false
 
     // Everything BlueZ currently knows about, listed or not.
     readonly property var allDevices: {
@@ -37,6 +38,56 @@ Singleton {
     }
 
     readonly property var connectedDevices: root.allDevices.filter(device => device.connected)
+    readonly property var listedDevices: root.listDevices(root.allDevices)
+
+    function listDevices(devices: var): var {
+        return devices.filter(device => device.paired || device.bonded || device.connected)
+            .sort((a, b) => Number(b.connected) - Number(a.connected)
+                || (a.name || a.address || "").localeCompare(b.name || b.address || ""))
+    }
+
+    function connecting(device: var): bool {
+        return device.state === BluetoothDeviceState.Connecting
+            || device.state === BluetoothDeviceState.Disconnecting
+    }
+
+    function deviceStatus(device: var): string {
+        if (device.state === BluetoothDeviceState.Connecting)
+            return "Connecting…"
+        if (device.state === BluetoothDeviceState.Disconnecting)
+            return "Disconnecting…"
+        return device.connected ? "Connected" : "Paired · disconnected"
+    }
+
+    function toggleConnection(device: var): void {
+        if (!device || !root.enabled || root.busy || root.connectionDevice !== null
+                || root.connecting(device))
+            return
+        root.error = ""
+        root.connectionWanted = !device.connected
+        root.connectionDevice = device
+        if (device.connected)
+            device.disconnect()
+        else if (device.paired || device.bonded)
+            device.connect()
+        Qt.callLater(root.finishConnection)
+    }
+
+    function finishConnection(): void {
+        const device = root.connectionDevice
+        if (!device || root.connecting(device))
+            return
+        if (device.connected !== root.connectionWanted)
+            root.error = root.connectionWanted
+                ? "Could not connect. Check the device is on and nearby, then retry or open Manage Bluetooth."
+                : "Could not disconnect. Retry or open Manage Bluetooth."
+        root.connectionDevice = null
+    }
+
+    readonly property Connections connectionState: Connections {
+        target: root.connectionDevice
+        function onStateChanged(): void { root.finishConnection() }
+    }
 
     // A single device is named; several are counted.
     readonly property string summary: {
@@ -64,35 +115,6 @@ Singleton {
         return root.connectedDevices.length > 0 ? "󰂱" : "󰂯"
     }
 
-    // `name` is BlueZ's Alias, which falls back to the MAC address when the
-    // device never advertised a name; `deviceName` is empty in that case.
-    function isNamed(device: var): bool {
-        return ((device.deviceName ?? "") + "").length > 0
-    }
-
-    // Named, paired, connected or pairing devices. Paired devices stay listed
-    // whatever BlueZ has cached for their name.
-    readonly property var devices: {
-        const listed = root.allDevices.filter(device => root.isNamed(device)
-            || device.paired || device.connected || device.pairing)
-        // Connected first, then paired, then whatever else is in range.
-        return listed.sort((a, b) => {
-            if (a.connected !== b.connected) return a.connected ? -1 : 1
-            if (a.paired !== b.paired) return a.paired ? -1 : 1
-            return (a.name ?? "").localeCompare(b.name ?? "")
-        })
-    }
-
-    // Everything else, shown in a collapsed second list.
-    readonly property var unnamedDevices: {
-        const rest = root.allDevices.filter(device => !(root.isNamed(device)
-            || device.paired || device.connected || device.pairing))
-        return rest.sort((a, b) => (a.address ?? "").localeCompare(b.address ?? ""))
-    }
-
-    readonly property int unnamedCount: root.unnamedDevices.length
-
-    readonly property bool discovering: root.available && root.adapter.discovering
 
     function deviceIcon(device: var): string {
         switch (device.icon) {
@@ -107,24 +129,9 @@ Singleton {
         }
     }
 
-    // `connected` is writable on the device.
-    function connectDevice(device: var): void {
-        if (device)
-            device.connected = !device.connected
+    function manage(): void {
+        Quickshell.execDetached(["kitty", "--title", "Bluetooth — bluetui", "bluetui"])
     }
-
-    function setDiscovering(on: bool): void {
-        root.discoveryRequested = on
-        root.syncDiscovery()
-    }
-
-    function syncDiscovery(): void {
-        if (root.available && root.enabled && !root.busy)
-            root.adapter.discovering = root.discoveryRequested
-    }
-
-    onEnabledChanged: root.syncDiscovery()
-    onBusyChanged: root.syncDiscovery()
 
     readonly property Process powerProcess: Process {
         stdout: StdioCollector {

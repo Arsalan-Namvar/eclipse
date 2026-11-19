@@ -1725,3 +1725,109 @@ original QML files backed up at
 opened actual island Bluetooth panel and observed Discovering=yes. Closed panel
 after verification; Bluetooth remains on. No full setup sync/install run.
 
+
+## Bluetooth pairing persistence workflow — 2026-11-17
+
+Owner reports pairings not saved. Read-only BlueZ metadata for connected WF-C500:
+Paired=yes, Bonded=no, Trusted=no. Root filesystem rw, /var/lib/bluetooth mode
+0700 root:root, no pairing/storage failures in current service journal. No key
+files read. Existing code only toggled connected; upstream Quickshell source
+confirms Connect does not call Pair and its pair() refuses already Paired.
+BlueZ 5.88 Device1.Pair checks Bonded rather than Paired, permitting the needed
+explicit bonding attempt without RemoveDevice. Implemented that path with a
+selected-device application pairing agent, post-pair Bonded verification, trust
+verification and connect. No automatic forgetting or privileged storage edits.
+
+Seven tests in test_bluetooth_pair.py passed: temporary Paired-but-not-Bonded
+workflow, saved reconnect, missing-bond refusal, pairing failure, trust failure,
+numeric confirmation rejection/acceptance, PIN/passkey validation. ./setup check
+passed all syntax sections. A throwaway private D-Bus BlueZ simulator exercised
+the real Gio helper/Agent1 callback protocol: requested passkey confirmation,
+received explicit approval, then verified Bonded/Trusted/Connected=true. This is
+protocol simulation, not evidence of hardware bonding or disk persistence.
+
+Rendered actual BluetoothDetail with live read-only device state in a disposable
+Wayland surface. Inspected WF-C500 as Connected · Temporary pairing with a
+non-overlapping Save pairing button and other discovery entries with the same
+explicit action. No QML load error. Deployed BluetoothService.qml,
+BluetoothDetail.qml and bluetooth_pair.py only; originals backed up at
+~/eclipse-backups/bluetooth-pairing-20261117-093155/. Opened installed island
+Bluetooth panel successfully. Headphones remain connected, Paired=yes,
+Bonded=no, Trusted=no: no physical re-pair, disconnect, trust change or reboot
+performed. Physical saved-bond/reconnect-after-reboot remains unverified until
+the owner invokes Save pairing with the device ready. Removed disposable proof
+files and surface after verification.
+
+
+## Rejected custom pairing workflow; native correction — 2026-11-17
+
+Owner explicitly reports the prior workflow failed and was overcomplicated.
+Its simulated D-Bus tests did not prove a hardware fix. Removed the custom
+bluetooth_pair.py and its tests, Kitty pairing process, Save pairing buttons,
+and extra labels. Replaced with native Quickshell pair/trust/connect sequencing.
+Live controller was powered but Pairable=no and not bondable in btmgmt info.
+After opening the corrected installed panel: Pairable=yes, Discovering=yes,
+and kernel management settings included bondable. No device keys were read,
+pairings removed, or headphones disconnected. Headphones were not currently
+available; hardware pairing/persistence remains unverified.
+
+test_bluetooth_pairing.py passed using the actual QML service with a controlled
+device object and inaccessible system D-Bus: successful asynchronous pairing,
+trust/connect only after bond, disconnect preserving bond, saved reconnect,
+failed pairing refusing trust/connect and immediate rejection releasing pending
+UI state. This tests lifecycle policy, not real pairing hardware or a PIN agent.
+./setup check passed all syntax sections. Actual BluetoothDetail rendered without
+Save pairing controls; visually inspected on Wayland. Deployed only the two QML
+files, retaining originals under
+~/eclipse-backups/bluetooth-native-20261117-100341/. Removed the installed custom
+helper as obsolete. No broad sync/install, package/service changes or reboot.
+
+
+## bluetui management cutover — 2026-11-17
+
+bluetui 0.8.2-1 was already installed on this laptop; no package installation or
+privileged operation required. Added bluetui to packages/pacman.txt for future
+setup runs. Replaced BluetoothService's pairing/discovery controls with a Kitty
+launch action; BluetoothDetail now shows read-only connected devices and the
+power toggle plus Manage Bluetooth. Removed obsolete native pairing test files.
+
+Actual QML button received a QtTest pointer click and invoked management. A
+persistent real-surface run opened actual bluetui with WF-C500 shown trusted
+and connected; inspected both TUI and simplified panel visually, including
+connected battery display. Final detached launch was separately exercised:
+the launching disposable shell exited while Kitty/bluetui remained visible.
+WF-C500 remained connected throughout; no pairing, trust, remove, disconnect or
+power action performed. This verifies UI launch/status, not a new bond/reboot
+persistence test. Shell no longer competes for discovery/pairable state.
+
+./setup check passed all syntax sections; four bluetooth_power regression tests
+passed. Deployed only BluetoothService.qml and BluetoothDetail.qml, originals
+under ~/eclipse-backups/bluetui-integration-20261117-103921/. Installed island
+opened successfully with new connected status/Manage action. Closed only the
+disposable manager windows and proof surfaces and removed temporary files.
+No broad setup sync/install or commit/push executed for this cutover.
+
+
+## Bluetooth paired-device quick controls — 2026-11-19
+
+Owner selected the quick-controls scope: paired devices remain visible while
+disconnected; add connect/disconnect but retain bluetui for advanced management.
+BluetoothService now filters paired/bonded/connected devices, sorts connected
+first, retains unnamed bonds, reports Connecting/Disconnecting, guards duplicate
+actions and displays generic connection-failure guidance. No pairing/trust or
+discovery/pairable mutations introduced. Panel uses this list and explicit buttons.
+
+Real WF-C500 was Paired=yes, Bonded=yes, Connected=no. Actual panel displayed it
+as Paired · disconnected with Connect; screenshot inspected on Wayland. Native
+connect action reached BlueZ and showed Connecting, then BlueZ returned
+br-connection-page-timeout. Device remained paired/bonded and listed; successful
+hardware connection/disconnection not claimed. Added visible failure guidance
+after this observation. Isolated real-QML regression passed for disconnected
+paired and unnamed bonded devices, nearby exclusion, ordering/non-mutating sort,
+transition status and failed-connect versus successful-disconnect handling.
+Final ./setup check passed all syntax sections.
+
+Deployed only BluetoothService.qml and BluetoothDetail.qml, originals under
+~/eclipse-backups/bluetooth-quick-20261119-092015/. No full sync/install, pairing
+reset or key-file access. Temporary surface/files removed. No commit/push.
+
